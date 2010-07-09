@@ -1,0 +1,22 @@
+= Taverna[http://taverna.sourceforge.net] 2 Server Interaction Gem
+
+Authors::    Robert Haines
+Version::    0.1
+Contact::    mailto:rob@mygrid.org.uk
+URL::        http://taverna.sourceforge.net/
+Licence::
+Copyright::  (c) 2010 The University of Manchester, UK
+
+
+== Synopsis
+
+This is a Ruby library to interface with the Taverna 2 Server REST interface.
+
+== Installation
+
+gem sources -a http://gems.github.com
+[sudo] gem install myGrid-t2-server
+
+== Usage
+
+TBC
