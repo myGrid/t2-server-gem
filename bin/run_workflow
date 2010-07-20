@@ -1,0 +1,138 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2010, The University of Manchester, UK.
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+#  * Neither the names of The University of Manchester nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission. 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Robert Haines
+
+require 't2server'
+require 'optparse'
+
+# go through the outputs and either print the contents
+# out or save them to a file.
+# if the output is a list, it appears as a directory so
+# all the individual entries must be grabbed from there.
+# server seems to be rather sensitive to slashes, hence
+# all the [...] mucking about.
+def get_outputs(run, pout, dir="")
+  outputs = run.ls("out#{dir}")
+  outputs.each do |out|
+    if out.include? "/"
+      get_outputs(run, pout, "#{dir}/#{out[0...-1]}")
+    else
+      print "          #{dir}/#{out} -> "
+      data = run.get_output("#{dir[1..-1]}/#{out}")
+      if pout
+        p data
+      else
+        filename = "#{dir[1..-1]}/#{out}".gsub('/','-')
+        File.open(filename, "w") do |file|
+          file.syswrite(data)
+        end
+        puts "written to file: #{filename}"
+      end
+    end
+  end
+end
+
+# set up options
+inputs  = {}
+wkf_file = ""
+print_output = true
+opts = OptionParser.new do |opt|
+  opt.banner = "Usage: run_workflow [options] server-address"
+  opt.separator ""
+  opt.separator "  Where server-address is the full URI of the server to"
+  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
+  opt.separator "  and [options] can be:"
+  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If this is not " +
+    "specified then the workflow is read from standard input") do |val|
+    wkf_file = val
+  end
+  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to VALUE") do |val|
+    input, value = val.chomp.split(':')
+    inputs[input] = value
+  end
+  opt.on("-p", "--[no-]print", "Print outputs to the console. On by default") do |val|
+    print_output = val
+  end
+  opt.on_tail("-h", "-?", "--help", "Show this message") do
+    puts opt
+    exit
+  end
+  opt.on_tail("-v", "--version", "Show the version") do
+    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
+    puts "Taverna 2 Server REST API version: #{T2Server::API_VERSION}"
+    exit
+  end
+end
+
+# parse options
+opts.parse!
+
+# read and check server address
+uri = ARGV.shift
+if uri == nil
+  puts opts
+  exit 1
+end
+
+# read workflow
+if wkf_file == ""
+  wkf = ARGF.read
+else
+  wkf = IO.read(wkf_file)
+end
+
+# create run and set inputs
+run = T2Server::Run.create(uri, wkf)
+puts "Created run with uuid: #{run.uuid}"
+
+inputs.each do |input, value|
+  puts "Set input '#{input}' to #{value}"
+  run.set_input(input, value)
+end
+
+# start run and wait until it is finished
+print "Running"
+run.start_and_wait(:progress => true)
+
+# get outputs
+stdout = run.stdout
+stderr = run.stderr
+puts "Exitcode: #{run.exitcode}"
+if stdout != "" then puts "Stdout:\n          #{stdout}" end
+if stderr != "" then puts "Stderr:\n          #{stderr}" end
+
+puts "Outputs:"
+get_outputs(run, print_output)
+
+# delete run
+run.delete
+puts "Finished and deleted run"
