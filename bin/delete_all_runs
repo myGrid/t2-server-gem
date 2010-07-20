@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2010, The University of Manchester, UK.
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+#  * Neither the names of The University of Manchester nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission. 
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Robert Haines
+
+require 't2server'
+require 'optparse'
+
+# set up options
+opts = OptionParser.new do |opt|
+  opt.banner = "Usage: delete_all_runs [options] server-address"
+  opt.separator ""
+  opt.separator "  Where server-address is the full URI of the server to"
+  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
+  opt.separator "  and [options] can be:"
+  opt.on_tail("-h", "-?", "--help", "Show this message") do
+    puts opt
+    exit
+  end
+  opt.on_tail("-v", "--version", "Show the version") do
+    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
+    puts "Taverna 2 Server REST API version: #{T2Server::API_VERSION}"
+    exit
+  end
+end
+
+# parse options
+opts.parse!
+
+# check for server address
+if ARGV[0] == nil
+  puts opts
+  exit 1
+end
+
+# connect and delete them all!
+T2Server::Server.connect(ARGV[0]).delete_all_runs
