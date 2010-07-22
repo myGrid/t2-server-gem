@@ -105,6 +105,10 @@ module T2Server
     def runs
       get_runs.values
     end
+    
+    def run(uuid)
+      get_runs[uuid]
+    end
 
     def delete_run(uuid)
       request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
