@@ -59,7 +59,7 @@ module T2Server
       
       # initialise run list
       @runs = {}
-      @runs = runs
+      @runs = get_runs
     end
 
     def Server.connect(uri)
@@ -101,38 +101,9 @@ module T2Server
         ""
       end
     end
-      
+    
     def runs
-      request = Net::HTTP::Get.new("#{@links[:runs]}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK  
-        doc = Document.new(response.body)
-        
-        # get list of run uuids
-        uuids = []
-        XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
-          uuids << run.attributes["href"].split('/')[-1]
-        end
-                
-        # add new runs
-        uuids.each do |uuid|
-          if !@runs.has_key? uuid
-            description = get_run_description(uuid)
-            @runs[uuid] = Run.create(self, "", uuid)
-          end
-        end
-        
-        # clear out the expired runs
-        if @runs.length > @run_limit
-          @runs.delete_if {|key, val| !uuids.member? key}
-        end
-
-        @runs
-      else
-        response_error(response)
-      end
+      get_runs.values
     end
 
     def delete_run(uuid)
@@ -154,7 +125,7 @@ module T2Server
     
     def delete_all_runs
       # first refresh run list
-      runs.each_value {|run| run.delete}
+      runs.each {|run| run.delete}
     end
     
     def set_run_input(run, input, value)
@@ -320,5 +291,37 @@ module T2Server
       false
     end
     
+    def get_runs
+      request = Net::HTTP::Get.new("#{@links[:runs]}")
+      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+      
+      case response
+      when Net::HTTPOK  
+        doc = Document.new(response.body)
+        
+        # get list of run uuids
+        uuids = []
+        XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
+          uuids << run.attributes["href"].split('/')[-1]
+        end
+                
+        # add new runs
+        uuids.each do |uuid|
+          if !@runs.has_key? uuid
+            description = get_run_description(uuid)
+            @runs[uuid] = Run.create(self, "", uuid)
+          end
+        end
+        
+        # clear out the expired runs
+        if @runs.length > @run_limit
+          @runs.delete_if {|key, val| !uuids.member? key}
+        end
+
+        @runs
+      else
+        response_error(response)
+      end
+    end
   end  
 end
