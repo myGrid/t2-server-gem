@@ -113,13 +113,14 @@ module T2Server
       @server.set_run_attribute(@uuid, @links[:status], STATE[:running])
     end
     
-    def start_and_wait(params={})
+    def wait(params={})
+      return unless running?
+      
       interval = params[:interval] || 1
       progress = params[:progress] || false
       keepalive = params[:keepalive] || false ### TODO maybe move out of params
       
-      # start run and wait
-      start
+      # wait
       until finished?
         sleep(interval)
         if progress
@@ -189,6 +190,18 @@ module T2Server
     def finished?
       status == STATE[:finished]
     end
+    
+    def create_time
+      @server.get_run_attribute(@uuid, @links[:createtime])
+    end
+    
+    def start_time
+      @server.get_run_attribute(@uuid, @links[:starttime])
+    end
+
+    def finish_time
+      @server.get_run_attribute(@uuid, @links[:finishtime])
+    end
 
     private
     def get_attributes(desc)
@@ -214,14 +227,17 @@ module T2Server
       doc = Document.new(desc)
       nsmap = Namespaces::MAP
       {
-        :expiry    => XPath.first(doc, "//nsr:expiry", nsmap).attributes["href"].split('/')[-1],
-        :workflow  => XPath.first(doc, "//nsr:creationWorkflow", nsmap).attributes["href"].split('/')[-1],
-        :status    => XPath.first(doc, "//nsr:status", nsmap).attributes["href"].split('/')[-1],
-        :wdir      => XPath.first(doc, "//nsr:workingDirectory", nsmap).attributes["href"].split('/')[-1],
-        :inputs    => XPath.first(doc, "//nsr:inputs", nsmap).attributes["href"].split('/')[-1],
-        :output    => XPath.first(doc, "//nsr:output", nsmap).attributes["href"].split('/')[-1],
-        :securectx => XPath.first(doc, "//nsr:securityContext", nsmap).attributes["href"].split('/')[-1],
-        :listeners => XPath.first(doc, "//nsr:listeners", nsmap).attributes["href"].split('/')[-1]
+        :expiry     => XPath.first(doc, "//nsr:expiry", nsmap).attributes["href"].split('/')[-1],
+        :workflow   => XPath.first(doc, "//nsr:creationWorkflow", nsmap).attributes["href"].split('/')[-1],
+        :status     => XPath.first(doc, "//nsr:status", nsmap).attributes["href"].split('/')[-1],
+        :createtime => XPath.first(doc, "//nsr:createTime", nsmap).attributes["href"].split('/')[-1],
+        :starttime  => XPath.first(doc, "//nsr:startTime", nsmap).attributes["href"].split('/')[-1],
+        :finishtime => XPath.first(doc, "//nsr:finishTime", nsmap).attributes["href"].split('/')[-1],
+        :wdir       => XPath.first(doc, "//nsr:workingDirectory", nsmap).attributes["href"].split('/')[-1],
+        :inputs     => XPath.first(doc, "//nsr:inputs", nsmap).attributes["href"].split('/')[-1],
+        :output     => XPath.first(doc, "//nsr:output", nsmap).attributes["href"].split('/')[-1],
+        :securectx  => XPath.first(doc, "//nsr:securityContext", nsmap).attributes["href"].split('/')[-1],
+        :listeners  => XPath.first(doc, "//nsr:listeners", nsmap).attributes["href"].split('/')[-1]
       }
     end
   end

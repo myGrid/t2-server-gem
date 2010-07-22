@@ -113,6 +113,7 @@ end
 # create run and set inputs
 run = T2Server::Run.create(uri, wkf)
 puts "Created run with uuid: #{run.uuid}"
+puts "Created at #{run.create_time}"
 
 inputs.each do |input, value|
   puts "Set input '#{input}' to #{value}"
@@ -120,8 +121,11 @@ inputs.each do |input, value|
 end
 
 # start run and wait until it is finished
+run.start
+puts "Started at #{run.start_time}"
 print "Running"
-run.start_and_wait(:progress => true)
+run.wait(:progress => true)
+puts "Finished at #{run.finish_time}"
 
 # get outputs
 stdout = run.stdout
