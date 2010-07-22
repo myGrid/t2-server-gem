@@ -41,25 +41,23 @@ require 'optparse'
 # server seems to be rather sensitive to slashes, hence
 # all the [...] mucking about.
 def get_outputs(run, pout, dir="")
-  outputs = run.ls("out#{dir}")
-  outputs.each do |out|
-    if out.include? "/"
-      get_outputs(run, pout, "#{dir}/#{out[0...-1]}")
+  dirs, files = run.ls("out#{dir}")
+  dirs.each {|d| get_outputs(run, pout, "#{dir}/#{d}")}
+  files.each do |out|
+    print "          #{dir}/#{out} -> "
+    output_name = "#{dir[1..-1]}/#{out}"
+    data = run.get_output(output_name)
+    if pout
+      p data
     else
-      print "          #{dir}/#{out} -> "
-      data = run.get_output("#{dir[1..-1]}/#{out}")
-      if pout
-        p data
-      else
-        filename = "#{dir[1..-1]}/#{out}".gsub('/','-')
-        File.open(filename, "w") do |file|
-          file.syswrite(data)
-        end
-        puts "written to file: #{filename}"
+      filename = output_name.gsub('/', '-')
+      File.open(filename, "w") do |file|
+        file.syswrite(data)
       end
+      puts "written to file: #{filename}"
     end
   end
-end
+end  
 
 # set up options
 inputs  = {}

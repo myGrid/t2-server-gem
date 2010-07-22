@@ -173,10 +173,11 @@ module T2Server
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
-      entries = []
-      XPath.each(doc, "//nss:dir", Namespaces::MAP) {|e| entries << "#{e.text.split('/')[-1]}/"}
-      XPath.each(doc, "//nss:file", Namespaces::MAP) {|e| entries << e.text.split('/')[-1]}
-      entries
+      dirs = []
+      files = []
+      XPath.each(doc, "//nss:dir", Namespaces::MAP) {|e| dirs << e.text.split('/')[-1]}
+      XPath.each(doc, "//nss:file", Namespaces::MAP) {|e| files << e.text.split('/')[-1]}
+      [dirs, files]
     end
 
     def initialized?
