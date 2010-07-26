@@ -35,6 +35,6 @@ require 't2server/server'
 require 't2server/run'
 
 module T2Server
-  GEM_VERSION = "0.0.2"
+  GEM_VERSION = "0.0.3"
   API_VERSION = "2.2.0a1"
 end
