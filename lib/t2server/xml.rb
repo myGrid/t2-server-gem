@@ -41,7 +41,7 @@ module T2Server
   end
   
   module Fragments
-    WORKFLOW      = "<t2s:scufl xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:scufl>"
+    WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
     RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
     RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
     RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
