@@ -51,7 +51,7 @@ module T2Server
       @port = uri.port
       @base_path = uri.path
       @rest_path = uri.path + "/rest"
-      @links = get_server_description
+      @links = parse_description(get_attribute(@rest_path))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # get max runs
@@ -231,7 +231,7 @@ module T2Server
       end
     end
     
-    protected
+    private
     def get_attribute(path)
       request = Net::HTTP::Get.new(path)
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
@@ -241,19 +241,8 @@ module T2Server
         return response.body
       when Net::HTTPNotFound
         puts "Cannot find attribute #{path}."
-      else
-        response_error(response)
-      end
-    end
-    
-    private
-    def get_server_description
-      request = Net::HTTP::Get.new(@rest_path)
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK
-        parse_description(response.body)
+      when Net::HTTPForbidden
+        puts "Verboten!"
       else
         response_error(response)
       end
@@ -269,20 +258,6 @@ module T2Server
         :permlisteners => URI.parse(XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
       }
     end
-
-    def get_run_description(uuid)
-      request = Net::HTTP::Get.new("#{@links[:runs]}/#{uuid}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK
-        return response.body
-      when Net::HTTPNotFound
-        puts "Cannot find run #{uuid}."
-      else
-        response_error(response)
-      end
-    end
     
     def response_error(response)
       puts "Unnexpected response from Taverna Server!"
@@ -296,36 +271,29 @@ module T2Server
     end
     
     def get_runs
-      request = Net::HTTP::Get.new("#{@links[:runs]}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK  
-        doc = Document.new(response.body)
-        
-        # get list of run uuids
-        uuids = []
-        XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
-          uuids << run.attributes["href"].split('/')[-1]
-        end
-                
-        # add new runs
-        uuids.each do |uuid|
-          if !@runs.has_key? uuid
-            description = get_run_description(uuid)
-            @runs[uuid] = Run.create(self, "", uuid)
-          end
-        end
-        
-        # clear out the expired runs
-        if @runs.length > @run_limit
-          @runs.delete_if {|key, val| !uuids.member? key}
-        end
+      run_list = get_attribute("#{@links[:runs]}")
 
-        @runs
-      else
-        response_error(response)
+      doc = Document.new(run_list)
+
+      # get list of run uuids
+      uuids = []
+      XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
+        uuids << run.attributes["href"].split('/')[-1]
       end
+
+      # add new runs
+      uuids.each do |uuid|
+        if !@runs.has_key? uuid
+          @runs[uuid] = Run.create(self, "", uuid)
+        end
+      end
+
+      # clear out the expired runs
+      if @runs.length > @run_limit
+        @runs.delete_if {|key, val| !uuids.member? key}
+      end
+
+      @runs
     end
   end  
 end
