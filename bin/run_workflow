@@ -45,7 +45,11 @@ def get_outputs(run, pout, dir="")
   dirs.each {|d| get_outputs(run, pout, "#{dir}/#{d}")}
   files.each do |out|
     print "          #{dir}/#{out} -> "
-    output_name = "#{dir[1..-1]}/#{out}"
+    if dir == ""
+      output_name = out
+    else
+      output_name = "#{dir[1..-1]}/#{out}"
+    end
     data = run.get_output(output_name)
     if pout
       p data
