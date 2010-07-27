@@ -81,7 +81,7 @@ module T2Server
     end
     
     def initialize_run(workflow)
-      request = Net::HTTP::Post.new("#{@links[:runs]}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::WORKFLOW % workflow)
@@ -111,7 +111,7 @@ module T2Server
     end
 
     def delete_run(uuid)
-      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
+      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}".gsub("//", "/"))
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
       
       case response
@@ -133,7 +133,7 @@ module T2Server
     end
     
     def set_run_input(run, input, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::RUNINPUTVALUE % value)
@@ -149,7 +149,7 @@ module T2Server
     end
 
     def set_run_input_file(run, input, filename)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::RUNINPUTFILE % filename)
@@ -165,7 +165,7 @@ module T2Server
     end
 
     def make_run_dir(uuid, root, dir)
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request,  Fragments::MKDIR % dir)
@@ -189,7 +189,7 @@ module T2Server
     def upload_run_file(uuid, filename, location, rename)
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request,  Fragments::UPLOAD % [rename, contents])
@@ -211,7 +211,7 @@ module T2Server
     end
 
     def set_run_attribute(uuid, path, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}".gsub("//", "/"))
       request.content_type = "text/plain"
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
       
@@ -233,7 +233,7 @@ module T2Server
     
     private
     def get_attribute(path)
-      request = Net::HTTP::Get.new(path)
+      request = Net::HTTP::Get.new(path.gsub("//", "/"))
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
       
       case response
