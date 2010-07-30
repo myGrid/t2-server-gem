@@ -1,21 +1,50 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
-Authors::    Robert Haines
-Version::    0.1
-Contact::    mailto:rhaines@manchester.ac.uk
-URL::        http://taverna.sourceforge.net/
-Licence::    BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
-Copyright::  (c) 2010 The University of Manchester, UK
+Authors::     Robert Haines
+Gem Version:: 0.0.4
+API Version:: 2.2a1
+Contact::     mailto:rhaines@manchester.ac.uk
+URL::         http://taverna.sourceforge.net/
+Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
+Copyright::   (c) 2010 The University of Manchester, UK
 
 
 == Synopsis
 
-This is a Ruby library to interface with the Taverna 2 Server REST interface.
+This is a Ruby library to interface with the Taverna 2 Server REST API.
 
 == Installation
 
-[sudo] gem install t2-server
+Ensure that gem itself is up to date:
+  [sudo] gem update --system
+
+Then simply install as you would any other gem:
+  [sudo] gem install t2-server
+
+In case of problems with the above the gem is available for download here:
+http://rubygems.org/gems/t2-server
+
+You can also download the source code from here:
+http://github.com/myGrid/t2-server-gem
 
 == Usage
 
-TBC
+As well as the library there are also a couple of example scripts which
+demonstrate good use of the T2Server API. These are available in the
+<tt>bin</tt> directory:
+* run_workflow
+* server_info
+* delete_all_runs
+Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
+switch will show how to use them, e.g.:
+  run_workflow --help
+
+== Support
+
+Please email mailto:support@mygrid.org.uk for any questions relating to
+this Ruby gem.
+
+== References
+
+Taverna 2 Server::       http://www.taverna.org.uk/documentation/taverna-2-x/server/
+REST API Documentation:: http://www.taverna.org.uk/documentation/taverna-2-x/server/rest-api/

@@ -33,7 +33,7 @@
 require 'rubygems'
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
-  s.version          = "0.0.3"
+  s.version          = "0.0.4"
   s.author           = "Robert Haines"
   s.email            = "rhaines@manchester.ac.uk"
   s.homepage         = "http://www.taverna.org.uk/"
