@@ -51,7 +51,7 @@ module T2Server
       @port = uri.port
       @base_path = uri.path
       @rest_path = uri.path + "/rest"
-      @links = get_server_description
+      @links = parse_description(get_attribute(@rest_path))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # get max runs
@@ -81,7 +81,7 @@ module T2Server
     end
     
     def initialize_run(workflow)
-      request = Net::HTTP::Post.new("#{@links[:runs]}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::WORKFLOW % workflow)
@@ -111,7 +111,7 @@ module T2Server
     end
 
     def delete_run(uuid)
-      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
+      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}".gsub("//", "/"))
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
       
       case response
@@ -133,7 +133,7 @@ module T2Server
     end
     
     def set_run_input(run, input, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::RUNINPUTVALUE % value)
@@ -149,7 +149,7 @@ module T2Server
     end
 
     def set_run_input_file(run, input, filename)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request, Fragments::RUNINPUTFILE % filename)
@@ -165,7 +165,7 @@ module T2Server
     end
 
     def make_run_dir(uuid, root, dir)
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request,  Fragments::MKDIR % dir)
@@ -189,7 +189,7 @@ module T2Server
     def upload_run_file(uuid, filename, location, rename)
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}".gsub("//", "/"))
       request.content_type = "application/xml"
       response = Net::HTTP.new(@host, @port).start do |http|
         http.request(request,  Fragments::UPLOAD % [rename, contents])
@@ -211,7 +211,7 @@ module T2Server
     end
 
     def set_run_attribute(uuid, path, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}")
+      request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}".gsub("//", "/"))
       request.content_type = "text/plain"
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
       
@@ -231,9 +231,9 @@ module T2Server
       end
     end
     
-    protected
+    private
     def get_attribute(path)
-      request = Net::HTTP::Get.new(path)
+      request = Net::HTTP::Get.new(path.gsub("//", "/"))
       response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
       
       case response
@@ -241,19 +241,8 @@ module T2Server
         return response.body
       when Net::HTTPNotFound
         puts "Cannot find attribute #{path}."
-      else
-        response_error(response)
-      end
-    end
-    
-    private
-    def get_server_description
-      request = Net::HTTP::Get.new(@rest_path)
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK
-        parse_description(response.body)
+      when Net::HTTPForbidden
+        puts "Verboten!"
       else
         response_error(response)
       end
@@ -269,20 +258,6 @@ module T2Server
         :permlisteners => URI.parse(XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
       }
     end
-
-    def get_run_description(uuid)
-      request = Net::HTTP::Get.new("#{@links[:runs]}/#{uuid}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK
-        return response.body
-      when Net::HTTPNotFound
-        puts "Cannot find run #{uuid}."
-      else
-        response_error(response)
-      end
-    end
     
     def response_error(response)
       puts "Unnexpected response from Taverna Server!"
@@ -296,36 +271,29 @@ module T2Server
     end
     
     def get_runs
-      request = Net::HTTP::Get.new("#{@links[:runs]}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
-      case response
-      when Net::HTTPOK  
-        doc = Document.new(response.body)
-        
-        # get list of run uuids
-        uuids = []
-        XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
-          uuids << run.attributes["href"].split('/')[-1]
-        end
-                
-        # add new runs
-        uuids.each do |uuid|
-          if !@runs.has_key? uuid
-            description = get_run_description(uuid)
-            @runs[uuid] = Run.create(self, "", uuid)
-          end
-        end
-        
-        # clear out the expired runs
-        if @runs.length > @run_limit
-          @runs.delete_if {|key, val| !uuids.member? key}
-        end
+      run_list = get_attribute("#{@links[:runs]}")
 
-        @runs
-      else
-        response_error(response)
+      doc = Document.new(run_list)
+
+      # get list of run uuids
+      uuids = []
+      XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
+        uuids << run.attributes["href"].split('/')[-1]
       end
+
+      # add new runs
+      uuids.each do |uuid|
+        if !@runs.has_key? uuid
+          @runs[uuid] = Run.create(self, "", uuid)
+        end
+      end
+
+      # clear out the expired runs
+      if @runs.length > @run_limit
+        @runs.delete_if {|key, val| !uuids.member? key}
+      end
+
+      @runs
     end
   end  
 end
