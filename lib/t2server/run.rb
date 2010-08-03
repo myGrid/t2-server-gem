@@ -146,7 +146,15 @@ module T2Server
     end
     
     def mkdir(dir)
-      @server.make_run_dir(@uuid, @links[:wdir], dir)
+      if dir.include? ?/
+        # if a path is given then separate the leaf from the
+        # end and add the rest of the path to the wdir link
+        leaf = dir.split("/")[-1]
+        path = dir[0...-(leaf.length + 1)]
+        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf)
+      else
+        @server.make_run_dir(@uuid, @links[:wdir], dir)
+      end
     end
     
     def upload_file(filename, params={})
