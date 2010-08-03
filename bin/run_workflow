@@ -47,8 +47,8 @@ def get_outputs(run, pout, dir="")
     if pout
       p data
     else
-      # remove leading slash
-      filename = "#{dir[1..-1]}/#{out}".gsub('/', '-')
+      # strip path and convert remove /'s for file output
+      filename = "#{dir.strip_path}/#{out}".gsub('/', '-')
       File.open(filename, "w") do |file|
         file.syswrite(data)
       end

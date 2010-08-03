@@ -86,6 +86,7 @@ module T2Server
     
     def get_output(output, type="text/plain")
       return unless finished?   ### raise exception?
+      output.strip_path!
       doc = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
       doc
     end
@@ -146,6 +147,7 @@ module T2Server
     end
     
     def mkdir(dir)
+      dir.strip_path!
       if dir.include? ?/
         # if a path is given then separate the leaf from the
         # end and add the rest of the path to the wdir link
@@ -176,6 +178,7 @@ module T2Server
     end
 
     def ls(dir="")
+      dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
       doc = Document.new(dir_list)
 
