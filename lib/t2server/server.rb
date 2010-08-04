@@ -139,50 +139,24 @@ module T2Server
     end
     
     def set_run_input(run, input, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
-      request.content_type = "application/xml"
-      begin
-        response = Net::HTTP.new(@host, @port).start do |http|
-          http.request(request, Fragments::RUNINPUTVALUE % value)
-        end
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-      
-      case response
-      when Net::HTTPOK
-        # Yay!
-        true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run.uuid)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new(run.uuid)
+      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
+      set_attribute(path, Fragments::RUNINPUTVALUE % value, "application/xml")
+    rescue AttributeNotFoundError => e
+      if get_runs.has_key? uuid
+        raise e
       else
-        raise UnexpectedServerResponse.new(response)
+        raise RunNotFoundError.new(uuid)
       end
     end
 
     def set_run_input_file(run, input, filename)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
-      request.content_type = "application/xml"
-      begin
-        response = Net::HTTP.new(@host, @port).start do |http|
-          http.request(request, Fragments::RUNINPUTFILE % filename)
-        end
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-
-      case response
-      when Net::HTTPOK
-        # Yay!
-        true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run.uuid)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new(run.uuid)
+      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
+      set_attribute(path, Fragments::RUNINPUTFILE % filename, "application/xml")
+    rescue AttributeNotFoundError => e
+      if get_runs.has_key? uuid
+        raise e
       else
-        raise UnexpectedServerResponse.new(response)
+        raise RunNotFoundError.new(uuid)
       end
     end
 
@@ -248,31 +222,15 @@ module T2Server
     end
 
     def set_run_attribute(uuid, path, value)
-      request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}")
-      request.content_type = "text/plain"
-      begin
-        response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-
-      case response
-      when Net::HTTPOK
-        # OK, so carry on
-        true
-      when Net::HTTPNotFound
-        if get_runs.has_key? uuid
-          raise AttributeNotFoundError.new(path)
-        else
-          raise RunNotFoundError.new(uuid)
-        end
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{uuid}")
+      set_attribute("#{@links[:runs]}/#{uuid}/#{path}", value, "text/plain")
+    rescue AttributeNotFoundError => e
+      if get_runs.has_key? uuid
+        raise e
       else
-        raise UnexpectedServerResponse.new(response)
+        raise RunNotFoundError.new(uuid)
       end
     end
-    
+
     private
     def get_attribute(path)
       request = Net::HTTP::Get.new(path)
@@ -285,6 +243,28 @@ module T2Server
       case response
       when Net::HTTPOK
         return response.body
+      when Net::HTTPNotFound
+        raise AttributeNotFoundError.new(path)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("attribute #{path}")
+      else
+        raise UnexpectedServerResponse.new(response)
+      end
+    end
+
+    def set_attribute(path, value, type)
+      request = Net::HTTP::Put.new(path)
+      request.content_type = type
+      begin
+        response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
+
+      case response
+      when Net::HTTPOK
+        # OK, so carry on
+        true
       when Net::HTTPNotFound
         raise AttributeNotFoundError.new(path)
       when Net::HTTPForbidden
