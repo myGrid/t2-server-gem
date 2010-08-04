@@ -106,11 +106,17 @@ else
   wkf = IO.read(wkf_file)
 end
 
-# create run and set inputs
-run = T2Server::Run.create(uri, wkf)
+# create run
+begin
+  run = T2Server::Run.create(uri, wkf)
+rescue T2Server::T2ServerError => e
+  puts e
+  exit 1
+end
 puts "Created run with uuid: #{run.uuid}"
 puts "Created at #{run.create_time}"
 
+# set inputs
 inputs.each do |input, value|
   puts "Set input '#{input}' to #{value}"
   run.set_input(input, value)
@@ -126,12 +132,15 @@ puts "Finished at #{run.finish_time}"
 # get outputs
 stdout = run.stdout
 stderr = run.stderr
-puts "Exitcode: #{run.exitcode}"
-if stdout != "" then puts "Stdout:\n          #{stdout}" end
-if stderr != "" then puts "Stderr:\n          #{stderr}" end
+exitcd = run.exitcode
+puts "Exitcode: #{exitcd}"
+if stdout != "" then puts "Stdout:\n#{stdout}" end
+if stderr != "" then puts "Stderr:\n#{stderr}" end
 
-puts "Outputs:"
-get_outputs(run, print_output)
+if exitcd == 0
+  puts "Outputs:"
+  get_outputs(run, print_output)
+end
 
 # delete run
 run.delete

@@ -62,4 +62,9 @@ if ARGV[0] == nil
 end
 
 # connect and delete them all!
-T2Server::Server.connect(ARGV[0]).delete_all_runs
+begin
+  T2Server::Server.connect(ARGV[0]).delete_all_runs
+rescue T2Server::T2ServerError => e
+  puts e
+  exit 1
+end
