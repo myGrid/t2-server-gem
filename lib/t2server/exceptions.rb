@@ -104,4 +104,10 @@ module T2Server
       super "Access to #{@path} is forbidden. Either you do not have the required credentials or the server does not allow the requested operation"
     end
   end
+
+  class RunStateError < T2ServerError
+    def initialize(current, need)
+      super "The run is in the wrong state (#{current}); it should be '#{need}' to perform that action"
+    end
+  end
 end

@@ -77,15 +77,23 @@ module T2Server
     end
     
     def set_input(input, value)
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+
       @server.set_run_input(self, input, value)
     end
     
     def set_input_file(input, filename)
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+
       @server.set_run_input_file(self, input, filename)
     end
     
     def get_output(output, type="text/plain")
-      return unless finished?   ### raise exception?
+      state = status
+      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
+
       output.strip_path!
       doc = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
       doc
@@ -111,12 +119,16 @@ module T2Server
     end
     
     def start
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+
       @server.set_run_attribute(@uuid, @links[:status], STATE[:running])
     end
     
     def wait(params={})
-      return unless running?
-      
+      state = status
+      raise RunStateError.new(state, STATE[:running]) if state != STATE[:running]
+
       interval = params[:interval] || 1
       progress = params[:progress] || false
       keepalive = params[:keepalive] || false ### TODO maybe move out of params
@@ -167,11 +179,17 @@ module T2Server
     end
     
     def upload_input_file(input, filename, params={})
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+
       file = upload_file(filename, params)
       set_input_file(input, file)
     end
     
     def upload_baclava_file(filename)
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+
       @baclava = true
       rename = upload_file(filename)
       @server.set_run_attribute(@uuid, @links[:baclava], rename)
