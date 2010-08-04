@@ -31,6 +31,7 @@
 # Author: Robert Haines
 
 require 't2server/xml'
+require 't2server/exceptions'
 require 't2server/server'
 require 't2server/run'
 

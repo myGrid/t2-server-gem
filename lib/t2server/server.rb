@@ -83,8 +83,12 @@ module T2Server
     def initialize_run(workflow)
       request = Net::HTTP::Post.new("#{@links[:runs]}")
       request.content_type = "application/xml"
-      response = Net::HTTP.new(@host, @port).start do |http|
-        http.request(request, Fragments::WORKFLOW % workflow)
+      begin
+        response = Net::HTTP.new(@host, @port).start do |http|
+          http.request(request, Fragments::WORKFLOW % workflow)
+        end
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
       end
       
       case response
@@ -93,12 +97,9 @@ module T2Server
         epr = URI.parse(response['location'])
         epr.path[-36..-1]
       when Net::HTTPForbidden
-        puts "Sorry, but the server is already running its configured limit of concurrent workflows."
-        puts "Please try again later."
-        ""
+        raise ServerAtCapacityError.new(@run_limit)
       else
-        response_error(response)
-        ""
+        raise UnexpectedServerResponse.new(response)
       end
     end
     
@@ -112,7 +113,11 @@ module T2Server
 
     def delete_run(uuid)
       request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+      begin
+        response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
       
       case response
       when Net::HTTPNoContent
@@ -120,10 +125,11 @@ module T2Server
         @runs.delete(uuid)
         true
       when Net::HTTPNotFound
-        puts "Cannot find run #{run.uuid}."
-        false
+        raise RunNotFoundError.new(uuid)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("run #{uuid}")
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
     
@@ -135,54 +141,73 @@ module T2Server
     def set_run_input(run, input, value)
       request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
       request.content_type = "application/xml"
-      response = Net::HTTP.new(@host, @port).start do |http|
-        http.request(request, Fragments::RUNINPUTVALUE % value)
+      begin
+        response = Net::HTTP.new(@host, @port).start do |http|
+          http.request(request, Fragments::RUNINPUTVALUE % value)
+        end
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
       end
       
       case response
       when Net::HTTPOK
         # Yay!
         true
+      when Net::HTTPNotFound
+        raise RunNotFoundError.new(run.uuid)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new(run.uuid)
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
 
     def set_run_input_file(run, input, filename)
       request = Net::HTTP::Put.new("#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}")
       request.content_type = "application/xml"
-      response = Net::HTTP.new(@host, @port).start do |http|
-        http.request(request, Fragments::RUNINPUTFILE % filename)
+      begin
+        response = Net::HTTP.new(@host, @port).start do |http|
+          http.request(request, Fragments::RUNINPUTFILE % filename)
+        end
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
       end
-      
+
       case response
       when Net::HTTPOK
         # Yay!
         true
+      when Net::HTTPNotFound
+        raise RunNotFoundError.new(run.uuid)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new(run.uuid)
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
 
     def make_run_dir(uuid, root, dir)
+      raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
       request.content_type = "application/xml"
-      response = Net::HTTP.new(@host, @port).start do |http|
-        http.request(request,  Fragments::MKDIR % dir)
+      begin
+        response = Net::HTTP.new(@host, @port).start do |http|
+          http.request(request,  Fragments::MKDIR % dir)
+        end
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
       end
-      
+
       case response
       when Net::HTTPCreated
         # OK, carry on...
         true
-      when Net::HTTPForbidden
-        puts "Error!", response.body
-        false
       when Net::HTTPNotFound
-        puts "Cannot find run #{uuid}."
-        false
+        raise RunNotFoundError.new(uuid)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("#{dir} on run #{uuid}")
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
     
@@ -191,60 +216,81 @@ module T2Server
       rename = filename.split('/')[-1] if rename == ""
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
       request.content_type = "application/xml"
-      response = Net::HTTP.new(@host, @port).start do |http|
-        http.request(request,  Fragments::UPLOAD % [rename, contents])
+      begin
+        response = Net::HTTP.new(@host, @port).start do |http|
+          http.request(request,  Fragments::UPLOAD % [rename, contents])
+        end
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
       end
-      
+
       case response
       when Net::HTTPCreated
         # Success, return remote name of uploaded file
         rename
+      when Net::HTTPNotFound
+        raise RunNotFoundError.new(uuid)
       when Net::HTTPForbidden
-        puts "Error!", response.body
+        raise AccessForbiddenError.new("run #{uuid}")
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
 
     def get_run_attribute(uuid, path)
       get_attribute("#{@links[:runs]}/#{uuid}/#{path}")
+    rescue AttributeNotFoundError => e
+      if get_runs.has_key? uuid
+        raise e
+      else
+        raise RunNotFoundError.new(uuid)
+      end
     end
 
     def set_run_attribute(uuid, path, value)
       request = Net::HTTP::Put.new("#{@links[:runs]}/#{uuid}/#{path}")
       request.content_type = "text/plain"
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
-      
+      begin
+        response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
+
       case response
       when Net::HTTPOK
         # OK, so carry on
         true
-      when Net::HTTPForbidden
-        puts "Error!"
-        puts response.body
-        false
       when Net::HTTPNotFound
-        puts "Cannot find run #{uuid}."
-        false
+        if get_runs.has_key? uuid
+          raise AttributeNotFoundError.new(path)
+        else
+          raise RunNotFoundError.new(uuid)
+        end
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("run #{uuid}")
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
     
     private
     def get_attribute(path)
       request = Net::HTTP::Get.new(path)
-      response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
-      
+      begin
+        response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
+
       case response
       when Net::HTTPOK
         return response.body
       when Net::HTTPNotFound
-        puts "Cannot find attribute #{path}."
+        raise AttributeNotFoundError.new(path)
       when Net::HTTPForbidden
-        puts "Verboten!"
+        raise AccessForbiddenError.new("attribute #{path}")
       else
-        response_error(response)
+        raise UnexpectedServerResponse.new(response)
       end
     end
 
@@ -258,18 +304,7 @@ module T2Server
         :permlisteners => URI.parse(XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
       }
     end
-    
-    def response_error(response)
-      puts "Unnexpected response from Taverna Server!"
-      puts "Server is: #{@host}:#{@port}#{@base_path}"
-      puts "Response code is: #{response.code}"
-      if response.body
-        puts "Response body is: \n#{response.body}"
-      end
-      puts "\nRaw error is: \n#{response.error!}"
-      false
-    end
-    
+
     def get_runs
       run_list = get_attribute("#{@links[:runs]}")
 
