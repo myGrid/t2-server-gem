@@ -38,3 +38,15 @@ module T2Server
   GEM_VERSION = "0.0.4"
   API_VERSION = "2.2a1"
 end
+
+# Add to the String class to operate on file paths
+class String
+  def strip_path
+    self.gsub(/^\//, "").chomp("/")
+  end
+
+  def strip_path!
+    g = self.gsub!(/^\//, "")
+    self.chomp!("/") || g
+  end
+end

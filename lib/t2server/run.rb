@@ -86,6 +86,7 @@ module T2Server
     
     def get_output(output, type="text/plain")
       return unless finished?   ### raise exception?
+      output.strip_path!
       doc = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
       doc
     end
@@ -146,7 +147,16 @@ module T2Server
     end
     
     def mkdir(dir)
-      @server.make_run_dir(@uuid, @links[:wdir], dir)
+      dir.strip_path!
+      if dir.include? ?/
+        # if a path is given then separate the leaf from the
+        # end and add the rest of the path to the wdir link
+        leaf = dir.split("/")[-1]
+        path = dir[0...-(leaf.length + 1)]
+        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf)
+      else
+        @server.make_run_dir(@uuid, @links[:wdir], dir)
+      end
     end
     
     def upload_file(filename, params={})
@@ -168,6 +178,7 @@ module T2Server
     end
 
     def ls(dir="")
+      dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
       doc = Document.new(dir_list)
 
