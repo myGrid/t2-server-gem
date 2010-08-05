@@ -33,6 +33,7 @@
 require 'rake'
 require 'rake/clean'
 require 'rake/testtask'
+require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
 task :default => [:test]
@@ -50,7 +51,7 @@ spec = Gem::Specification.new do |s|
   s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
   s.test_file        = "test/ts_t2server.rb"
-  s.has_rdoc         = false
+  s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
   s.add_development_dependency('rake')
 end
@@ -64,4 +65,11 @@ Rake::TestTask.new do |t|
   t.libs << "test"
   t.test_files = FileList['test/ts_t2server.rb']
   t.verbose = true
+end
+
+Rake::RDocTask.new do |r|
+  r.main = "README.rdoc"
+  lib = Dir.glob("lib/**/*.rb").delete_if {|item| item.include?("xml.rb")}
+  r.rdoc_files.include("README.rdoc", "LICENCE", lib)
+  r.options << "-t Taverna 2 Server Ruby Interface Library"
 end
