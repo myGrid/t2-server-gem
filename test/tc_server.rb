@@ -30,22 +30,42 @@
 #
 # Author: Robert Haines
 
-require 'test/unit'
 require 't2server'
 
-# get a server address to test - 30 second timeout
-print "\nPlease supply a valid Taverna 2 Server address (leave blank to skip tests): "
-$stdout.flush
-if select([$stdin], [], [], 30)
-  $address = $stdin.gets.chomp
-else
-  puts "\nSkipping tests that require a Taverna 2 Server instance..."
-  $address = ""
-end
-$wkf = File.read("test/workflows/hello.t2flow")
+class TestServer < Test::Unit::TestCase
 
-# the testcases to run
-require 'tc_paths'
-if $address != ""
-  require 'tc_server'
+  def test_server
+    # connection
+    assert_nothing_raised(T2Server::ConnectionError) do
+      @server = T2Server::Server.connect($address)
+    end
+    assert_not_nil(@server)
+    assert_raise(T2Server::ConnectionError) do
+      uri = URI.parse($address)
+      T2Server::Server.connect("http://#{uri.host}:22")
+    end
+
+    # run creation
+    assert_nothing_raised(T2Server::T2ServerError) do
+      @run = @server.create_run($wkf)
+    end
+
+    # capacity
+    limit = @server.run_limit
+    assert_instance_of(Fixnum, limit)
+    assert_raise(T2Server::ServerAtCapacityError) do
+      limit.times do
+        @server.create_run($wkf)
+      end
+    end
+  
+    # deleting
+    assert_nothing_raised(T2Server::T2ServerError) do
+      @run.delete
+    end
+
+    assert_nothing_raised(T2Server::T2ServerError) do
+      @server.delete_all_runs
+    end
+  end
 end
