@@ -30,7 +30,13 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
+require 'rake'
+require 'rake/clean'
+require 'rake/testtask'
+require 'rake/gempackagetask'
+
+task :default => [:test]
+
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
   s.version          = "0.0.4"
@@ -40,10 +46,22 @@ spec = Gem::Specification.new do |s|
   s.platform         = Gem::Platform::RUBY
   s.summary          = "Support for interacting with Taverna 2 Server."
   s.description      = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
-  candidates         = Dir.glob("{bin,lib}/**/*")
+  candidates         = Dir.glob("{bin,lib,test}/**/*")
   s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
-  #s.test_file        = ""
+  s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = false
   s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
+  s.add_development_dependency('rake')
+end
+
+Rake::GemPackageTask.new(spec) do |pkg|
+  pkg.need_zip = true
+  pkg.need_tar = true
+end
+
+Rake::TestTask.new do |t|
+  t.libs << "test"
+  t.test_files = FileList['test/ts_t2server.rb']
+  t.verbose = true
 end
