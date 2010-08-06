@@ -30,23 +30,43 @@
 #
 # Author: Robert Haines
 
-require 'test/unit'
 require 't2server'
 
-# get a server address to test - 30 second timeout
-print "\nPlease supply a valid Taverna 2 Server address (leave blank to skip tests): "
-$stdout.flush
-if select([$stdin], [], [], 30)
-  $address = $stdin.gets.chomp
-else
-  puts "\nSkipping tests that require a Taverna 2 Server instance..."
-  $address = ""
-end
-$wkf = File.read("test/workflows/hello.t2flow")
+class TestRun < Test::Unit::TestCase
 
-# the testcases to run
-require 'tc_paths'
-if $address != ""
-  require 'tc_server'
-  require 'tc_run'
+  def test_run
+    # connection
+    assert_nothing_raised(T2Server::ConnectionError) do
+      @run = T2Server::Run.create($address, $wkf)
+    end
+
+    # test bad state code
+    assert_raise(T2Server::RunStateError) do
+      @run.get_output("out")
+    end
+    assert_raise(T2Server::RunStateError) do
+      @run.wait
+    end
+
+    # test mkdir and ls
+    assert(@run.mkdir("test"))
+    assert_equal(@run.ls, [["test"], []])
+
+    # start, state and wait
+    @run.start
+    assert(@run.running?)
+    assert_nothing_raised(T2Server::RunStateError) do
+      @run.wait
+    end
+
+    # exitcode and output
+    assert_instance_of(Fixnum, @run.exitcode)
+    assert_equal(@run.get_output("Message"), "Hello, World!")
+    assert_raise(T2Server::AccessForbiddenError) do
+      @run.get_output("wrong!")
+    end
+
+    # deletion
+    assert(@run.delete)
+  end
 end
