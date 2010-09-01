@@ -37,6 +37,9 @@ require 'rexml/document'
 include REXML
 
 module T2Server
+
+  # An interface for directly communicating with one or more Taverna 2 Server
+  # instances.
   class Server
     private_class_method :new
     attr_reader :uri, :run_limit
@@ -44,6 +47,8 @@ module T2Server
     # list of servers we know about
     @@servers = []
     
+    # :stopdoc:
+    # New is private but rdoc does not get it right! Hence :stopdoc: section.
     def initialize(uri)
       @uri = uri.strip_path
       uri = URI.parse(@uri)
@@ -61,7 +66,15 @@ module T2Server
       @runs = {}
       @runs = get_runs
     end
+    # :startdoc:
 
+    # :call-seq:
+    #   Server.connect(uri) -> server
+    #
+    # Connect to the server specified by _uri_ which should be of the form:
+    # http://example.com:8888/blah
+    #
+    # A Server instance is returned that represents the connection.
     def Server.connect(uri)
       # see if we've already got this server
       server = @@servers.find {|s| s.uri == uri}
@@ -74,12 +87,21 @@ module T2Server
       
       server
     end
-    
+
+    # :call-seq:
+    #   server.create_run(workflow) -> run
+    #
+    # Create a run on this server using the specified _workflow_.
     def create_run(workflow)
       uuid = initialize_run(workflow)
       @runs[uuid] = Run.create(self, "", uuid)
     end
-    
+
+    # :call-seq:
+    #   server.initialize_run(workflow) -> string
+    #
+    # Create a run on this server using the specified _workflow_ but do not
+    # return it as a Run instance. Return its UUID instead.
     def initialize_run(workflow)
       request = Net::HTTP::Post.new("#{@links[:runs]}")
       request.content_type = "application/xml"
@@ -102,15 +124,27 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   server.runs -> [runs]
+    #
+    # Return the set of runs on this server.
     def runs
       get_runs.values
     end
-    
+
+    # :call-seq:
+    #   server.run(uuid) -> run
+    #
+    # Return the specified run.
     def run(uuid)
       get_runs[uuid]
     end
 
+    # :call-seq:
+    #   server.delete_run(uuid) -> bool
+    #
+    # Delete the specified run from the server, discarding all of its state.
     def delete_run(uuid)
       request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
       begin
@@ -132,12 +166,20 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   server.delete_all_runs
+    #
+    # Delete all runs on this server, discarding all of their state.
     def delete_all_runs
       # first refresh run list
       runs.each {|run| run.delete}
     end
-    
+
+    # :call-seq:
+    #   server.set_run_input(run, input, value) -> bool
+    #
+    # Set the workflow input port _input_ on run _run_ to _value_.
     def set_run_input(run, input, value)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
       set_attribute(path, Fragments::RUNINPUTVALUE % value, "application/xml")
@@ -149,6 +191,11 @@ module T2Server
       end
     end
 
+    # :call-seq:
+    #   server.set_run_input_file(run, input, filename) -> bool
+    #
+    # Set the workflow input port _input_ on run _run_ to use the file at
+    # _filename_ for its input.
     def set_run_input_file(run, input, filename)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
       set_attribute(path, Fragments::RUNINPUTFILE % filename, "application/xml")
@@ -160,6 +207,11 @@ module T2Server
       end
     end
 
+    # :call-seq:
+    #   server.make_run_dir(uuid, root, dir) -> bool
+    #
+    # Create a directory _dir_ within the directory _root_ on the run with
+    # identifier _uuid_. This is mainly for use by Run#mkdir.
     def make_run_dir(uuid, root, dir)
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
@@ -184,7 +236,12 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   server.upload_run_file(uuid, filename, location, rename) -> string
+    #
+    # Upload a file to the run with identifier _uuid_. Mainly for internal use
+    # by Run#upload_file.
     def upload_run_file(uuid, filename, location, rename)
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
@@ -211,6 +268,10 @@ module T2Server
       end
     end
 
+    # :call-seq:
+    #   server.get_run_attribute(uuid, path) -> string
+    #
+    # Get the attribute at _path_ in the run with identifier _uuid_.
     def get_run_attribute(uuid, path)
       get_attribute("#{@links[:runs]}/#{uuid}/#{path}")
     rescue AttributeNotFoundError => e
@@ -221,6 +282,10 @@ module T2Server
       end
     end
 
+    # :call-seq:
+    #   server.set_run_attribute(uuid, path, value) -> bool
+    #
+    # Set the attribute at _path_ in the run with identifier _uuid_ to _value_.
     def set_run_attribute(uuid, path, value)
       set_attribute("#{@links[:runs]}/#{uuid}/#{path}", value, "text/plain")
     rescue AttributeNotFoundError => e

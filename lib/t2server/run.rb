@@ -34,19 +34,29 @@ require 'rexml/document'
 include REXML
 
 module T2Server
-  
+
+  # An interface for easily running jobs on a Taverna 2 Server with minimal
+  # setup and configuration required.
+  #
+  # A run can be in one of three states:
+  # * Initialized: The run has been accepted by the server. It may not yet be
+  #   ready to run though as its input port may not have been set.
+  # * Running: The run is being run by the server.
+  # * Finished: The run has finished running and its outputs are available for
+  #   download.
   class Run
-    
+    private_class_method :new
+    attr_reader :uuid
+
+    # :stopdoc:
     STATE = {
       :initialized => "Initialized",
       :running     => "Operating",
       :finished    => "Finished",
       :stopped     => "Stopped"
     }
-    
-    private_class_method :new
-    attr_reader :uuid
-    
+
+    # New is private but rdoc does not get it right! Hence :stopdoc: section.
     def initialize(server, uuid)
       @server = server
       @uuid = uuid
@@ -56,7 +66,16 @@ module T2Server
       @links = get_attributes(@server.get_run_attribute(uuid, ""))
       #@links.each {|key, val| puts "#{key}: #{val}"}
     end
+    # :startdoc:
 
+    # :call-seq:
+    #   Run.create(server, workflow) -> run
+    #
+    # Create a new run in the +Initialized+ state. The run will be created on
+    # the server with address supplied by _server_. This can either be a
+    # String of the form <tt>http://example.com:8888/blah</tt> or an already
+    # created instance of T2Server::Server. The _workflow_ must also be
+    # supplied as a string in t2flow or scufl format.
     def Run.create(server, workflow, uuid="")
       if server.class == String
         server = Server.connect(server)
@@ -67,29 +86,56 @@ module T2Server
         new(server, uuid)
       end
     end
-    
+
+    # :call-seq:
+    #   run.delete
+    #
+    # Delete this run from the server.
     def delete
       @server.delete_run uuid
     end
-    
+
+    # :call-seq:
+    #   run.inputs -> string
+    #
+    # Return the path to the input ports of this run on the server.
     def inputs
       @links[:inputs]
     end
-    
+
+    # :call-seq:
+    #   run.set_input(input, value) -> bool
+    #
+    # Set the workflow input port _input_ to _value_.
+    #
+    # Raises RunStateError if the run is not in the +Initialized+ state.
     def set_input(input, value)
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       @server.set_run_input(self, input, value)
     end
-    
+
+    # :call-seq:
+    #   run.set_input_file(input, filename) -> bool
+    #
+    # Set the workflow input port _input_ to use the file at _filename_ as its
+    # input data.
+    #
+    # Raises RunStateError if the run is not in the +Initialized+ state.
     def set_input_file(input, filename)
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       @server.set_run_input_file(self, input, filename)
     end
-    
+
+    # :call-seq:
+    #   run.get_output(output) -> string
+    #
+    # Return the value of the workflow output port _output_.
+    #
+    # Raises RunStateError if the run is not in the +Finished+ state.
     def get_output(output, type="text/plain")
       state = status
       raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
@@ -98,33 +144,68 @@ module T2Server
       doc = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
       doc
     end
-    
+
+    # :call-seq:
+    #   run.expiry -> string
+    #
+    # Return the expiry time of this run. It is formatted as an ISO-8601
+    # timestamp.
     def expiry
       @server.get_run_attribute(@uuid, @links[:expiry])
     end
-    
+
+    # :call-seq:
+    #   run.expiry=(time) -> bool
+    #
+    # Set the expiry time of this run to _time_. The format of _time_ should
+    # be an ISO-8601 timestamp.
     def expiry=(date)
       @server.set_run_attribute(@uuid, @links[:expiry], date)
     end
 
+    # :call-seq:
+    #   run.workflow -> string
+    #
+    # Get the workflow that this run represents.
     def workflow
       if @workflow == ""
         @workflow = @server.get_run_attribute(@uuid, @links[:workflow])
       end
       @workflow
     end
-    
+
+    # :call-seq:
+    #   run.status -> string
+    #
+    # Get the status of this run.
     def status
       @server.get_run_attribute(@uuid, @links[:status])
     end
-    
+
+    # :call-seq:
+    #   run.start
+    #
+    # Start this run on the server.
+    #
+    # Raises RunStateError if the run is not in the +Initialized+ state.
     def start
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       @server.set_run_attribute(@uuid, @links[:status], STATE[:running])
     end
-    
+
+    # :call-seq:
+    #   run.wait(params={})
+    #
+    # Wait (block) for this run to finish. Possible values that can be passed
+    # in via _params_ are:
+    # * :interval - How often (in seconds) to test for run completion.
+    #   Default +1+.
+    # * :progress - Print a dot (.) each interval to show that something is
+    #   actually happening. Default +false+.
+    #
+    # Raises RunStateError if the run is not in the +Running+ state.
     def wait(params={})
       state = status
       raise RunStateError.new(state, STATE[:running]) if state != STATE[:running]
@@ -145,19 +226,36 @@ module T2Server
       # tidy up output if there is any
       puts if progress
     end
-    
+
+    # :call-seq:
+    #   run.exitcode -> integer
+    #
+    # Get the return code of the run. Zero indicates success.
     def exitcode
       @server.get_run_attribute(@uuid, @links[:exitcode]).to_i
     end
-    
+
+    # :call-seq:
+    #   run.stdout -> string
+    #
+    # Get anything that the run printed to the standard out stream.
     def stdout
       @server.get_run_attribute(@uuid, @links[:stdout])
     end
-    
+
+    # :call-seq:
+    #   run.stderr -> string
+    #
+    # Get anything that the run printed to the standard error stream.
     def stderr
       @server.get_run_attribute(@uuid, @links[:stderr])
     end
-    
+
+    # :call-seq:
+    #   run.mkdir(dir) -> bool
+    #
+    # Create a directory in the run's working directory on the server. This
+    # could be used to store input data.
     def mkdir(dir)
       dir.strip_path!
       if dir.include? ?/
@@ -170,14 +268,37 @@ module T2Server
         @server.make_run_dir(@uuid, @links[:wdir], dir)
       end
     end
-    
+
+    # :call-seq:
+    #   run.upload_file(filename, params={}) -> string
+    #
+    # Upload a file, with name _filename_, to the server. Possible values that
+    # can be passed in via _params_ are:
+    # * :dir - The directory to upload to. If this is not left blank the
+    #   corresponding directory will need to have been created by Run#mkdir.
+    # * :rename - Save the file on the server with a different name.
+    #
+    # The name of the file on the server is returned.
     def upload_file(filename, params={})
       location = params[:dir] || ""
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
       @server.upload_run_file(@uuid, filename, location, rename)
     end
-    
+
+    # :call-seq:
+    #   run.upload_input_file(input, filename, params={}) -> string
+    #
+    # Upload a file, with name _filename_, to the server and set it as the
+    # input data for input port _input_. Possible values that can be passed
+    # in via _params_ are:
+    # * :dir - The directory to upload to. If this is not left blank the
+    #   corresponding directory will need to have been created by Run#mkdir.
+    # * :rename - Save the file on the server with a different name.
+    #
+    # The name of the file on the server is returned.
+    #
+    # Raises RunStateError if the run is not in the +Initialized+ state.
     def upload_input_file(input, filename, params={})
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
@@ -185,7 +306,11 @@ module T2Server
       file = upload_file(filename, params)
       set_input_file(input, file)
     end
-    
+
+    # :call-seq:
+    #   run.upload_baclava_file(filename) -> bool
+    #
+    # Upload a baclava file to be used for the workflow inputs.
     def upload_baclava_file(filename)
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
@@ -195,6 +320,12 @@ module T2Server
       @server.set_run_attribute(@uuid, @links[:baclava], rename)
     end
 
+    # :call-seq:
+    #   run.ls(dir="") -> [[dirs], [objects]]
+    #
+    # List a directory in the run's workspace on the server. If _dir_ is left
+    # blank then / is listed. The contents of a directory are returned as a
+    # list of two lists, directories and "objects" respectively.
     def ls(dir="")
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
@@ -209,26 +340,50 @@ module T2Server
       [dirs, files]
     end
 
+    # :call-seq:
+    #   run.initialized? -> bool
+    #
+    # Is this run in the +Initialized+ state?
     def initialized?
       status == STATE[:initialized]
     end
-    
+
+    # :call-seq:
+    #   run.running? -> bool
+    #
+    # Is this run in the +Running+ state?
     def running?
       status == STATE[:running]
     end
-    
+
+    # :call-seq:
+    #   run.finished? -> bool
+    #
+    # Is this run in the +Finished+ state?
     def finished?
       status == STATE[:finished]
     end
-    
+
+    # :call-seq:
+    #   run.create_time -> string
+    #
+    # Get the creation time of this run formatted as an ISO-8601 timestamp.
     def create_time
       @server.get_run_attribute(@uuid, @links[:createtime])
     end
-    
+
+    # :call-seq:
+    #   run.start_time -> string
+    #
+    # Get the start time of this run formatted as an ISO-8601 timestamp.
     def start_time
       @server.get_run_attribute(@uuid, @links[:starttime])
     end
 
+    # :call-seq:
+    #   run.finish_time -> string
+    #
+    # Get the finish time of this run formatted as an ISO-8601 timestamp.
     def finish_time
       @server.get_run_attribute(@uuid, @links[:finishtime])
     end
