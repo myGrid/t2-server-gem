@@ -1,7 +1,7 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
 Authors::     Robert Haines
-Gem Version:: 0.0.4
+Gem Version:: 0.1.0
 API Version:: 2.2a1
 Contact::     mailto:rhaines@manchester.ac.uk
 URL::         http://taverna.sourceforge.net/
@@ -29,7 +29,14 @@ http://github.com/myGrid/t2-server-gem
 
 == Usage
 
-As well as the library there are also a couple of example scripts which
+There are two entry points for the T2Server API:
+* T2Server::Run - Use this for running single jobs on a server.
+* T2Server::Server - Use this if you are providing a web interface to one or
+  more Taverna 2 Server instances.
+
+See the rdoc for more information.
+
+As well as rdoc there are also a couple of example scripts which
 demonstrate good use of the T2Server API. These are available in the
 <tt>bin</tt> directory:
 * run_workflow
