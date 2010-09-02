@@ -75,6 +75,9 @@ opts = OptionParser.new do |opt|
     input, value = val.chomp.split(':')
     inputs[input] = value
   end
+  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
+    inputs[:baclava] = val
+  end
   opt.on("-p", "--[no-]print", "Print outputs to the console. On by default") do |val|
     print_output = val
   end
@@ -117,9 +120,14 @@ puts "Created run with uuid: #{run.uuid}"
 puts "Created at #{run.create_time}"
 
 # set inputs
-inputs.each do |input, value|
-  puts "Set input '#{input}' to #{value}"
-  run.set_input(input, value)
+if inputs.has_key?(:baclava)
+  run.upload_baclava_file(inputs[:baclava])
+  puts "Uploaded baclava input file"
+else
+  inputs.each do |input, value|
+    puts "Set input '#{input}' to #{value}"
+    run.set_input(input, value)
+  end
 end
 
 # start run and wait until it is finished
