@@ -42,7 +42,14 @@ module T2Server
   # instances.
   class Server
     private_class_method :new
-    attr_reader :uri, :run_limit
+
+    # The URI of this server instance as a String.
+    attr_reader :uri
+    
+    # The maximum number of runs that this server will allow at any one time.
+    # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
+    # against this maximum.
+    attr_reader :run_limit
     
     # list of servers we know about
     @@servers = []

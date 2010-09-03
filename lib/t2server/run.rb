@@ -46,6 +46,9 @@ module T2Server
   #   download.
   class Run
     private_class_method :new
+
+    # The identifier of this run on the server. It is currently a UUID
+    # (version 4).
     attr_reader :uuid
 
     # :stopdoc:
