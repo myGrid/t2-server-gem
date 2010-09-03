@@ -40,7 +40,7 @@ task :default => [:test]
 
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
-  s.version          = "0.1.0"
+  s.version          = "0.1.1"
   s.author           = "Robert Haines"
   s.email            = "rhaines@manchester.ac.uk"
   s.homepage         = "http://www.taverna.org.uk/"
@@ -53,7 +53,7 @@ spec = Gem::Specification.new do |s|
   s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
-  s.add_development_dependency('rake')
+  s.add_development_dependency('rake', '>=0.8.7')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
