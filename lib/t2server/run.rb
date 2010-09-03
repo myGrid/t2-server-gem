@@ -61,7 +61,8 @@ module T2Server
       @server = server
       @uuid = uuid
       @workflow = ""
-      @baclava = false
+      @baclava_in = false
+      @baclava_out = ""
       
       @links = get_attributes(@server.get_run_attribute(uuid, ""))
       #@links.each {|key, val| puts "#{key}: #{val}"}
@@ -315,9 +316,37 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @baclava = true
+      @baclava_in = true
       rename = upload_file(filename)
       @server.set_run_attribute(@uuid, @links[:baclava], rename)
+    end
+
+    # :call-seq:
+    #   run.set_baclava_output(name="out.xml") -> bool
+    #
+    # Set the server to save the outputs of this run in baclava format. The
+    # filename can be specified with the _name_ parameter otherwise a default
+    # of 'out.xml' is used. This must be done before the run is started.
+    def set_baclava_output(name="out.xml")
+      state = status
+      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      
+      @baclava_out = name.strip_path
+      @server.set_run_attribute(@uuid, @links[:output], @baclava_out)
+    end
+
+    # :call-seq:
+    #   run.get_baclava_output -> string
+    #
+    # Get the outputs of this run in baclava format. This can only be done if
+    # the output has been requested in baclava format by #set_baclava_output
+    # before starting the run.
+    def get_baclava_output
+      state = status
+      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
+      
+      raise AttributeNotFoundError.new("#{@links[:wdir]}/#{@baclava_out}") if @baclava_out == ""
+      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{@baclava_out}")
     end
 
     # :call-seq:
