@@ -40,10 +40,6 @@ class TestServer < Test::Unit::TestCase
       @server = T2Server::Server.connect($address)
     end
     assert_not_nil(@server)
-    assert_raise(T2Server::ConnectionError) do
-      uri = URI.parse($address)
-      T2Server::Server.connect("http://#{uri.host}:22")
-    end
 
     # run creation
     assert_nothing_raised(T2Server::T2ServerError) do
