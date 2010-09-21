@@ -32,7 +32,7 @@
 
 require 'base64'
 require 'uri'
-require 'net/http'
+require 'net/https'
 require 'rexml/document'
 include REXML
 
@@ -50,19 +50,27 @@ module T2Server
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
     # against this maximum.
     attr_reader :run_limit
-    
+
     # list of servers we know about
     @@servers = []
     
     # :stopdoc:
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
-    def initialize(uri)
+    def initialize(uri, username, password)
       @uri = uri.strip_path
       uri = URI.parse(@uri)
       @host = uri.host
       @port = uri.port
       @base_path = uri.path
       @rest_path = uri.path + "/rest"
+
+      # use ssl?
+      @ssl = uri.scheme == "https"
+      if ssl?
+        @username = uri.user || username
+        @password = uri.password || password
+      end
+
       @links = parse_description(get_attribute(@rest_path))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
@@ -76,19 +84,20 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   Server.connect(uri) -> server
+    #   Server.connect(uri, username="", password="") -> server
     #
     # Connect to the server specified by _uri_ which should be of the form:
-    # http://example.com:8888/blah
+    # http://example.com:8888/blah or https://user:pass@example.com:8888/blah
     #
+    # The username and password can also be passed in separately.
     # A Server instance is returned that represents the connection.
-    def Server.connect(uri)
+    def Server.connect(uri, username="", password="")
       # see if we've already got this server
       server = @@servers.find {|s| s.uri == uri}
 
       if !server
         # no, so create new one and return it
-        server = new(uri)
+        server = new(uri, username, password)
         @@servers << server
       end
       
@@ -110,12 +119,15 @@ module T2Server
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its UUID instead.
     def initialize_run(workflow)
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}")
       request.content_type = "application/xml"
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start do |http|
-          http.request(request, Fragments::WORKFLOW % workflow)
-        end
+        response = http.request(request, Fragments::WORKFLOW % workflow)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -127,9 +139,19 @@ module T2Server
         epr.path[-36..-1]
       when Net::HTTPForbidden
         raise ServerAtCapacityError.new(@run_limit)
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end
+    end
+
+    # :call-seq:
+    #   server.ssl? -> bool
+    #
+    # Is this server using SSL?
+    def ssl?
+      @ssl
     end
 
     # :call-seq:
@@ -153,9 +175,14 @@ module T2Server
     #
     # Delete the specified run from the server, discarding all of its state.
     def delete_run(uuid)
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+        response = http.request(request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -169,6 +196,8 @@ module T2Server
         raise RunNotFoundError.new(uuid)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("run #{uuid}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end
@@ -221,12 +250,15 @@ module T2Server
     # identifier _uuid_. This is mainly for use by Run#mkdir.
     def make_run_dir(uuid, root, dir)
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
       request.content_type = "application/xml"
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start do |http|
-          http.request(request,  Fragments::MKDIR % dir)
-        end
+        response = http.request(request,  Fragments::MKDIR % dir)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -239,6 +271,8 @@ module T2Server
         raise RunNotFoundError.new(uuid)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("#{dir} on run #{uuid}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end
@@ -252,12 +286,15 @@ module T2Server
     def upload_run_file(uuid, filename, location, rename)
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
       request.content_type = "application/xml"
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start do |http|
-          http.request(request,  Fragments::UPLOAD % [rename, contents])
-        end
+        response = http.request(request,  Fragments::UPLOAD % [rename, contents])
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -270,6 +307,8 @@ module T2Server
         raise RunNotFoundError.new(uuid)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("run #{uuid}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end
@@ -305,9 +344,14 @@ module T2Server
 
     private
     def get_attribute(path)
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Get.new(path)
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start {|http| http.request(request)}
+        response = http.request(request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -319,16 +363,23 @@ module T2Server
         raise AttributeNotFoundError.new(path)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("attribute #{path}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end
     end
 
     def set_attribute(path, value, type)
+      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Put.new(path)
       request.content_type = type
+      if ssl?
+        http.use_ssl = true
+        request.basic_auth @username, @password
+      end
       begin
-        response = Net::HTTP.new(@host, @port).start {|http| http.request(request, value)}
+        response = http.request(request, value)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -341,6 +392,8 @@ module T2Server
         raise AttributeNotFoundError.new(path)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("attribute #{path}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(@username)
       else
         raise UnexpectedServerResponse.new(response)
       end

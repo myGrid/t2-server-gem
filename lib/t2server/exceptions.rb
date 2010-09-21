@@ -139,6 +139,17 @@ module T2Server
     end
   end
 
+  # Access to the server is denied to this username
+  class AuthorizationError < T2ServerError
+    attr_reader :username
+
+    # Create a new AuthorizationError with the rejected username
+    def initialize(username)
+      @username = username
+      super "The username '#{@username}' is not authorized to connect to this server"
+    end
+  end
+
   # Raised if an operation is performed on a run when it is in the wrong
   # state. Trying to start a run if it is the finished state would cause this
   # exception to be raised.
