@@ -64,11 +64,17 @@ module T2Server
       @base_path = uri.path
       @rest_path = uri.path + "/rest"
 
+      # set up http connection
+      @http = Net::HTTP.new(@host, @port)
+
       # use ssl?
       @ssl = uri.scheme == "https"
       if ssl?
         @username = uri.user || username
         @password = uri.password || password
+        
+        @http.use_ssl = true
+        @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
       @links = parse_description(get_attribute(@rest_path))
@@ -119,15 +125,13 @@ module T2Server
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its UUID instead.
     def initialize_run(workflow)
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}")
       request.content_type = "application/xml"
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request, Fragments::WORKFLOW % workflow)
+        response = @http.request(request, Fragments::WORKFLOW % workflow)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -175,14 +179,12 @@ module T2Server
     #
     # Delete the specified run from the server, discarding all of its state.
     def delete_run(uuid)
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request)
+        response = @http.request(request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -250,15 +252,13 @@ module T2Server
     # identifier _uuid_. This is mainly for use by Run#mkdir.
     def make_run_dir(uuid, root, dir)
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
       request.content_type = "application/xml"
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request,  Fragments::MKDIR % dir)
+        response = @http.request(request, Fragments::MKDIR % dir)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -286,15 +286,13 @@ module T2Server
     def upload_run_file(uuid, filename, location, rename)
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
       request.content_type = "application/xml"
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request,  Fragments::UPLOAD % [rename, contents])
+        response = @http.request(request,  Fragments::UPLOAD % [rename, contents])
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -344,14 +342,12 @@ module T2Server
 
     private
     def get_attribute(path)
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Get.new(path)
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request)
+        response = @http.request(request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -371,15 +367,13 @@ module T2Server
     end
 
     def set_attribute(path, value, type)
-      http = Net::HTTP.new(@host, @port)
       request = Net::HTTP::Put.new(path)
       request.content_type = type
       if ssl?
-        http.use_ssl = true
         request.basic_auth @username, @password
       end
       begin
-        response = http.request(request, value)
+        response = @http.request(request, value)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
