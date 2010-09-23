@@ -34,7 +34,6 @@ require 'base64'
 require 'uri'
 require 'net/https'
 require 'rexml/document'
-include REXML
 
 module T2Server
 
@@ -394,24 +393,24 @@ module T2Server
     end
 
     def parse_description(desc)
-      doc = Document.new(desc)
+      doc = REXML::Document.new(desc)
       nsmap = Namespaces::MAP
       {
-        :runs          => URI.parse(XPath.first(doc, "//nsr:runs", nsmap).attributes["href"]).path,
-        :runlimit      => URI.parse(XPath.first(doc, "//nsr:runLimit", nsmap).attributes["href"]).path,
-        :permworkflows => URI.parse(XPath.first(doc, "//nsr:permittedWorkflows", nsmap).attributes["href"]).path,
-        :permlisteners => URI.parse(XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
+        :runs          => URI.parse(REXML::XPath.first(doc, "//nsr:runs", nsmap).attributes["href"]).path,
+        :runlimit      => URI.parse(REXML::XPath.first(doc, "//nsr:runLimit", nsmap).attributes["href"]).path,
+        :permworkflows => URI.parse(REXML::XPath.first(doc, "//nsr:permittedWorkflows", nsmap).attributes["href"]).path,
+        :permlisteners => URI.parse(REXML::XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
       }
     end
 
     def get_runs
       run_list = get_attribute("#{@links[:runs]}")
 
-      doc = Document.new(run_list)
+      doc = REXML::Document.new(run_list)
 
       # get list of run uuids
       uuids = []
-      XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
+      REXML::XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
         uuids << run.attributes["href"].split('/')[-1]
       end
 

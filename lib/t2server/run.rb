@@ -31,7 +31,6 @@
 # Author: Robert Haines
 
 require 'rexml/document'
-include REXML
 
 module T2Server
 
@@ -361,14 +360,14 @@ module T2Server
     def ls(dir="")
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
-      doc = Document.new(dir_list)
+      doc = REXML::Document.new(dir_list)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
       dirs = []
       files = []
-      XPath.each(doc, "//nss:dir", Namespaces::MAP) {|e| dirs << e.text.split('/')[-1]}
-      XPath.each(doc, "//nss:file", Namespaces::MAP) {|e| files << e.text.split('/')[-1]}
+      REXML::XPath.each(doc, "//nss:dir", Namespaces::MAP) {|e| dirs << e.text.split('/')[-1]}
+      REXML::XPath.each(doc, "//nss:file", Namespaces::MAP) {|e| files << e.text.split('/')[-1]}
       [dirs, files]
     end
 
@@ -427,9 +426,9 @@ module T2Server
       
       # get inputs
       inputs = @server.get_run_attribute(@uuid, links[:inputs])
-      doc = Document.new(inputs)
+      doc = REXML::Document.new(inputs)
       nsmap = Namespaces::MAP
-      links[:baclava] = "#{links[:inputs]}/" + XPath.first(doc, "//nsr:baclava", nsmap).attributes["href"].split('/')[-1]
+      links[:baclava] = "#{links[:inputs]}/" + REXML::XPath.first(doc, "//nsr:baclava", nsmap).attributes["href"].split('/')[-1]
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"
@@ -441,20 +440,20 @@ module T2Server
     end
 
     def parse_description(desc)
-      doc = Document.new(desc)
+      doc = REXML::Document.new(desc)
       nsmap = Namespaces::MAP
       {
-        :expiry     => XPath.first(doc, "//nsr:expiry", nsmap).attributes["href"].split('/')[-1],
-        :workflow   => XPath.first(doc, "//nsr:creationWorkflow", nsmap).attributes["href"].split('/')[-1],
-        :status     => XPath.first(doc, "//nsr:status", nsmap).attributes["href"].split('/')[-1],
-        :createtime => XPath.first(doc, "//nsr:createTime", nsmap).attributes["href"].split('/')[-1],
-        :starttime  => XPath.first(doc, "//nsr:startTime", nsmap).attributes["href"].split('/')[-1],
-        :finishtime => XPath.first(doc, "//nsr:finishTime", nsmap).attributes["href"].split('/')[-1],
-        :wdir       => XPath.first(doc, "//nsr:workingDirectory", nsmap).attributes["href"].split('/')[-1],
-        :inputs     => XPath.first(doc, "//nsr:inputs", nsmap).attributes["href"].split('/')[-1],
-        :output     => XPath.first(doc, "//nsr:output", nsmap).attributes["href"].split('/')[-1],
-        :securectx  => XPath.first(doc, "//nsr:securityContext", nsmap).attributes["href"].split('/')[-1],
-        :listeners  => XPath.first(doc, "//nsr:listeners", nsmap).attributes["href"].split('/')[-1]
+        :expiry     => REXML::XPath.first(doc, "//nsr:expiry", nsmap).attributes["href"].split('/')[-1],
+        :workflow   => REXML::XPath.first(doc, "//nsr:creationWorkflow", nsmap).attributes["href"].split('/')[-1],
+        :status     => REXML::XPath.first(doc, "//nsr:status", nsmap).attributes["href"].split('/')[-1],
+        :createtime => REXML::XPath.first(doc, "//nsr:createTime", nsmap).attributes["href"].split('/')[-1],
+        :starttime  => REXML::XPath.first(doc, "//nsr:startTime", nsmap).attributes["href"].split('/')[-1],
+        :finishtime => REXML::XPath.first(doc, "//nsr:finishTime", nsmap).attributes["href"].split('/')[-1],
+        :wdir       => REXML::XPath.first(doc, "//nsr:workingDirectory", nsmap).attributes["href"].split('/')[-1],
+        :inputs     => REXML::XPath.first(doc, "//nsr:inputs", nsmap).attributes["href"].split('/')[-1],
+        :output     => REXML::XPath.first(doc, "//nsr:output", nsmap).attributes["href"].split('/')[-1],
+        :securectx  => REXML::XPath.first(doc, "//nsr:securityContext", nsmap).attributes["href"].split('/')[-1],
+        :listeners  => REXML::XPath.first(doc, "//nsr:listeners", nsmap).attributes["href"].split('/')[-1]
       }
     end
   end
