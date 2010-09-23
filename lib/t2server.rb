@@ -43,7 +43,7 @@ require 't2server/run'
 #   Taverna 2 Server instance.
 module T2Server
   # The version of this library
-  GEM_VERSION = "0.0.4"
+  GEM_VERSION = "0.2.1"
   # The version of the Taverna 2 Server API that this library can interface with
   API_VERSION = "2.2a1"
 end
