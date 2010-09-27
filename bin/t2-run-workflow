@@ -64,7 +64,7 @@ wkf_file = ""
 print_output = true
 baclava_out = ""
 opts = OptionParser.new do |opt|
-  opt.banner = "Usage: run_workflow [options] server-address"
+  opt.banner = "Usage: t2-run-workflow [options] server-address"
   opt.separator ""
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
