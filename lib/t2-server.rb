@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # Copyright (c) 2010, The University of Manchester, UK.
 #
 # All rights reserved.
@@ -31,50 +30,42 @@
 #
 # Author: Robert Haines
 
-require 't2-server'
-require 'optparse'
+require 't2-server/xml'
+require 't2-server/exceptions'
+require 't2-server/server'
+require 't2-server/run'
 
-opts = OptionParser.new do |opt|
-  opt.banner = "Usage: server_info [options] server-address"
-  opt.separator ""
-  opt.separator "  Where server-address is the full URI of the server to"
-  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
-  opt.separator "  and [options] can be:"
-  opt.on_tail("-h", "-?", "--help", "Show this message") do
-    puts opt
-    exit
-  end
-  opt.on_tail("-v", "--version", "Show the version") do
-    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
-    puts "Taverna 2 Server REST API version: #{T2Server::API_VERSION}"
-    exit
-  end
+# This is a Ruby library to interface with the Taverna 2 Server REST API.
+#
+# There are two API entry points:
+# * T2Server::Run - Use this for running single jobs on a server.
+# * T2Server::Server - Use this if you are providing a web interface to a
+#   Taverna 2 Server instance.
+module T2Server
+  # The version of this library
+  GEM_VERSION = "0.2.1"
+  # The version of the Taverna 2 Server API that this library can interface with
+  API_VERSION = "2.2a1"
 end
 
-# parse options
-opts.parse!
-
-# read and check server address
-uri = ARGV.shift
-if uri == nil
-  puts opts
-  exit 1
-end
-
-# connect to server and output information
-begin
-  server = T2Server::Server.connect(uri)
-  print "     Server: #{uri}\n"
-  print "  Run limit: #{server.run_limit}\n"
-  runs = server.runs
-  print "No. of runs: #{runs.length}\n"
-  if runs.length > 0
-    print "   Run list: #{runs[0].uuid} - #{runs[0].expiry}\n"
-    runs[1..-1].each do |run|
-      print "             #{run.uuid} - #{run.expiry}\n"
-    end
+# Add methods to the String class to operate on file paths.
+class String
+  # :call-seq:
+  #   str.strip_path -> string
+  #
+  # Returns a new String with one leading and one trailing slash
+  # removed from the ends of _str_ (if present).
+  def strip_path
+    self.gsub(/^\//, "").chomp("/")
   end
-rescue T2Server::T2ServerError => e
-  puts e
-  exit 1
+
+  # :call-seq:
+  #   str.strip_path! -> str or nil
+  #
+  # Modifies _str_ in place as described for String#strip_path,
+  # returning _str_, or returning +nil+ if no modifications were made. 
+  def strip_path!
+    g = self.gsub!(/^\//, "")
+    self.chomp!("/") || g
+  end
 end

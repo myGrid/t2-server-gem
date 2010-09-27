@@ -31,7 +31,7 @@
 #
 # Author: Robert Haines
 
-require 't2server'
+require 't2-server'
 require 'optparse'
 
 # set up options
