@@ -73,7 +73,7 @@ opts = OptionParser.new do |opt|
     wkf_file = val
   end
   opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to VALUE") do |val|
-    input, value = val.chomp.split(':')
+    input, value = val.chomp.split(':', 2)
     inputs[input] = value
   end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
