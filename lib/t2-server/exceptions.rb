@@ -33,11 +33,12 @@
 require 'net/http'
 
 module T2Server
+  # :stopdoc:
   # An internal module to collect all the exceptions that we
   # can't really do anything about ourselves, such as
   # timeouts and lost connections. This is further wrapped
   # and exposed in the API as T2Server::ConnectionError below.
-  module InternalHTTPError  #:nodoc:
+  module InternalHTTPError
   end
 
   # These are the HTTP errors we want to catch.
@@ -55,6 +56,7 @@ module T2Server
     Net::ProtocolError
   ].each {|err| err.send(:include, InternalHTTPError)}
 
+  # :startdoc:
   # This is a superclass for all T2Server exceptions. It is provided as a
   # useful catch-all for all the internally raised/thrown exceptions.
   class T2ServerError < RuntimeError

@@ -31,6 +31,7 @@
 # Author: Robert Haines
 
 module T2Server
+  # :stopdoc:
   module Namespaces
     SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
     REST   = SERVER + "rest/"
@@ -48,4 +49,5 @@ module T2Server
     UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
     MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
   end
+  # :startdoc:
 end

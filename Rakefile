@@ -53,6 +53,7 @@ spec = Gem::Specification.new do |s|
   s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
+  s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '>=0.8.7')
 end
 
@@ -75,4 +76,6 @@ Rake::RDocTask.new do |r|
   end
   r.rdoc_files.include("README.rdoc", "LICENCE", lib)
   r.options << "-t Taverna 2 Server Ruby Interface Library"
+  r.options << "-N"
+  r.options << "--tab-width=2"
 end
