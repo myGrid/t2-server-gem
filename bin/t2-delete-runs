@@ -36,12 +36,16 @@ require 't2-server'
 require 'optparse'
 
 # set up options
+delete_all = false
 opts = OptionParser.new do |opt|
-  opt.banner = "Usage: t2-delete-all-runs [options] server-address"
+  opt.banner = "Usage: t2-delete-runs [options] server-address [run-ids...]"
   opt.separator ""
-  opt.separator "  Where server-address is the full URI of the server to"
-  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
-  opt.separator "  and [options] can be:"
+  opt.separator "  Where server-address is the full URI of the server to connect to,"
+  opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the id numbers"
+  opt.separator "  of the runs you want to delete and [options] can be:"
+  opt.on("--all", "Delete all runs on the server") do
+    delete_all = true
+  end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
     exit
@@ -56,16 +60,53 @@ end
 # parse options
 opts.parse!
 
-# check for server address
-if ARGV[0] == nil
+# get runs and server address from the arguments
+runs = []
+address = ""
+for arg in ARGV
+  if arg.match(/https?:\/\//) == nil
+    runs << arg
+  else
+    address = arg
+  end
+end
+
+# can't do anything without a server address
+if address == ""
   puts opts
   exit 1
 end
 
-# connect and delete them all!
+# connect...
 begin
-  T2Server::Server.connect(ARGV[0]).delete_all_runs
+  server = T2Server::Server.connect(ARGV[0])
 rescue T2Server::T2ServerError => e
   puts e
   exit 1
+end
+
+# ...and delete them!
+if delete_all
+  begin
+    server.delete_all_runs
+  rescue T2Server::AuthorizationError => ae
+    puts "You are not authorized to delete runs on this server."
+  rescue T2Server::T2ServerError => e
+    puts "There was a problem while deleting runs. Some may remain on the server."
+  end
+else
+  for run in runs
+    begin
+      server.delete_run(run)
+    rescue T2Server::RunNotFoundError => rnf
+      puts "Run '#{run}' not found - skipping."
+      next
+    rescue T2Server::AuthorizationError => ae
+      puts "You are not authorized to delete run '#{run}' - skipping."
+      next
+    rescue T2Server::T2ServerError => e
+      puts "There was a problem while deleting run '#{run}' - skipping."
+      next
+    end
+  end
 end
