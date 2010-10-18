@@ -63,6 +63,7 @@ inputs  = {}
 wkf_file = ""
 print_output = true
 baclava_out = ""
+delete_run = false
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-run-workflow [options] server-address"
   opt.separator ""
@@ -91,6 +92,11 @@ opts = OptionParser.new do |opt|
   opt.on("-p", "--[no-]print", "Print outputs to the console. On by default " +
     "unless baclava output is selected") do |val|
     print_output = val
+  end
+  opt.on("-D", "--delete", "Delete the run from the server when it is " +
+    "complete. By default the run and its results are preserved. Note that " +
+    "the run will still be deleted when its expiry time is reached") do |val|
+    delete_run = val    
   end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
@@ -171,6 +177,8 @@ if exitcd == 0
   end
 end
 
-# delete run
-run.delete
-puts "Finished and deleted run"
+# delete run?
+if delete_run
+  run.delete
+  puts "Run deleted"
+end
