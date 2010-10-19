@@ -134,18 +134,53 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.get_output(output) -> string
+    #   run.get_output(output, refs=false) -> list
     #
-    # Return the value of the workflow output port _output_.
-    #
-    # Raises RunStateError if the run is not in the +Finished+ state.
-    def get_output(output, type="text/plain")
-      state = status
-      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
-
+    # Return the values of the workflow output port _output_. These are
+    # returned as a list of strings. If the output port represents a singleton
+    # output then a one item list is returned. By default this method returns
+    # the actual data from the output port but if _refs_ is set to true then
+    # it will instead return URIs to the actual data in the same list format.
+    # See also Run#get_output_refs.
+    def get_output(output, refs=false)
       output.strip_path!
-      doc = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
-      doc
+      result = []
+
+      # look at the contents of the output port
+      lists, items = ls("out/#{output}")
+
+      # if lists and items are empty then it's a single value
+      if lists == [] and items == []
+        if refs
+          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
+        else
+          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+        end
+      end
+
+      # for each list recurse into it and add the items to the result
+      lists.each {|list| result << get_output("#{output}/#{list}", refs)}
+
+      # for each item, add it to the output list
+      items.each do |item|
+        if refs
+          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
+        else
+          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}/#{item}")
+        end
+      end
+
+      result
+    end
+
+    # :call-seq:
+    #   run.get_output_refs(output) -> list
+    #
+    # Return references (URIs) to the values of the workflow output port
+    # _output_. These are returned as a list of URIs. If the output port
+    # represents a singleton output then a one item list is returned.
+    def get_output_refs(output)
+      get_output(output, true)
     end
 
     # :call-seq:
@@ -355,8 +390,15 @@ module T2Server
     #   run.ls(dir="") -> [[dirs], [objects]]
     #
     # List a directory in the run's workspace on the server. If _dir_ is left
-    # blank then / is listed. The contents of a directory are returned as a
-    # list of two lists, directories and "objects" respectively.
+    # blank then / is listed. As there is no concept of changing into a
+    # directory (_cd_) in Taverna Server then all paths passed into _ls_
+    # should be full paths starting at "root". The contents of a directory are
+    # returned as a list of two lists, "directories" and "objects"
+    # respectively. In the case of listing the contents of the "out"
+    # directory, the "directories" returned by _ls_ are actually output port
+    # names and their contents are the values held by these ports. If there
+    # are multiple values listed then that port represents a list. If there
+    # are further directories below a port name then it is a list of lists.
     def ls(dir="")
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")

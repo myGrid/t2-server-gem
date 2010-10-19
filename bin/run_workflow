@@ -38,29 +38,27 @@ require 'optparse'
 # out or save them to a file.
 # if the output is a list, it appears as a directory so
 # all the individual entries must be grabbed from there.
-def get_outputs(run, pout, dir="")
-  dirs, files = run.ls("out#{dir}")
-  dirs.each {|d| get_outputs(run, pout, "#{dir}/#{d}")}
-  files.each do |out|
-    print "          #{dir}/#{out} -> "
-    data = run.get_output("#{dir}/#{out}")
-    if pout
-      p data
-    else
-      # strip path and convert remove /'s for file output
-      filename = "#{dir.strip_path}/#{out}".gsub('/', '-')
-      File.open(filename, "w") do |file|
-        file.syswrite(data)
-      end
-      puts "written to file: #{filename}"
-    end
+def get_outputs(run, refs)
+  # get a list of the outputs
+  lists, items = run.ls("out")
+
+  # go through the lists
+  lists.each do |l|
+    print "          #{l} -> "
+    p run.get_output("#{l}", refs)
   end
-end  
+
+  # go through the singletons
+  items.each do |i|
+    print "          #{i} -> "
+    p run.get_output("#{i}", refs)
+  end
+end
 
 # set up options
 inputs  = {}
 wkf_file = ""
-print_output = true
+output_refs = false
 baclava_out = ""
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: run_workflow [options] server-address"
@@ -87,9 +85,9 @@ opts = OptionParser.new do |opt|
       baclava_out = "out.xml"
     end
   end
-  opt.on("-p", "--[no-]print", "Print outputs to the console. On by default " +
-    "unless baclava output is selected") do |val|
-    print_output = val
+  opt.on("-r", "--output-refs", "Return URIs that point to the data items " +
+    "of the output rather than the data items themselves.") do |val|
+    output_refs = val
   end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
@@ -166,7 +164,7 @@ if exitcd == 0
     puts "Baclava file written to '#{baclava_out}'"
   else
     puts "Outputs:"
-    get_outputs(run, print_output)
+    get_outputs(run, output_refs)
   end
 end
 
