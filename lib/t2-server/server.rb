@@ -174,11 +174,17 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.delete_run(uuid) -> bool
+    #   server.delete_run(run) -> bool
     #
     # Delete the specified run from the server, discarding all of its state.
-    def delete_run(uuid)
-      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{uuid}")
+    # _run_ can be either a Run instance or a UUID.
+    def delete_run(run)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
+      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{run}")
       if ssl?
         request.basic_auth @username, @password
       end
@@ -191,12 +197,12 @@ module T2Server
       case response
       when Net::HTTPNoContent
         # Success, carry on...
-        @runs.delete(uuid)
+        @runs.delete(run)
         true
       when Net::HTTPNotFound
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{uuid}")
+        raise AccessForbiddenError.new("run #{run}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(@username)
       else
@@ -216,15 +222,21 @@ module T2Server
     # :call-seq:
     #   server.set_run_input(run, input, value) -> bool
     #
-    # Set the workflow input port _input_ on run _run_ to _value_.
+    # Set the workflow input port _input_ on run _run_ to _value_. _run_ can
+    # be either a Run instance or a UUID.
     def set_run_input(run, input, value)
-      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
+      # get the run from the uuid if that is what is passed in
+      if not run.instance_of? Run
+        run = run(run)
+      end
+
+      path = "#{@links[:runs]}/#{run.run}/#{run.inputs}/input/#{input}"
       set_attribute(path, Fragments::RUNINPUTVALUE % value, "application/xml")
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? uuid
+      if get_runs.has_key? run.uuid
         raise e
       else
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run.uuid)
       end
     end
 
@@ -232,26 +244,36 @@ module T2Server
     #   server.set_run_input_file(run, input, filename) -> bool
     #
     # Set the workflow input port _input_ on run _run_ to use the file at
-    # _filename_ for its input.
+    # _filename_ for its input. _run_ can be either a Run instance or a UUID.
     def set_run_input_file(run, input, filename)
+      # get the run from the uuid if that is what is passed in
+      if not run.instance_of? Run
+        run = run(run)
+      end
+
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
       set_attribute(path, Fragments::RUNINPUTFILE % filename, "application/xml")
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? uuid
+      if get_runs.has_key? run.uuid
         raise e
       else
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run.uuid)
       end
     end
 
     # :call-seq:
-    #   server.make_run_dir(uuid, root, dir) -> bool
+    #   server.make_run_dir(run, root, dir) -> bool
     #
-    # Create a directory _dir_ within the directory _root_ on the run with
-    # identifier _uuid_. This is mainly for use by Run#mkdir.
-    def make_run_dir(uuid, root, dir)
+    # Create a directory _dir_ within the directory _root_ on _run_. _run_ can
+    # be either a Run instance or a UUID. This is mainly for use by Run#mkdir.
+    def make_run_dir(run, root, dir)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{root}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{run}/#{root}")
       request.content_type = "application/xml"
       if ssl?
         request.basic_auth @username, @password
@@ -267,9 +289,9 @@ module T2Server
         # OK, carry on...
         true
       when Net::HTTPNotFound
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("#{dir} on run #{uuid}")
+        raise AccessForbiddenError.new("#{dir} on run #{run}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(@username)
       else
@@ -278,14 +300,19 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.upload_run_file(uuid, filename, location, rename) -> string
+    #   server.upload_run_file(run, filename, location, rename) -> string
     #
-    # Upload a file to the run with identifier _uuid_. Mainly for internal use
-    # by Run#upload_file.
-    def upload_run_file(uuid, filename, location, rename)
+    # Upload a file to _run_. _run_ can be either a Run instance or a UUID.
+    # Mainly for internal use by Run#upload_file.
+    def upload_run_file(run, filename, location, rename)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{uuid}/#{location}")
+      request = Net::HTTP::Post.new("#{@links[:runs]}/#{run}/#{location}")
       request.content_type = "application/xml"
       if ssl?
         request.basic_auth @username, @password
@@ -301,9 +328,9 @@ module T2Server
         # Success, return remote name of uploaded file
         rename
       when Net::HTTPNotFound
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{uuid}")
+        raise AccessForbiddenError.new("run #{run}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(@username)
       else
@@ -312,30 +339,42 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.get_run_attribute(uuid, path) -> string
+    #   server.get_run_attribute(run, path) -> string
     #
-    # Get the attribute at _path_ in the run with identifier _uuid_.
-    def get_run_attribute(uuid, path)
-      get_attribute("#{@links[:runs]}/#{uuid}/#{path}")
+    # Get the attribute at _path_ in _run_. _run_ can be either a Run instance
+    # or a UUID.
+    def get_run_attribute(run, path)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
+      get_attribute("#{@links[:runs]}/#{run}/#{path}")
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? uuid
+      if get_runs.has_key? run
         raise e
       else
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run)
       end
     end
 
     # :call-seq:
-    #   server.set_run_attribute(uuid, path, value) -> bool
+    #   server.set_run_attribute(run, path, value) -> bool
     #
-    # Set the attribute at _path_ in the run with identifier _uuid_ to _value_.
-    def set_run_attribute(uuid, path, value)
-      set_attribute("#{@links[:runs]}/#{uuid}/#{path}", value, "text/plain")
+    # Set the attribute at _path_ in _run_ to _value_. _run_ can be either a
+    # Run instance or a UUID.
+    def set_run_attribute(run, path, value)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
+      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, "text/plain")
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? uuid
+      if get_runs.has_key? run
         raise e
       else
-        raise RunNotFoundError.new(uuid)
+        raise RunNotFoundError.new(run)
       end
     end
 
