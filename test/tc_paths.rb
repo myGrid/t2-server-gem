@@ -30,7 +30,7 @@
 #
 # Author: Robert Haines
 
-require 't2server'
+require 't2-server'
 require 'test/unit'
 
 class TestFilePaths < Test::Unit::TestCase

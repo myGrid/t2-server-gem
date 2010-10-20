@@ -31,10 +31,13 @@
 # Author: Robert Haines
 
 require 'test/unit'
-require 't2server'
+require 't2-server'
 
 # get a server address to test - 30 second timeout
-print "\nPlease supply a valid Taverna 2 Server address (leave blank to skip tests): "
+print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that these " +
+  "tests will fully load the server and then delete all the runs that it " +
+  "has permission to do so - if you are not using security ALL runs will be " +
+  "deleted!\n(leave blank to skip tests): "
 $stdout.flush
 if select([$stdin], [], [], 30)
   $address = $stdin.gets.chomp

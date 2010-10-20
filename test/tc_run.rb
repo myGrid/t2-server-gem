@@ -30,7 +30,7 @@
 #
 # Author: Robert Haines
 
-require 't2server'
+require 't2-server'
 
 class TestRun < Test::Unit::TestCase
 
@@ -41,9 +41,6 @@ class TestRun < Test::Unit::TestCase
     end
 
     # test bad state code
-    assert_raise(T2Server::RunStateError) do
-      @run.get_output("out")
-    end
     assert_raise(T2Server::RunStateError) do
       @run.wait
     end
@@ -61,7 +58,7 @@ class TestRun < Test::Unit::TestCase
 
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
-    assert_equal(@run.get_output("Message"), "Hello, World!")
+    assert_equal(@run.get_output("Message"), ["Hello, World!"])
     assert_raise(T2Server::AccessForbiddenError) do
       @run.get_output("wrong!")
     end
