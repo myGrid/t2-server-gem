@@ -30,7 +30,8 @@
 #
 # Author: Robert Haines
 
-require 'rexml/document'
+require 'rubygems'
+require 'libxml'
 
 module T2Server
 
@@ -44,6 +45,8 @@ module T2Server
   # * Finished: The run has finished running and its outputs are available for
   #   download.
   class Run
+    include LibXML
+
     private_class_method :new
 
     # The identifier of this run on the server. It is currently a UUID
@@ -402,14 +405,25 @@ module T2Server
     def ls(dir="")
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
-      doc = REXML::Document.new(dir_list)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
       dirs = []
       files = []
-      REXML::XPath.each(doc, "//nss:dir", Namespaces::MAP) {|e| dirs << e.text.split('/')[-1]}
-      REXML::XPath.each(doc, "//nss:file", Namespaces::MAP) {|e| files << e.text.split('/')[-1]}
+
+      begin
+        doc = XML::Document.string(dir_list)
+
+        doc.find(XPaths::DIR, Namespaces::MAP).each {|e| dirs << e.content.split('/')[-1]}
+        doc.find(XPaths::FILE, Namespaces::MAP).each {|e| files << e.content.split('/')[-1]}
+      rescue XML::Error => xmle
+        # We expect to get a DOCUMENT_EMPTY error in some cases. All others
+        # should be re-raised.
+        if xmle.code != XML::Error::DOCUMENT_EMPTY
+          raise xmle
+        end
+      end
+
       [dirs, files]
     end
 
@@ -468,9 +482,9 @@ module T2Server
       
       # get inputs
       inputs = @server.get_run_attribute(@uuid, links[:inputs])
-      doc = REXML::Document.new(inputs)
+      doc = XML::Document.string(inputs)
       nsmap = Namespaces::MAP
-      links[:baclava] = "#{links[:inputs]}/" + REXML::XPath.first(doc, "//nsr:baclava", nsmap).attributes["href"].split('/')[-1]
+      links[:baclava] = "#{links[:inputs]}/" + doc.find_first(XPaths::BACLAVA, nsmap).attributes["href"].split('/')[-1]
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"
@@ -482,20 +496,20 @@ module T2Server
     end
 
     def parse_description(desc)
-      doc = REXML::Document.new(desc)
+      doc = XML::Document.string(desc)
       nsmap = Namespaces::MAP
       {
-        :expiry     => REXML::XPath.first(doc, "//nsr:expiry", nsmap).attributes["href"].split('/')[-1],
-        :workflow   => REXML::XPath.first(doc, "//nsr:creationWorkflow", nsmap).attributes["href"].split('/')[-1],
-        :status     => REXML::XPath.first(doc, "//nsr:status", nsmap).attributes["href"].split('/')[-1],
-        :createtime => REXML::XPath.first(doc, "//nsr:createTime", nsmap).attributes["href"].split('/')[-1],
-        :starttime  => REXML::XPath.first(doc, "//nsr:startTime", nsmap).attributes["href"].split('/')[-1],
-        :finishtime => REXML::XPath.first(doc, "//nsr:finishTime", nsmap).attributes["href"].split('/')[-1],
-        :wdir       => REXML::XPath.first(doc, "//nsr:workingDirectory", nsmap).attributes["href"].split('/')[-1],
-        :inputs     => REXML::XPath.first(doc, "//nsr:inputs", nsmap).attributes["href"].split('/')[-1],
-        :output     => REXML::XPath.first(doc, "//nsr:output", nsmap).attributes["href"].split('/')[-1],
-        :securectx  => REXML::XPath.first(doc, "//nsr:securityContext", nsmap).attributes["href"].split('/')[-1],
-        :listeners  => REXML::XPath.first(doc, "//nsr:listeners", nsmap).attributes["href"].split('/')[-1]
+        :expiry     => doc.find_first(XPaths::EXPIRY, nsmap).attributes["href"].split('/')[-1],
+        :workflow   => doc.find_first(XPaths::WORKFLOW, nsmap).attributes["href"].split('/')[-1],
+        :status     => doc.find_first(XPaths::STATUS, nsmap).attributes["href"].split('/')[-1],
+        :createtime => doc.find_first(XPaths::CREATETIME, nsmap).attributes["href"].split('/')[-1],
+        :starttime  => doc.find_first(XPaths::STARTTIME, nsmap).attributes["href"].split('/')[-1],
+        :finishtime => doc.find_first(XPaths::FINISHTIME, nsmap).attributes["href"].split('/')[-1],
+        :wdir       => doc.find_first(XPaths::WDIR, nsmap).attributes["href"].split('/')[-1],
+        :inputs     => doc.find_first(XPaths::INPUTS, nsmap).attributes["href"].split('/')[-1],
+        :output     => doc.find_first(XPaths::OUTPUT, nsmap).attributes["href"].split('/')[-1],
+        :securectx  => doc.find_first(XPaths::SECURECTX, nsmap).attributes["href"].split('/')[-1],
+        :listeners  => doc.find_first(XPaths::LISTENERS, nsmap).attributes["href"].split('/')[-1]
       }
     end
   end

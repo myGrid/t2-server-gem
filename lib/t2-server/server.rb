@@ -30,16 +30,19 @@
 #
 # Author: Robert Haines
 
+require 'rubygems'
 require 'base64'
 require 'uri'
 require 'net/https'
-require 'rexml/document'
+require 'libxml'
 
 module T2Server
 
   # An interface for directly communicating with one or more Taverna 2 Server
   # instances.
   class Server
+    include LibXML
+
     private_class_method :new
 
     # The URI of this server instance as a String.
@@ -432,24 +435,24 @@ module T2Server
     end
 
     def parse_description(desc)
-      doc = REXML::Document.new(desc)
+      doc = XML::Document.string(desc)
       nsmap = Namespaces::MAP
       {
-        :runs          => URI.parse(REXML::XPath.first(doc, "//nsr:runs", nsmap).attributes["href"]).path,
-        :runlimit      => URI.parse(REXML::XPath.first(doc, "//nsr:runLimit", nsmap).attributes["href"]).path,
-        :permworkflows => URI.parse(REXML::XPath.first(doc, "//nsr:permittedWorkflows", nsmap).attributes["href"]).path,
-        :permlisteners => URI.parse(REXML::XPath.first(doc, "//nsr:permittedListeners", nsmap).attributes["href"]).path
+        :runs          => URI.parse(doc.find_first(XPaths::RUNS, nsmap).attributes["href"]).path,
+        :runlimit      => URI.parse(doc.find_first(XPaths::RUNLIMIT, nsmap).attributes["href"]).path,
+        :permworkflows => URI.parse(doc.find_first(XPaths::PERMWKF, nsmap).attributes["href"]).path,
+        :permlisteners => URI.parse(doc.find_first(XPaths::PERMLSTN, nsmap).attributes["href"]).path
       }
     end
 
     def get_runs
       run_list = get_attribute("#{@links[:runs]}")
 
-      doc = REXML::Document.new(run_list)
+      doc = XML::Document.string(run_list)
 
       # get list of run uuids
       uuids = []
-      REXML::XPath.each(doc, "//nsr:run", Namespaces::MAP) do |run|
+      doc.find(XPaths::RUN, Namespaces::MAP).each do |run|
         uuids << run.attributes["href"].split('/')[-1]
       end
 

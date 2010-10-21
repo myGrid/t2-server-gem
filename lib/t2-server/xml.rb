@@ -30,6 +30,9 @@
 #
 # Author: Robert Haines
 
+require 'rubygems'
+require 'libxml'
+
 module T2Server
   # :stopdoc:
   module Namespaces
@@ -40,7 +43,7 @@ module T2Server
       "nsr" => Namespaces::REST
     }
   end
-  
+
   module Fragments
     WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
     RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
@@ -48,6 +51,36 @@ module T2Server
     RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
     UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
     MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
+  end
+
+  module XPaths
+    include LibXML
+
+    # Shut the libxml error handler up
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+
+    # Server XPath queries
+    RUN      = XML::XPath::Expression.new("//nsr:run")
+    RUNS     = XML::XPath::Expression.new("//nsr:runs")
+    RUNLIMIT = XML::XPath::Expression.new("//nsr:runLimit")
+    PERMWKF  = XML::XPath::Expression.new("//nsr:permittedWorkflows")
+    PERMLSTN = XML::XPath::Expression.new("//nsr:permittedListeners")
+
+    # Run XPath queries
+    DIR        = XML::XPath::Expression.new("//nss:dir")
+    FILE       = XML::XPath::Expression.new("//nss:file")
+    EXPIRY     = XML::XPath::Expression.new("//nsr:expiry")
+    WORKFLOW   = XML::XPath::Expression.new("//nsr:creationWorkflow")
+    STATUS     = XML::XPath::Expression.new("//nsr:status")
+    CREATETIME = XML::XPath::Expression.new("//nsr:createTime")
+    STARTTIME  = XML::XPath::Expression.new("//nsr:startTime")
+    FINISHTIME = XML::XPath::Expression.new("//nsr:finishTime")
+    WDIR       = XML::XPath::Expression.new("//nsr:workingDirectory")
+    INPUTS     = XML::XPath::Expression.new("//nsr:inputs")
+    OUTPUT     = XML::XPath::Expression.new("//nsr:output")
+    SECURECTX  = XML::XPath::Expression.new("//nsr:securityContext")
+    LISTENERS  = XML::XPath::Expression.new("//nsr:listeners")
+    BACLAVA    = XML::XPath::Expression.new("//nsr:baclava")
   end
   # :startdoc:
 end

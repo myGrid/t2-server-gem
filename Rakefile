@@ -57,6 +57,7 @@ spec = Gem::Specification.new do |s|
   s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '>=0.8.7')
+  s.add_runtime_dependency('libxml-ruby', '>=1.1.4')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
