@@ -1,7 +1,7 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
 Authors::     Robert Haines
-Gem Version:: 0.2.1
+Gem Version:: 0.5.0
 API Version:: 2.2a1
 Contact::     mailto:rhaines@manchester.ac.uk
 URL::         http://taverna.sourceforge.net/
@@ -34,17 +34,22 @@ There are two entry points for the T2Server API:
 * T2Server::Server - Use this if you are providing a web interface to one or
   more Taverna 2 Server instances.
 
+In both cases the gem should be initialized by requiring the top level ruby
+file:
+  require 't2-server.rb'
+
 See the rdoc for more information.
 
 As well as rdoc there are also a couple of example scripts which
 demonstrate good use of the T2Server API. These are available in the
-<tt>bin</tt> directory:
-* run_workflow
-* server_info
-* delete_all_runs
+<tt>bin</tt> directory but are also installed with the library code when the
+gem is installed:
+* t2-run-workflow
+* t2-server-info
+* t2-delete-runs
 Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
 switch will show how to use them, e.g.:
-  run_workflow --help
+  t2-run-workflow --help
 
 == Support
 
