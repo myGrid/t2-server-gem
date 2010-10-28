@@ -45,11 +45,15 @@ else
   puts "\nSkipping tests that require a Taverna 2 Server instance..."
   $address = ""
 end
-$wkf = File.read("test/workflows/hello.t2flow")
 
 # the testcases to run
 require 'tc_paths'
 if $address != ""
+  $wkf_hello  = File.read("test/workflows/hello.t2flow")
+  $wkf_input  = File.read("test/workflows/pipelined_list_iteration_902021.t2flow")
+  $wkf_lists  = File.read("test/workflows/demonstration_of_configurable_iteration_114130.t2flow")
+  $baclava_in = "test/workflows/list_input.baclava"
+
   require 'tc_server'
   require 'tc_run'
 end

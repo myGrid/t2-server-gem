@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<b:dataThingMap xmlns:b="http://org.embl.ebi.escience/baclava/0.1alpha">
+  <b:dataThing key="input">
+    <b:myGridDataDocument lsid="" syntactictype="'text/plain'">
+      <s:metadata xmlns:s="http://org.embl.ebi.escience/xscufl/0.1alpha">
+        <s:mimeTypes>
+          <s:mimeType>text/plain</s:mimeType>
+        </s:mimeTypes>
+      </s:metadata>
+      <b:dataElement lsid="">
+        <b:dataElementData>MTA=</b:dataElementData>
+      </b:dataElement>
+    </b:myGridDataDocument>
+  </b:dataThing>
+</b:dataThingMap>
+

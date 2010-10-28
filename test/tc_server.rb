@@ -43,7 +43,7 @@ class TestServer < Test::Unit::TestCase
 
     # run creation
     assert_nothing_raised(T2Server::T2ServerError) do
-      @run = @server.create_run($wkf)
+      @run = @server.create_run($wkf_hello)
     end
 
     # capacity
@@ -51,7 +51,7 @@ class TestServer < Test::Unit::TestCase
     assert_instance_of(Fixnum, limit)
     assert_raise(T2Server::ServerAtCapacityError) do
       limit.times do
-        @server.create_run($wkf)
+        @server.create_run($wkf_hello)
       end
     end
   
