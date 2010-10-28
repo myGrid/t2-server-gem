@@ -233,7 +233,7 @@ module T2Server
         run = run(run)
       end
 
-      path = "#{@links[:runs]}/#{run.run}/#{run.inputs}/input/#{input}"
+      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
       set_attribute(path, Fragments::RUNINPUTVALUE % value, "application/xml")
     rescue AttributeNotFoundError => e
       if get_runs.has_key? run.uuid
