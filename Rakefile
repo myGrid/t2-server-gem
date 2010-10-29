@@ -54,7 +54,7 @@ spec = Gem::Specification.new do |s|
   s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info"]
   s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
-  s.extra_rdoc_files = ["README.rdoc", "LICENCE"]
+  s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '>=0.8.7')
   s.add_runtime_dependency('libxml-ruby', '>=1.1.4')
@@ -77,7 +77,7 @@ Rake::RDocTask.new do |r|
     item.include?("t2server.rb") or
     item.include?("xml.rb")
   end
-  r.rdoc_files.include("README.rdoc", "LICENCE", lib)
+  r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
   r.options << "-t Taverna 2 Server Ruby Interface Library"
   r.options << "-N"
   r.options << "--tab-width=2"
