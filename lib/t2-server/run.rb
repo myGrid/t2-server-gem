@@ -32,6 +32,7 @@
 
 require 'rubygems'
 require 'libxml'
+require 'time'
 
 module T2Server
 
@@ -172,10 +173,9 @@ module T2Server
     # :call-seq:
     #   run.expiry -> string
     #
-    # Return the expiry time of this run. It is formatted as an ISO-8601
-    # timestamp.
+    # Return the expiry time of this run as an instance of class Time.
     def expiry
-      @server.get_run_attribute(@uuid, @links[:expiry])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:expiry]))
     end
 
     # :call-seq:
@@ -399,25 +399,25 @@ module T2Server
     # :call-seq:
     #   run.create_time -> string
     #
-    # Get the creation time of this run formatted as an ISO-8601 timestamp.
+    # Get the creation time of this run as an instance of class Time.
     def create_time
-      @server.get_run_attribute(@uuid, @links[:createtime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:createtime]))
     end
 
     # :call-seq:
     #   run.start_time -> string
     #
-    # Get the start time of this run formatted as an ISO-8601 timestamp.
+    # Get the start time of this run as an instance of class Time.
     def start_time
-      @server.get_run_attribute(@uuid, @links[:starttime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:starttime]))
     end
 
     # :call-seq:
     #   run.finish_time -> string
     #
-    # Get the finish time of this run formatted as an ISO-8601 timestamp.
+    # Get the finish time of this run as an instance of class Time.
     def finish_time
-      @server.get_run_attribute(@uuid, @links[:finishtime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime]))
     end
 
     private
