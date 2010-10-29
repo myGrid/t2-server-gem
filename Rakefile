@@ -40,7 +40,7 @@ task :default => [:test]
 
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
-  s.version          = "0.5.0"
+  s.version          = "0.5.1"
   s.author           = "Robert Haines"
   s.email            = "rhaines@manchester.ac.uk"
   s.homepage         = "http://www.taverna.org.uk/"

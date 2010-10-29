@@ -1,5 +1,11 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.5.1
+
+* Fix horror typo in Server#set_run_input.
+* Expand test coverage to include more diverse workflows.
+* Reformat LICENCE and CHANGES as rdoc files.
+
 == Version 0.5.0
 
 * Make the require file consistent with the gem name.
