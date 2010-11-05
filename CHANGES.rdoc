@@ -1,5 +1,10 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.5.2
+
+* Fix two issues with the retrieving of workflow outputs.
+* Update tests to reflect changes to output code.
+
 == Version 0.5.1
 
 * Fix horror typo in Server#set_run_input.
