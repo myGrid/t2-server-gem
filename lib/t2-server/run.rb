@@ -137,53 +137,27 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.get_output(output, refs=false) -> list
+    #   run.get_output(output, refs=false) -> string or list
     #
     # Return the values of the workflow output port _output_. These are
-    # returned as a list of strings. If the output port represents a singleton
-    # output then a one item list is returned. By default this method returns
+    # returned as a list of strings or, if the output port represents a
+    # singleton value, then a string returned. By default this method returns
     # the actual data from the output port but if _refs_ is set to true then
     # it will instead return URIs to the actual data in the same list format.
     # See also Run#get_output_refs.
     def get_output(output, refs=false)
-      output.strip_path!
-      result = []
-
-      # look at the contents of the output port
-      lists, items = ls("out/#{output}")
-
-      # if lists and items are empty then it's a single value
-      if lists == [] and items == []
-        if refs
-          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
-        else
-          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
-        end
-      end
-
-      # for each list recurse into it and add the items to the result
-      lists.each {|list| result << get_output("#{output}/#{list}", refs)}
-
-      # for each item, add it to the output list
-      items.each do |item|
-        if refs
-          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
-        else
-          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}/#{item}")
-        end
-      end
-
-      result
+      _get_output(output, refs)
     end
 
     # :call-seq:
-    #   run.get_output_refs(output) -> list
+    #   run.get_output_refs(output) -> string or list
     #
     # Return references (URIs) to the values of the workflow output port
-    # _output_. These are returned as a list of URIs. If the output port
-    # represents a singleton output then a one item list is returned.
+    # _output_. These are returned as a list of URIs or, if the output port
+    # represents a singleton value, then a single URI is returned. The URIs
+    # are returned as strings.
     def get_output_refs(output)
-      get_output(output, true)
+      _get_output(output, true)
     end
 
     # :call-seq:
@@ -476,6 +450,39 @@ module T2Server
     end
 
     private
+    def _get_output(output, refs=false, top=true)
+      output.strip_path!
+      result = []
+
+      # look at the contents of the output port
+      lists, items = ls("out/#{output}")
+
+      # if lists and items are empty then it's an empty list
+      # although it could be a single value if we're at the top level
+      if top and lists == [] and items == []
+        # as we are at the top level, just return the single value
+        if refs
+          return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
+        else
+          return @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+        end
+      end
+
+      # for each list recurse into it and add the items to the result
+      lists.each {|list| result << _get_output("#{output}/#{list}", refs, false)}
+
+      # for each item, add it to the output list
+      items.each do |item|
+        if refs
+          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
+        else
+          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}/#{item}")
+        end
+      end
+
+      result
+    end
+
     def get_attributes(desc)
       # first parse out the basic stuff
       links = parse_description(desc)

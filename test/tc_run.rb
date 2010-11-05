@@ -58,7 +58,7 @@ class TestRun < Test::Unit::TestCase
 
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
-    assert_equal(@run.get_output("Message"), ["Hello, World!"])
+    assert_equal(@run.get_output("Message"), "Hello, World!")
     assert_raise(T2Server::AccessForbiddenError) do
       @run.get_output("wrong!")
     end
@@ -79,24 +79,23 @@ class TestRun < Test::Unit::TestCase
       @run.wait
     end
 
-    # run that returns list of lists
+    # run that returns list of lists, some empty, using baclava for input
     @run = T2Server::Run.create($address, $wkf_lists)
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      @run.upload_baclava_file($list_input)
+    end
+    
     @run.start
     assert(@run.running?)
     assert_nothing_raised(T2Server::RunStateError) do
       @run.wait
     end
-    assert_equal(@run.get_output("Output"), [["triangular green rabbit ",
-      "triangular red cat "], ["circular green rabbit ", "circular red cat "],
-      ["square green rabbit ", "square red cat "]])
+    assert_equal(@run.get_output("OUT"), [[["boo"]], [["", "hello"]],
+      [], [[], ["test"], []]])
 
-    # run with baclava input and output
-    @run = T2Server::Run.create($address, $wkf_input)
+    # run with baclava output
+    @run = T2Server::Run.create($address, $wkf_hello)
 
-    assert_nothing_raised(T2Server::AttributeNotFoundError) do
-      @run.upload_baclava_file($baclava_in)
-    end
-    
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.set_baclava_output
     end

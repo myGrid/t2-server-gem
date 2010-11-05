@@ -51,8 +51,8 @@ require 'tc_paths'
 if $address != ""
   $wkf_hello  = File.read("test/workflows/hello.t2flow")
   $wkf_input  = File.read("test/workflows/pipelined_list_iteration_902021.t2flow")
-  $wkf_lists  = File.read("test/workflows/demonstration_of_configurable_iteration_114130.t2flow")
-  $baclava_in = "test/workflows/list_input.baclava"
+  $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
+  $list_input = "test/workflows/empty_list_input.baclava"
 
   require 'tc_server'
   require 'tc_run'
