@@ -452,21 +452,25 @@ module T2Server
     private
     def _get_output(output, refs=false, top=true)
       output.strip_path!
-      result = []
 
-      # look at the contents of the output port
-      lists, items = ls("out/#{output}")
-
-      # if lists and items are empty then it's an empty list
-      # although it could be a single value if we're at the top level
-      if top and lists == [] and items == []
-        # as we are at the top level, just return the single value
-        if refs
-          return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
-        else
-          return @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+      # if at the top level we need to check if the port represents a list
+      # or a singleton value
+      if top
+        lists, items = ls("out")
+        if items.include? output
+          if refs
+            return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
+          else
+            return @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+          end
         end
       end
+
+      # we're not at the top level so look at the contents of the output port
+      lists, items = ls("out/#{output}")
+
+      # build up lists of results
+      result = []
 
       # for each list recurse into it and add the items to the result
       lists.each {|list| result << _get_output("#{output}/#{list}", refs, false)}
