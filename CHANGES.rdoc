@@ -1,5 +1,9 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.5.3
+
+* Fix an issue with singleton value/empty list confusion for output ports.
+
 == Version 0.5.2
 
 * Fix two issues with the retrieving of workflow outputs.
