@@ -137,6 +137,15 @@ module T2Server
     end
 
     # :call-seq:
+    #   run.get_output_ports -> list
+    #
+    # Return a list of all the output ports
+    def get_output_ports
+      lists, items = ls("out")
+      items + lists
+    end
+
+    # :call-seq:
     #   run.get_output(output, refs=false) -> string or list
     #
     # Return the values of the workflow output port _output_. These are

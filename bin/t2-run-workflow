@@ -35,27 +35,6 @@ require 'rubygems'
 require 't2-server'
 require 'optparse'
 
-# go through the outputs and either print the contents
-# out or save them to a file.
-# if the output is a list, it appears as a directory so
-# all the individual entries must be grabbed from there.
-def get_outputs(run, refs)
-  # get a list of the outputs
-  lists, items = run.ls("out")
-
-  # go through the lists
-  lists.each do |l|
-    print "          #{l} -> "
-    p run.get_output("#{l}", refs)
-  end
-
-  # go through the singletons
-  items.each do |i|
-    print "          #{i} -> "
-    p run.get_output("#{i}", refs)
-  end
-end
-
 # set up options
 inputs  = {}
 wkf_file = ""
@@ -170,8 +149,12 @@ if exitcd == 0
     end
     puts "Baclava file written to '#{baclava_out}'"
   else
+    # go through the outputs and print them out
     puts "Outputs:"
-    get_outputs(run, output_refs)
+    run.get_output_ports.each do |o|
+      print "          #{o} -> "
+      p run.get_output("#{o}", output_refs)
+    end
   end
 end
 
