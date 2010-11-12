@@ -45,9 +45,8 @@ class TestRun < Test::Unit::TestCase
       @run.wait
     end
 
-    # test mkdir and ls
+    # test mkdir
     assert(@run.mkdir("test"))
-    assert_equal(@run.ls, [["test"], []])
 
     # start, state and wait
     @run.start

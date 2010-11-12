@@ -373,44 +373,6 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.ls(dir="") -> [[dirs], [objects]]
-    #
-    # List a directory in the run's workspace on the server. If _dir_ is left
-    # blank then / is listed. As there is no concept of changing into a
-    # directory (_cd_) in Taverna Server then all paths passed into _ls_
-    # should be full paths starting at "root". The contents of a directory are
-    # returned as a list of two lists, "directories" and "objects"
-    # respectively. In the case of listing the contents of the "out"
-    # directory, the "directories" returned by _ls_ are actually output port
-    # names and their contents are the values held by these ports. If there
-    # are multiple values listed then that port represents a list. If there
-    # are further directories below a port name then it is a list of lists.
-    def ls(dir="")
-      dir.strip_path!
-      dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
-
-      # compile a list of directory entries stripping the
-      # directory name from the front of each filename
-      dirs = []
-      files = []
-
-      begin
-        doc = XML::Document.string(dir_list)
-
-        doc.find(XPaths::DIR, Namespaces::MAP).each {|e| dirs << e.content.split('/')[-1]}
-        doc.find(XPaths::FILE, Namespaces::MAP).each {|e| files << e.content.split('/')[-1]}
-      rescue XML::Error => xmle
-        # We expect to get a DOCUMENT_EMPTY error in some cases. All others
-        # should be re-raised.
-        if xmle.code != XML::Error::DOCUMENT_EMPTY
-          raise xmle
-        end
-      end
-
-      [dirs, files]
-    end
-
-    # :call-seq:
     #   run.initialized? -> bool
     #
     # Is this run in the +Initialized+ state?
@@ -459,6 +421,37 @@ module T2Server
     end
 
     private
+
+    # List a directory in the run's workspace on the server. If dir is left
+    # blank then / is listed. As there is no concept of changing into a
+    # directory (cd) in Taverna Server then all paths passed into ls should be
+    # full paths starting at "root". The contents of a directory are returned
+    # as a list of two lists, "lists" and "values" respectively.
+    def ls(dir="")
+      dir.strip_path!
+      dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
+
+      # compile a list of directory entries stripping the
+      # directory name from the front of each filename
+      lists = []
+      values = []
+
+      begin
+        doc = XML::Document.string(dir_list)
+
+        doc.find(XPaths::DIR, Namespaces::MAP).each {|e| lists << e.content.split('/')[-1]}
+        doc.find(XPaths::FILE, Namespaces::MAP).each {|e| values << e.content.split('/')[-1]}
+      rescue XML::Error => xmle
+        # We expect to get a DOCUMENT_EMPTY error in some cases. All others
+        # should be re-raised.
+        if xmle.code != XML::Error::DOCUMENT_EMPTY
+          raise xmle
+        end
+      end
+
+      [lists, values]
+    end
+
     def _get_output(output, refs=false, top=true)
       output.strip_path!
 
