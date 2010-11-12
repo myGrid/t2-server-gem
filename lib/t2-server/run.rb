@@ -141,7 +141,7 @@ module T2Server
     #
     # Return a list of all the output ports
     def get_output_ports
-      lists, items = ls("out")
+      lists, items = _ls_ports("out")
       items + lists
     end
 
@@ -424,10 +424,10 @@ module T2Server
 
     # List a directory in the run's workspace on the server. If dir is left
     # blank then / is listed. As there is no concept of changing into a
-    # directory (cd) in Taverna Server then all paths passed into ls should be
-    # full paths starting at "root". The contents of a directory are returned
-    # as a list of two lists, "lists" and "values" respectively.
-    def ls(dir="")
+    # directory (cd) in Taverna Server then all paths passed into _ls_ports
+    # should be full paths starting at "root". The contents of a directory are
+    # returned as a list of two lists, "lists" and "values" respectively.
+    def _ls_ports(dir="", top=true)
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
 
@@ -439,8 +439,23 @@ module T2Server
       begin
         doc = XML::Document.string(dir_list)
 
-        doc.find(XPaths::DIR, Namespaces::MAP).each {|e| lists << e.content.split('/')[-1]}
-        doc.find(XPaths::FILE, Namespaces::MAP).each {|e| values << e.content.split('/')[-1]}
+        doc.find(XPaths::DIR, Namespaces::MAP).each do |e|
+          if top
+            lists << e.content.split('/')[-1]
+          else
+            index = (e.attributes['name'].to_i - 1)
+            lists[index] = e.content.split('/')[-1]
+          end
+        end
+
+        doc.find(XPaths::FILE, Namespaces::MAP).each do |e|
+          if top
+            values << e.content.split('/')[-1]
+          else
+            index = (e.attributes['name'].to_i - 1)
+            values[index] = e.content.split('/')[-1]
+          end
+        end
       rescue XML::Error => xmle
         # We expect to get a DOCUMENT_EMPTY error in some cases. All others
         # should be re-raised.
@@ -458,7 +473,7 @@ module T2Server
       # if at the top level we need to check if the port represents a list
       # or a singleton value
       if top
-        lists, items = ls("out")
+        lists, items = _ls_ports("out")
         if items.include? output
           if refs
             return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
@@ -469,7 +484,7 @@ module T2Server
       end
 
       # we're not at the top level so look at the contents of the output port
-      lists, items = ls("out/#{output}")
+      lists, items = _ls_ports("out/#{output}", false)
 
       # build up lists of results
       result = []

@@ -91,8 +91,8 @@ class TestRun < Test::Unit::TestCase
     end
     assert_equal(@run.get_output_ports, ["SINGLE", "MANY"])
     assert_equal(@run.get_output("SINGLE"), [])
-    assert_equal(@run.get_output("MANY"), [[], [["Hello", ""]], [[], ["test"],
-      []], [["boo"]]])
+    assert_equal(@run.get_output("MANY"),
+      [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
 
     # run with baclava output
     @run = T2Server::Run.create($address, $wkf_hello)
