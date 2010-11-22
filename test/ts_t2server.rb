@@ -49,10 +49,10 @@ end
 # the testcases to run
 require 'tc_paths'
 if $address != ""
-  $wkf_hello  = File.read("test/workflows/hello.t2flow")
-  $wkf_input  = File.read("test/workflows/pipelined_list_iteration_902021.t2flow")
+  $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
   $list_input = "test/workflows/empty_list_input.baclava"
+  $file_input = "test/workflows/in.txt"
 
   require 'tc_server'
   require 'tc_run'

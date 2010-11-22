@@ -37,7 +37,7 @@ class TestRun < Test::Unit::TestCase
   def test_run
     # connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @run = T2Server::Run.create($address, $wkf_hello)
+      @run = T2Server::Run.create($address, $wkf_pass)
     end
 
     # test bad state code
@@ -48,7 +48,10 @@ class TestRun < Test::Unit::TestCase
     # test mkdir
     assert(@run.mkdir("test"))
 
-    # start, state and wait
+    # set input, start, check state and wait
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      @run.set_input("IN", "Hello, World!")
+    end
     @run.start
     assert(@run.running?)
     assert_nothing_raised(T2Server::RunStateError) do
@@ -57,7 +60,7 @@ class TestRun < Test::Unit::TestCase
 
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
-    assert_equal(@run.get_output("Message"), "Hello, World!")
+    assert_equal(@run.get_output("OUT"), "Hello, World!")
     assert_raise(T2Server::AccessForbiddenError) do
       @run.get_output("wrong!")
     end
@@ -65,11 +68,11 @@ class TestRun < Test::Unit::TestCase
     # deletion
     assert(@run.delete)
 
-    # run that need inputs
-    @run = T2Server::Run.create($address, $wkf_input)
+    # run with file input
+    @run = T2Server::Run.create($address, $wkf_pass)
 
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
-      @run.set_input("input", 10)
+      @run.upload_input_file("IN", $file_input)
     end
 
     @run.start
@@ -77,6 +80,7 @@ class TestRun < Test::Unit::TestCase
     assert_nothing_raised(T2Server::RunStateError) do
       @run.wait
     end
+    assert_equal(@run.get_output("OUT"), "Hello, World!")
 
     # run that returns list of lists, some empty, using baclava for input
     @run = T2Server::Run.create($address, $wkf_lists)
@@ -95,8 +99,8 @@ class TestRun < Test::Unit::TestCase
       [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
 
     # run with baclava output
-    @run = T2Server::Run.create($address, $wkf_hello)
-
+    @run = T2Server::Run.create($address, $wkf_pass)
+    @run.set_input("IN", "Some input...")
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.set_baclava_output
     end
