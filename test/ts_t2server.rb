@@ -33,17 +33,23 @@
 require 'test/unit'
 require 't2-server'
 
-# get a server address to test - 30 second timeout
-print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that these " +
-  "tests will fully load the server and then delete all the runs that it " +
-  "has permission to do so - if you are not using security ALL runs will be " +
-  "deleted!\n(leave blank to skip tests): "
-$stdout.flush
-if select([$stdin], [], [], 30)
-  $address = $stdin.gets.chomp
+# check for a server address passed through on the command line
+if ARGV.size != 0:
+  $address = ARGV[0]
+  puts "Using server at #{$address}"
 else
-  puts "\nSkipping tests that require a Taverna 2 Server instance..."
-  $address = ""
+  # get a server address to test - 30 second timeout
+  print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
+    "these tests will fully load the server and then delete all the runs " +
+    "that it has permission to do so - if you are not using security ALL " +
+    "runs will be deleted!\n(leave blank to skip tests): "
+  $stdout.flush
+  if select([$stdin], [], [], 30)
+    $address = $stdin.gets.chomp
+  else
+    puts "\nSkipping tests that require a Taverna 2 Server instance..."
+    $address = ""
+  end
 end
 
 # the testcases to run

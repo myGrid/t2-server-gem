@@ -32,7 +32,7 @@
 
 require 'rake'
 require 'rake/clean'
-require 'rake/testtask'
+require 'rake/tasklib'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
@@ -65,10 +65,23 @@ Rake::GemPackageTask.new(spec) do |pkg|
   pkg.need_tar = true
 end
 
-Rake::TestTask.new do |t|
-  t.libs << "test"
-  t.test_files = FileList['test/ts_t2server.rb']
-  t.verbose = true
+# This test task does not use the standard Rake::TestTask class as we need to
+# be able to supply an argument to the test. This is so that the test can be
+# run with a server address from a CI server. The equivalent TestTask would be
+# something like this:
+#
+#  Rake::TestTask.new do |t|
+#    t.libs << "test"
+#    t.test_files = FileList['test/ts_t2server.rb']
+#    t.verbose = true
+#  end
+task :test, :server do |t, args|
+  args.with_defaults(:server => "")
+  RakeFileUtils.verbose(true) do
+    server_arg = ""
+    server_arg = " -- #{args[:server]}" if args[:server] != ""
+    ruby "-I\"lib:test\" -S testrb test/ts_t2server.rb" + server_arg
+  end
 end
 
 Rake::RDocTask.new do |r|
