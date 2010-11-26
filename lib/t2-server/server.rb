@@ -79,7 +79,9 @@ module T2Server
         @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
 
-      @links = parse_description(get_attribute(@rest_path))
+      # add a slash to the end of this address to work around this bug:
+      # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
+      @links = parse_description(get_attribute("#{@rest_path}/"))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # get max runs
