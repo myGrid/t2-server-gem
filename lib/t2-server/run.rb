@@ -32,6 +32,7 @@
 
 require 'rubygems'
 require 'libxml'
+require 'time'
 
 module T2Server
 
@@ -172,19 +173,24 @@ module T2Server
     # :call-seq:
     #   run.expiry -> string
     #
-    # Return the expiry time of this run. It is formatted as an ISO-8601
-    # timestamp.
+    # Return the expiry time of this run as an instance of class Time.
     def expiry
-      @server.get_run_attribute(@uuid, @links[:expiry])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:expiry]))
     end
 
     # :call-seq:
     #   run.expiry=(time) -> bool
     #
     # Set the expiry time of this run to _time_. The format of _time_ should
-    # be an ISO-8601 timestamp.
-    def expiry=(date)
-      @server.set_run_attribute(@uuid, @links[:expiry], date)
+    # be something that the Ruby Time class can parse. If the value given does
+    # not specify a date then today's date will be assumed. If a time/date in
+    # the past is specified, the expiry time will not be changed.
+    def expiry=(time)
+      # need to massage the xmlschema format slightly as the server cannot
+      # parse timezone offsets with a colon (eg +00:00)
+      date_str = Time.parse(time).xmlschema(2)
+      date_str = date_str[0..-4] + date_str[-2..-1]
+      @server.set_run_attribute(@uuid, @links[:expiry], date_str)
     end
 
     # :call-seq:
@@ -399,25 +405,25 @@ module T2Server
     # :call-seq:
     #   run.create_time -> string
     #
-    # Get the creation time of this run formatted as an ISO-8601 timestamp.
+    # Get the creation time of this run as an instance of class Time.
     def create_time
-      @server.get_run_attribute(@uuid, @links[:createtime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:createtime]))
     end
 
     # :call-seq:
     #   run.start_time -> string
     #
-    # Get the start time of this run formatted as an ISO-8601 timestamp.
+    # Get the start time of this run as an instance of class Time.
     def start_time
-      @server.get_run_attribute(@uuid, @links[:starttime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:starttime]))
     end
 
     # :call-seq:
     #   run.finish_time -> string
     #
-    # Get the finish time of this run formatted as an ISO-8601 timestamp.
+    # Get the finish time of this run as an instance of class Time.
     def finish_time
-      @server.get_run_attribute(@uuid, @links[:finishtime])
+      Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime]))
     end
 
     private
