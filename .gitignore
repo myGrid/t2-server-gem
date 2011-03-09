@@ -1,3 +1,5 @@
 *~
 pkg/
 html/
+.buildpath
+.project
