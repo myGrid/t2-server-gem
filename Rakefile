@@ -58,6 +58,7 @@ spec = Gem::Specification.new do |s|
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '>=0.8.7')
   s.add_runtime_dependency('libxml-ruby', '>=1.1.4')
+  s.add_runtime_dependency('hirb', '>=0.4.0')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
