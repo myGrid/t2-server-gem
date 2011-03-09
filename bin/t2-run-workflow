@@ -37,6 +37,7 @@ require 'optparse'
 
 # set up options
 inputs  = {}
+files = {}
 wkf_file = ""
 output_refs = false
 baclava_out = ""
@@ -55,6 +56,11 @@ opts = OptionParser.new do |opt|
     input, value = val.chomp.split(':', 2)
     inputs[input] = value
   end
+  opt.on("-f INPUT:FILE", "--input-file=INPUT:FILE",
+    "Set input port INPUT to use the contents of FILE as its input") do |val|
+      input, filename = val.chomp.split(':', 2)
+      files[input] = filename
+    end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
     inputs[:baclava] = val
   end
@@ -121,6 +127,12 @@ else
   inputs.each do |input, value|
     puts "Set input '#{input}' to #{value}"
     run.set_input(input, value)
+  end
+  
+  files.each do |input, file|
+    name = file.split("/")[-1];
+    puts "Set input '#{input}' to use file '#{name}'"
+    run.upload_input_file(input, file)
   end
 end
 

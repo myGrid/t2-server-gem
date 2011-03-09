@@ -34,6 +34,7 @@
 require 'rubygems'
 require 't2-server'
 require 'optparse'
+require 'hirb'
 
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-server-info [options] server-address"
@@ -70,10 +71,12 @@ begin
   runs = server.runs
   print "No. of runs: #{runs.length}\n"
   if runs.length > 0
-    print "   Run list: #{runs[0].uuid} - #{runs[0].expiry}\n"
-    runs[1..-1].each do |run|
-      print "             #{run.uuid} - #{run.expiry}\n"
-    end
+    puts (Hirb::Helpers::ObjectTable.render runs,
+      :fields=>[:uuid, :status, :expiry],
+      :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
+      :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
+      :max_fields=>{:expiry=>19},
+      :description=>false)
   end
 rescue T2Server::T2ServerError => e
   puts e
