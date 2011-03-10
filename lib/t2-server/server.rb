@@ -45,7 +45,7 @@ module T2Server
 
     private_class_method :new
 
-    # The URI of this server instance as a String.
+    # The URI of this server instance.
     attr_reader :uri
     
     # The maximum number of runs that this server will allow at any one time.
@@ -59,12 +59,11 @@ module T2Server
     # :stopdoc:
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
     def initialize(uri, username, password)
-      @uri = uri.strip_path
-      uri = URI.parse(@uri)
-      @host = uri.host
-      @port = uri.port
-      @base_path = uri.path
-      @rest_path = uri.path + "/rest"
+      @uri = uri
+      @host = @uri.host
+      @port = @uri.port
+      @base_path = @uri.path
+      @rest_path = @uri.path + "/rest"
 
       # set up http connection
       @http = Net::HTTP.new(@host, @port)
@@ -72,8 +71,8 @@ module T2Server
       # use ssl?
       @ssl = uri.scheme == "https"
       if ssl?
-        @username = uri.user || username
-        @password = uri.password || password
+        @username = username
+        @password = password
         
         @http.use_ssl = true
         @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -102,12 +101,23 @@ module T2Server
     # The username and password can also be passed in separately.
     # A Server instance is returned that represents the connection.
     def Server.connect(uri, username="", password="")
+      # we want to use URIs here but strings can be passed in
+      if !uri.instance_of? URI
+        uri = URI.parse(uri.strip_path);
+      end
+      
+      # strip username and password from the URI if present
+      username = uri.user || username
+      password = uri.password || password
+      new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
+        uri.path, nil, nil, nil);
+      
       # see if we've already got this server
-      server = @@servers.find {|s| s.uri == uri}
+      server = @@servers.find {|s| s.uri == new_uri}
 
       if !server
         # no, so create new one and return it
-        server = new(uri, username, password)
+        server = new(new_uri, username, password)
         @@servers << server
       end
       
