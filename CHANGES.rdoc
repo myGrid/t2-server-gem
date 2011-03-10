@@ -1,5 +1,18 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.6.0
+
+* Add a new API call Run#get_output_ports
+* Remove Run#ls from the API.
+* Refactor the code that builds output port lists.
+* Update and streamline test suite.
+* Parameterize the Rakefile for use in CI.
+* Return dates as instances of class Time.
+* Allow expiry dates to be specified in human readable formats.
+* Workaround for CXF bug upon server start-up.
+* t2-run-workflow: accept files as inputs.
+* Tabulate run information.
+
 == Version 0.5.3
 
 * Fix an issue with singleton value/empty list confusion for output ports.
