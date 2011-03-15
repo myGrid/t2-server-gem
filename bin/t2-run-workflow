@@ -42,6 +42,7 @@ wkf_file = ""
 output_refs = false
 baclava_out = ""
 delete_run = false
+no_wait = false
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-run-workflow [options] server-address"
   opt.separator ""
@@ -71,6 +72,10 @@ opts = OptionParser.new do |opt|
     else
       baclava_out = "out.xml"
     end
+  end
+  opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return " +
+    "once it has started running") do |val|
+      no_wait = true
   end
   opt.on("-r", "--output-refs", "Return URIs that point to the data items " +
     "of the output rather than the data items themselves.") do |val|
@@ -142,6 +147,11 @@ run.set_baclava_output(baclava_out) unless baclava_out == ""
 # start run and wait until it is finished
 run.start
 puts "Started at #{run.start_time}"
+
+# bail out if user doesn't want to wait
+exit 0 if no_wait
+
+# otherwise wait
 print "Running"
 run.wait(:progress => true)
 puts "Finished at #{run.finish_time}"
