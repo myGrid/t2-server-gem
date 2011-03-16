@@ -118,13 +118,10 @@ module T2Server
 
   # The server is at capacity and cannot accept anymore runs at this time.
   class ServerAtCapacityError < T2ServerError
-    attr_reader :limit
-
     # Create a new ServerAtCapacityError with the specified limit for
     # information.
-    def initialize(limit)
-      @limit = limit
-      super "The server is already running its configured limit of concurrent workflows (#{@limit})"
+    def initialize
+      super "The server is already running its configured limit of concurrent workflows."
     end
   end
 
@@ -165,6 +162,16 @@ module T2Server
     # which is needed to run the operation.
     def initialize(current, need)
       super "The run is in the wrong state (#{current}); it should be '#{need}' to perform that action"
+    end
+  end
+
+  class ConnectionRedirectError < T2ServerError
+    attr_reader :redirect
+
+    def initialize(connection)
+      @redirect = connection
+
+      super "The server returned an unhandled redirect to '#{@redirect}'."
     end
   end
 end

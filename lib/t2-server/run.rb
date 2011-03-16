@@ -54,6 +54,9 @@ module T2Server
     # (version 4).
     attr_reader :uuid
 
+    # The server instance that this run is hosted on.
+    attr_reader :server
+
     # :stopdoc:
     STATE = {
       :initialized => "Initialized",

@@ -42,10 +42,8 @@ module T2Server
   class Server
     include LibXML
 
-    # The maximum number of runs that this server will allow at any one time.
-    # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
-    # against this maximum.
-    attr_reader :run_limit
+    # The version of the remote Taverna Server instance.
+    attr_reader :version
 
     def initialize(uri)
       # we want to use URIs here but strings can be passed in
@@ -65,10 +63,8 @@ module T2Server
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
       server_description = XML::Document.string(get_attribute("#{uri.path}/rest/"))
+      @version = get_version(server_description)
       @links = get_description(server_description)
-      
-      # get max runs
-      @run_limit = get_attribute(@links[:runlimit]).to_i
       
       # initialise run list
       @runs = {}
@@ -102,7 +98,7 @@ module T2Server
     # return it as a Run instance. Return its UUID instead.
     def initialize_run(workflow, credentials = nil)
       @connection.POST_run("#{@links[:runs]}", Fragments::WORKFLOW % workflow,
-        @run_limit, credentials)
+        credentials)
     end
 
     # :call-seq:
@@ -111,6 +107,16 @@ module T2Server
     # The URI of the connection to the remote Taverna Server.
     def uri
       @connection.uri
+    end
+
+    # :call-seq:
+    #   server.run_limit(credentials = nil) -> num
+    #
+    # The maximum number of runs that this server will allow at any one time.
+    # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
+    # against this maximum.
+    def run_limit(credentials = nil)
+      get_attribute(@links[:runlimit], credentials).to_i
     end
 
     # :call-seq:
@@ -280,21 +286,47 @@ module T2Server
 
     private
     def get_attribute(path, credentials = nil)
-      @connection.GET(path, credentials)
+      begin
+        @connection.GET(path, credentials)
+      rescue ConnectionRedirectError => cre
+        @connection = cre.redirect
+        retry
+      end
     end
 
     def set_attribute(path, value, type, credentials = nil)
       @connection.PUT(path, value, type, credentials)
     end
 
+    def get_version(doc)
+      version = doc.find_first(XPaths::SERVER, Namespaces::MAP).attributes["serverVersion"]
+      if version == nil
+        return 1.0
+      else
+        return version.to_f
+      end
+    end
+
     def get_description(doc)
       nsmap = Namespaces::MAP
-      {
-        :runs          => URI.parse(doc.find_first(XPaths::RUNS, nsmap).attributes["href"]).path,
-        :runlimit      => URI.parse(doc.find_first(XPaths::RUNLIMIT, nsmap).attributes["href"]).path,
-        :permworkflows => URI.parse(doc.find_first(XPaths::PERMWKF, nsmap).attributes["href"]).path,
-        :permlisteners => URI.parse(doc.find_first(XPaths::PERMLSTN, nsmap).attributes["href"]).path
-      }
+      
+      links = {}
+      links[:runs] = URI.parse(doc.find_first(XPaths::RUNS, nsmap).attributes["href"]).path
+      
+      if @version > 1.0
+        links[:policy] = URI.parse(doc.find_first(XPaths::POLICY, nsmap).attributes["href"]).path
+        doc = XML::Document.string(get_attribute(links[:policy]))
+        
+        links[:permlisteners] = URI.parse(doc.find_first(XPaths::PERMLSTT, nsmap).attributes["href"]).path
+        links[:notifications] = URI.parse(doc.find_first(XPaths::NOTIFY, nsmap).attributes["href"]).path
+      else
+        links[:permlisteners] = URI.parse(doc.find_first(XPaths::PERMLSTN, nsmap).attributes["href"]).path
+      end
+      
+      links[:runlimit]      = URI.parse(doc.find_first(XPaths::RUNLIMIT, nsmap).attributes["href"]).path
+      links[:permworkflows] = URI.parse(doc.find_first(XPaths::PERMWKF, nsmap).attributes["href"]).path
+
+      links
     end
 
     def get_runs(credentials = nil)
@@ -316,7 +348,7 @@ module T2Server
       end
 
       # clear out the expired runs
-      if @runs.length > @run_limit
+      if @runs.length > uuids.length
         @runs.delete_if {|key, val| !uuids.member? key}
       end
 

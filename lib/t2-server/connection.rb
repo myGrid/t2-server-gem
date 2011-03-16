@@ -79,7 +79,7 @@ module T2Server
       @http = Net::HTTP.new(@uri.host, @uri.port)
     end
     
-    def POST_run(path, value, limit, credentials)
+    def POST_run(path, value, credentials)
       response = POST(path, value, "application/xml", credentials)
       
       case response
@@ -88,7 +88,7 @@ module T2Server
         epr = URI.parse(response['location'])
         epr.path[-36..-1]
       when Net::HTTPForbidden
-        raise ServerAtCapacityError.new(limit)
+        raise ServerAtCapacityError.new
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -145,6 +145,9 @@ module T2Server
       case response
       when Net::HTTPOK
         return response.body
+      when Net::HTTPMovedTemporarily
+        new_conn = redirect(response["location"])
+        raise ConnectionRedirectError.new(new_conn)
       when Net::HTTPNotFound
         raise AttributeNotFoundError.new(path)
       when Net::HTTPForbidden
@@ -218,6 +221,14 @@ module T2Server
       else
         raise UnexpectedServerResponse.new(response)
       end
+    end
+
+    private
+    def redirect(location)
+      uri = URI.parse(location)
+      new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
+        @uri.path, nil, nil, nil);
+      Connection.connect(new_uri)
     end
   end
   

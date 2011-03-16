@@ -60,11 +60,17 @@ module T2Server
     XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
 
     # Server XPath queries
+    SERVER   = XML::XPath::Expression.new("//nsr:serverDescription")
+    POLICY   = XML::XPath::Expression.new("//nsr:policy")
     RUN      = XML::XPath::Expression.new("//nsr:run")
     RUNS     = XML::XPath::Expression.new("//nsr:runs")
+
+    # Server policy XPath queries
     RUNLIMIT = XML::XPath::Expression.new("//nsr:runLimit")
     PERMWKF  = XML::XPath::Expression.new("//nsr:permittedWorkflows")
     PERMLSTN = XML::XPath::Expression.new("//nsr:permittedListeners")
+    PERMLSTT = XML::XPath::Expression.new("//nsr:permittedListenerTypes")
+    NOTIFY   = XML::XPath::Expression.new("//nsr:enabledNotificationFabrics")
 
     # Run XPath queries
     DIR        = XML::XPath::Expression.new("//nss:dir")
