@@ -245,8 +245,9 @@ module T2Server
         run = run(run)
       end
 
+      xml_value = XML::Node.new_text(value)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTVALUE % value, "application/xml")
+      set_attribute(path, Fragments::RUNINPUTVALUE % xml_value, "application/xml")
     rescue AttributeNotFoundError => e
       if get_runs.has_key? run.uuid
         raise e
@@ -266,8 +267,9 @@ module T2Server
         run = run(run)
       end
 
+      xml_value = XML::Node.new_text(filename)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTFILE % filename, "application/xml")
+      set_attribute(path, Fragments::RUNINPUTFILE % xml_value, "application/xml")
     rescue AttributeNotFoundError => e
       if get_runs.has_key? run.uuid
         raise e

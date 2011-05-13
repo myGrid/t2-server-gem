@@ -68,6 +68,14 @@ class TestRun < Test::Unit::TestCase
     # deletion
     assert(@run.delete)
 
+    # run with xml input
+    @run = T2Server::Run.create($address, $wkf_xml)
+    @run.set_input("xml","<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>")
+    @run.set_input("xpath","//yes")
+    @run.start
+    @run.wait
+    assert_equal(@run.get_output("nodes"), ["hello", "world"])
+
     # run with file input
     @run = T2Server::Run.create($address, $wkf_pass)
 

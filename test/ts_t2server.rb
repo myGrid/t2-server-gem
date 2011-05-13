@@ -57,6 +57,7 @@ require 'tc_paths'
 if $address != ""
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
+  $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
   $list_input = "test/workflows/empty_list_input.baclava"
   $file_input = "test/workflows/in.txt"
 
