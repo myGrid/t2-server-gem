@@ -1,7 +1,7 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
 Authors::     Robert Haines
-Gem Version:: 0.6.0
+Gem Version:: 0.6.1
 API Version:: 2.2a1
 Contact::     mailto:rhaines@manchester.ac.uk
 URL::         http://taverna.sourceforge.net/

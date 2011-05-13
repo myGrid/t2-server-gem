@@ -1,5 +1,11 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.6.1
+
+* Store server addresses internally as URI objects.
+* t2-run-workflow: Add a no-wait option.
+* Fix input value escaping to allow XML in inputs.
+
 == Version 0.6.0
 
 * Add a new API call Run#get_output_ports
