@@ -63,12 +63,15 @@ if uri == nil
   exit 1
 end
 
+uri, creds = URI.strip_credentials(uri)
+
 # connect to server and output information
 begin
-  server = T2Server::Server.connect(uri)
-  print "     Server: #{uri}\n"
-  print "  Run limit: #{server.run_limit}\n"
-  runs = server.runs
+  server = T2Server::Server.new(uri)
+  print "     Server: #{server.uri}\n"
+  print "    Version: #{server.version}\n"
+  print "  Run limit: #{server.run_limit(creds)}\n"
+  runs = server.runs(creds)
   print "No. of runs: #{runs.length}\n"
   if runs.length > 0
     puts (Hirb::Helpers::ObjectTable.render runs,

@@ -77,9 +77,11 @@ if address == ""
   exit 1
 end
 
+uri, creds = URI.strip_credentials(address)
+
 # connect...
 begin
-  server = T2Server::Server.connect(ARGV[0])
+  server = T2Server::Server.new(uri)
 rescue T2Server::T2ServerError => e
   puts e
   exit 1
@@ -88,7 +90,7 @@ end
 # ...and delete them!
 if delete_all
   begin
-    server.delete_all_runs
+    server.delete_all_runs(creds)
   rescue T2Server::AuthorizationError => ae
     puts "You are not authorized to delete runs on this server."
   rescue T2Server::T2ServerError => e
@@ -97,7 +99,7 @@ if delete_all
 else
   for run in runs
     begin
-      server.delete_run(run)
+      server.delete_run(run, creds)
     rescue T2Server::RunNotFoundError => rnf
       puts "Run '#{run}' not found - skipping."
       next
