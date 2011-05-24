@@ -39,6 +39,7 @@ require 'optparse'
 inputs  = {}
 files = {}
 wkf_file = ""
+expiry = ""
 output_refs = false
 baclava_out = ""
 delete_run = false
@@ -61,7 +62,10 @@ opts = OptionParser.new do |opt|
     "Set input port INPUT to use the contents of FILE as its input") do |val|
       input, filename = val.chomp.split(':', 2)
       files[input] = filename
-    end
+  end
+  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry  date/time of this run") do |val|
+    expiry = val.chomp
+  end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
     inputs[:baclava] = val
   end
@@ -123,6 +127,12 @@ rescue T2Server::T2ServerError => e
 end
 puts "Created run with uuid: #{run.uuid}"
 puts "Created at #{run.create_time}"
+
+# set run expiry
+if expiry != ""
+  run.expiry=(expiry)
+  puts "Expiry time set to #{run.expiry}"
+end
 
 # set inputs
 if inputs.has_key?(:baclava)
