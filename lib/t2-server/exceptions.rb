@@ -146,8 +146,12 @@ module T2Server
     attr_reader :username
 
     # Create a new AuthorizationError with the rejected username
-    def initialize(username)
-      @username = username
+    def initialize(credentials)
+      if credentials != nil
+        @username = credentials.username
+      else
+        @username = ""
+      end
       super "The username '#{@username}' is not authorized to connect to this server"
     end
   end

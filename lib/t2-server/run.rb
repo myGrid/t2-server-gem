@@ -63,35 +63,38 @@ module T2Server
     }
 
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
-    def initialize(server, uuid)
+    def initialize(server, uuid, credentials = nil)
       @server = server
       @uuid = uuid
       @workflow = ""
       @baclava_in = false
       @baclava_out = ""
       
-      @links = get_attributes(@server.get_run_attribute(uuid, ""))
+      @credentials = credentials
+      
+      @links = get_attributes(@server.get_run_attribute(uuid, "", @credentials))
       #@links.each {|key, val| puts "#{key}: #{val}"}
     end
     # :startdoc:
 
     # :call-seq:
-    #   Run.create(server, workflow) -> run
+    #   Run.create(server, workflow, credentials = nil) -> run
     #
     # Create a new run in the +Initialized+ state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
     # supplied as a string in t2flow or scufl format.
-    def Run.create(server, workflow, uuid="")
-      if server.class == String
-        server = Server.connect(server)
+    def Run.create(server, workflow, credentials = nil, uuid="")
+      if server.class != Server
+        server = Server.new(server)
       end
+      
       if uuid == ""
-        new(server, server.initialize_run(workflow))
-      else
-        new(server, uuid)
+        uuid = server.initialize_run(workflow, credentials)
       end
+      
+      new(server, uuid, credentials)
     end
 
     # :call-seq:
@@ -99,7 +102,7 @@ module T2Server
     #
     # Delete this run from the server.
     def delete
-      @server.delete_run uuid
+      @server.delete_run(uuid, @credentials)
     end
 
     # :call-seq:
@@ -120,7 +123,7 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @server.set_run_input(self, input, value)
+      @server.set_run_input(self, input, value, @credentials)
     end
 
     # :call-seq:
@@ -134,7 +137,7 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @server.set_run_input_file(self, input, filename)
+      @server.set_run_input_file(self, input, filename, @credentials)
     end
 
     # :call-seq:
@@ -175,7 +178,8 @@ module T2Server
     #
     # Return the expiry time of this run as an instance of class Time.
     def expiry
-      Time.parse(@server.get_run_attribute(@uuid, @links[:expiry]))
+      Time.parse(@server.get_run_attribute(@uuid, @links[:expiry],
+        @credentials))
     end
 
     # :call-seq:
@@ -190,7 +194,7 @@ module T2Server
       # parse timezone offsets with a colon (eg +00:00)
       date_str = Time.parse(time).xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
-      @server.set_run_attribute(@uuid, @links[:expiry], date_str)
+      @server.set_run_attribute(@uuid, @links[:expiry], date_str, @credentials)
     end
 
     # :call-seq:
@@ -199,7 +203,8 @@ module T2Server
     # Get the workflow that this run represents.
     def workflow
       if @workflow == ""
-        @workflow = @server.get_run_attribute(@uuid, @links[:workflow])
+        @workflow = @server.get_run_attribute(@uuid, @links[:workflow],
+          @credentials)
       end
       @workflow
     end
@@ -209,7 +214,7 @@ module T2Server
     #
     # Get the status of this run.
     def status
-      @server.get_run_attribute(@uuid, @links[:status])
+      @server.get_run_attribute(@uuid, @links[:status], @credentials)
     end
 
     # :call-seq:
@@ -222,7 +227,8 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @server.set_run_attribute(@uuid, @links[:status], STATE[:running])
+      @server.set_run_attribute(@uuid, @links[:status], STATE[:running],
+        @credentials)
     end
 
     # :call-seq:
@@ -262,7 +268,7 @@ module T2Server
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
-      @server.get_run_attribute(@uuid, @links[:exitcode]).to_i
+      @server.get_run_attribute(@uuid, @links[:exitcode], @credentials).to_i
     end
 
     # :call-seq:
@@ -270,7 +276,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
-      @server.get_run_attribute(@uuid, @links[:stdout])
+      @server.get_run_attribute(@uuid, @links[:stdout], @credentials)
     end
 
     # :call-seq:
@@ -278,7 +284,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
-      @server.get_run_attribute(@uuid, @links[:stderr])
+      @server.get_run_attribute(@uuid, @links[:stderr], @credentials)
     end
 
     # :call-seq:
@@ -293,9 +299,10 @@ module T2Server
         # end and add the rest of the path to the wdir link
         leaf = dir.split("/")[-1]
         path = dir[0...-(leaf.length + 1)]
-        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf)
+        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf,
+          @credentials)
       else
-        @server.make_run_dir(@uuid, @links[:wdir], dir)
+        @server.make_run_dir(@uuid, @links[:wdir], dir, @credentials)
       end
     end
 
@@ -313,7 +320,7 @@ module T2Server
       location = params[:dir] || ""
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
-      @server.upload_run_file(@uuid, filename, location, rename)
+      @server.upload_run_file(@uuid, filename, location, rename, @credentials)
     end
 
     # :call-seq:
@@ -347,7 +354,7 @@ module T2Server
 
       @baclava_in = true
       rename = upload_file(filename)
-      @server.set_run_attribute(@uuid, @links[:baclava], rename)
+      @server.set_run_attribute(@uuid, @links[:baclava], rename, @credentials)
     end
 
     # :call-seq:
@@ -361,7 +368,8 @@ module T2Server
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
       
       @baclava_out = name.strip_path
-      @server.set_run_attribute(@uuid, @links[:output], @baclava_out)
+      @server.set_run_attribute(@uuid, @links[:output], @baclava_out,
+        @credentials)
     end
 
     # :call-seq:
@@ -375,7 +383,8 @@ module T2Server
       raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
       
       raise AttributeNotFoundError.new("#{@links[:wdir]}/#{@baclava_out}") if @baclava_out == ""
-      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{@baclava_out}")
+      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{@baclava_out}",
+        @credentials)
     end
 
     # :call-seq:
@@ -407,7 +416,8 @@ module T2Server
     #
     # Get the creation time of this run as an instance of class Time.
     def create_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:createtime]))
+      Time.parse(@server.get_run_attribute(@uuid, @links[:createtime],
+        @credentials))
     end
 
     # :call-seq:
@@ -415,7 +425,8 @@ module T2Server
     #
     # Get the start time of this run as an instance of class Time.
     def start_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:starttime]))
+      Time.parse(@server.get_run_attribute(@uuid, @links[:starttime],
+        @credentials))
     end
 
     # :call-seq:
@@ -423,7 +434,8 @@ module T2Server
     #
     # Get the finish time of this run as an instance of class Time.
     def finish_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime]))
+      Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime],
+        @credentials))
     end
 
     private
@@ -435,7 +447,8 @@ module T2Server
     # returned as a list of two lists, "lists" and "values" respectively.
     def _ls_ports(dir="", top=true)
       dir.strip_path!
-      dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
+      dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}",
+        @credentials)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
@@ -484,7 +497,8 @@ module T2Server
           if refs
             return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
           else
-            return @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+            return @server.get_run_attribute(@uuid,
+              "#{@links[:wdir]}/out/#{output}", @credentials)
           end
         end
       end
@@ -503,7 +517,8 @@ module T2Server
         if refs
           result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
         else
-          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}/#{item}")
+          result << @server.get_run_attribute(@uuid,
+            "#{@links[:wdir]}/out/#{output}/#{item}", @credentials)
         end
       end
 
@@ -515,7 +530,7 @@ module T2Server
       links = parse_description(desc)
       
       # get inputs
-      inputs = @server.get_run_attribute(@uuid, links[:inputs])
+      inputs = @server.get_run_attribute(@uuid, links[:inputs], @credentials)
       doc = XML::Document.string(inputs)
       nsmap = Namespaces::MAP
       links[:baclava] = "#{links[:inputs]}/" + doc.find_first(XPaths::BACLAVA, nsmap).attributes["href"].split('/')[-1]

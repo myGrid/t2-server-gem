@@ -33,7 +33,6 @@
 require 'rubygems'
 require 'base64'
 require 'uri'
-require 'net/https'
 require 'libxml'
 
 module T2Server
@@ -43,54 +42,37 @@ module T2Server
   class Server
     include LibXML
 
-    private_class_method :new
-
-    # The URI of this server instance.
-    attr_reader :uri
-    
     # The maximum number of runs that this server will allow at any one time.
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
     # against this maximum.
     attr_reader :run_limit
 
-    # list of servers we know about
-    @@servers = []
-    
-    # :stopdoc:
-    # New is private but rdoc does not get it right! Hence :stopdoc: section.
-    def initialize(uri, username, password)
-      @uri = uri
-      @host = @uri.host
-      @port = @uri.port
-      @base_path = @uri.path
-      @rest_path = @uri.path + "/rest"
-
-      # set up http connection
-      @http = Net::HTTP.new(@host, @port)
-
-      # use ssl?
-      @ssl = uri.scheme == "https"
-      if ssl?
-        @username = username
-        @password = password
-        
-        @http.use_ssl = true
-        @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    def initialize(uri)
+      # we want to use URIs here but strings can be passed in
+      if !uri.is_a? URI
+        uri = URI.parse(uri.strip_path);
       end
+
+      # strip username and password from the URI if present
+      if uri.user != nil
+        uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
+        uri.path, nil, nil, nil);
+      end
+
+      # setup connection
+      @connection = Connection.connect(uri)
 
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
-      @links = parse_description(get_attribute("#{@rest_path}/"))
-      #@links.each {|key, val| puts "#{key}: #{val}"}
+      server_description = XML::Document.string(get_attribute("#{uri.path}/rest/"))
+      @links = get_description(server_description)
       
       # get max runs
       @run_limit = get_attribute(@links[:runlimit]).to_i
       
       # initialise run list
       @runs = {}
-      @runs = get_runs
     end
-    # :startdoc:
 
     # :call-seq:
     #   Server.connect(uri, username="", password="") -> server
@@ -98,158 +80,98 @@ module T2Server
     # Connect to the server specified by _uri_ which should be of the form:
     # http://example.com:8888/blah or https://user:pass@example.com:8888/blah
     #
-    # The username and password can also be passed in separately.
+    # The credentials to be used can also be passed in directly.
     # A Server instance is returned that represents the connection.
     def Server.connect(uri, username="", password="")
-      # we want to use URIs here but strings can be passed in
-      if !uri.instance_of? URI
-        uri = URI.parse(uri.strip_path);
-      end
-      
-      # strip username and password from the URI if present
-      username = uri.user || username
-      password = uri.password || password
-      new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
-        uri.path, nil, nil, nil);
-      
-      # see if we've already got this server
-      server = @@servers.find {|s| s.uri == new_uri}
-
-      if !server
-        # no, so create new one and return it
-        server = new(new_uri, username, password)
-        @@servers << server
-      end
-      
-      server
+      new(uri)
     end
 
     # :call-seq:
-    #   server.create_run(workflow) -> run
+    #   server.create_run(workflow, credentials = nil) -> run
     #
     # Create a run on this server using the specified _workflow_.
-    def create_run(workflow)
-      uuid = initialize_run(workflow)
-      @runs[uuid] = Run.create(self, "", uuid)
+    def create_run(workflow, credentials = nil)
+      uuid = initialize_run(workflow, credentials)
+      @runs[uuid] = Run.create(self, "", credentials, uuid)
     end
 
     # :call-seq:
-    #   server.initialize_run(workflow) -> string
+    #   server.initialize_run(workflow, credentials = nil) -> string
     #
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its UUID instead.
-    def initialize_run(workflow)
-      request = Net::HTTP::Post.new("#{@links[:runs]}")
-      request.content_type = "application/xml"
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request, Fragments::WORKFLOW % workflow)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-      
-      case response
-      when Net::HTTPCreated
-        # return the uuid of the newly created run
-        epr = URI.parse(response['location'])
-        epr.path[-36..-1]
-      when Net::HTTPForbidden
-        raise ServerAtCapacityError.new(@run_limit)
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
+    def initialize_run(workflow, credentials = nil)
+      @connection.POST_run("#{@links[:runs]}", Fragments::WORKFLOW % workflow,
+        @run_limit, credentials)
     end
 
     # :call-seq:
-    #   server.ssl? -> bool
+    #   server.uri -> URI
     #
-    # Is this server using SSL?
-    def ssl?
-      @ssl
+    # The URI of the connection to the remote Taverna Server.
+    def uri
+      @connection.uri
     end
 
     # :call-seq:
-    #   server.runs -> [runs]
+    #   server.runs(credentials = nil) -> [runs]
     #
     # Return the set of runs on this server.
-    def runs
-      get_runs.values
+    def runs(credentials = nil)
+      get_runs(credentials).values
     end
 
     # :call-seq:
-    #   server.run(uuid) -> run
+    #   server.run(uuid, credentials = nil) -> run
     #
     # Return the specified run.
-    def run(uuid)
-      get_runs[uuid]
+    def run(uuid, credentials = nil)
+      get_runs(credentials)[uuid]
     end
 
     # :call-seq:
-    #   server.delete_run(run) -> bool
+    #   server.delete_run(run, credentials = nil) -> bool
     #
     # Delete the specified run from the server, discarding all of its state.
     # _run_ can be either a Run instance or a UUID.
-    def delete_run(run)
+    def delete_run(run, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
-
-      request = Net::HTTP::Delete.new("#{@links[:runs]}/#{run}")
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
       
-      case response
-      when Net::HTTPNoContent
-        # Success, carry on...
+      if @connection.DELETE("#{@links[:runs]}/#{run}", credentials)
         @runs.delete(run)
         true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{run}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
       end
     end
 
     # :call-seq:
-    #   server.delete_all_runs
+    #   server.delete_all_runs(credentials = nil)
     #
     # Delete all runs on this server, discarding all of their state.
-    def delete_all_runs
+    def delete_all_runs(credentials = nil)
       # first refresh run list
-      runs.each {|run| run.delete}
+      runs(credentials).each {|run| run.delete}
     end
 
     # :call-seq:
-    #   server.set_run_input(run, input, value) -> bool
+    #   server.set_run_input(run, input, value, credentials = nil) -> bool
     #
     # Set the workflow input port _input_ on run _run_ to _value_. _run_ can
     # be either a Run instance or a UUID.
-    def set_run_input(run, input, value)
+    def set_run_input(run, input, value, credentials = nil)
       # get the run from the uuid if that is what is passed in
       if not run.instance_of? Run
-        run = run(run)
+        run = run(run, credentials)
       end
 
       xml_value = XML::Node.new_text(value)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTVALUE % xml_value, "application/xml")
+      set_attribute(path, Fragments::RUNINPUTVALUE % xml_value,
+        "application/xml", credentials)
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? run.uuid
+      if get_runs(credentials).has_key? run.uuid
         raise e
       else
         raise RunNotFoundError.new(run.uuid)
@@ -257,21 +179,22 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.set_run_input_file(run, input, filename) -> bool
+    #   server.set_run_input_file(run, input, filename, credentials = nil) -> bool
     #
     # Set the workflow input port _input_ on run _run_ to use the file at
     # _filename_ for its input. _run_ can be either a Run instance or a UUID.
-    def set_run_input_file(run, input, filename)
+    def set_run_input_file(run, input, filename, credentials = nil)
       # get the run from the uuid if that is what is passed in
       if not run.instance_of? Run
-        run = run(run)
+        run = run(run, credentials)
       end
 
       xml_value = XML::Node.new_text(filename)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTFILE % xml_value, "application/xml")
+      set_attribute(path, Fragments::RUNINPUTFILE % xml_value,
+        "application/xml", credentials)
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? run.uuid
+      if get_runs(credentials).has_key? run.uuid
         raise e
       else
         raise RunNotFoundError.new(run.uuid)
@@ -279,49 +202,27 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.make_run_dir(run, root, dir) -> bool
+    #   server.make_run_dir(run, root, dir, credentials = nil) -> bool
     #
     # Create a directory _dir_ within the directory _root_ on _run_. _run_ can
     # be either a Run instance or a UUID. This is mainly for use by Run#mkdir.
-    def make_run_dir(run, root, dir)
+    def make_run_dir(run, root, dir, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
 
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{run}/#{root}")
-      request.content_type = "application/xml"
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request, Fragments::MKDIR % dir)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-
-      case response
-      when Net::HTTPCreated
-        # OK, carry on...
-        true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("#{dir} on run #{run}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
+      @connection.POST_dir("#{@links[:runs]}/#{run}/#{root}",
+        Fragments::MKDIR % dir, run, dir, credentials)
     end
 
     # :call-seq:
-    #   server.upload_run_file(run, filename, location, rename) -> string
+    #   server.upload_run_file(run, filename, location, rename, credentials = nil) -> string
     #
     # Upload a file to _run_. _run_ can be either a Run instance or a UUID.
     # Mainly for internal use by Run#upload_file.
-    def upload_run_file(run, filename, location, rename)
+    def upload_run_file(run, filename, location, rename, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
@@ -329,46 +230,27 @@ module T2Server
 
       contents = Base64.encode64(IO.read(filename))
       rename = filename.split('/')[-1] if rename == ""
-      request = Net::HTTP::Post.new("#{@links[:runs]}/#{run}/#{location}")
-      request.content_type = "application/xml"
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request,  Fragments::UPLOAD % [rename, contents])
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
 
-      case response
-      when Net::HTTPCreated
-        # Success, return remote name of uploaded file
+      if @connection.POST_file("#{@links[:runs]}/#{run}/#{location}",
+        Fragments::UPLOAD % [rename, contents], run, credentials)
         rename
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{run}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
       end
     end
 
     # :call-seq:
-    #   server.get_run_attribute(run, path) -> string
+    #   server.get_run_attribute(run, path, credentials = nil) -> string
     #
     # Get the attribute at _path_ in _run_. _run_ can be either a Run instance
     # or a UUID.
-    def get_run_attribute(run, path)
+    def get_run_attribute(run, path, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
 
-      get_attribute("#{@links[:runs]}/#{run}/#{path}")
+      get_attribute("#{@links[:runs]}/#{run}/#{path}", credentials)
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? run
+      if get_runs(credentials).has_key? run
         raise e
       else
         raise RunNotFoundError.new(run)
@@ -376,19 +258,20 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.set_run_attribute(run, path, value) -> bool
+    #   server.set_run_attribute(run, path, value, credentials = nil) -> bool
     #
     # Set the attribute at _path_ in _run_ to _value_. _run_ can be either a
     # Run instance or a UUID.
-    def set_run_attribute(run, path, value)
+    def set_run_attribute(run, path, value, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
 
-      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, "text/plain")
+      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, "text/plain",
+        credentials)
     rescue AttributeNotFoundError => e
-      if get_runs.has_key? run
+      if get_runs(credentials).has_key? run
         raise e
       else
         raise RunNotFoundError.new(run)
@@ -396,60 +279,15 @@ module T2Server
     end
 
     private
-    def get_attribute(path)
-      request = Net::HTTP::Get.new(path)
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-
-      case response
-      when Net::HTTPOK
-        return response.body
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
+    def get_attribute(path, credentials = nil)
+      @connection.GET(path, credentials)
     end
 
-    def set_attribute(path, value, type)
-      request = Net::HTTP::Put.new(path)
-      request.content_type = type
-      if ssl?
-        request.basic_auth @username, @password
-      end
-      begin
-        response = @http.request(request, value)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-
-      case response
-      when Net::HTTPOK
-        # OK, so carry on
-        true
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(@username)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
+    def set_attribute(path, value, type, credentials = nil)
+      @connection.PUT(path, value, type, credentials)
     end
 
-    def parse_description(desc)
-      doc = XML::Document.string(desc)
+    def get_description(doc)
       nsmap = Namespaces::MAP
       {
         :runs          => URI.parse(doc.find_first(XPaths::RUNS, nsmap).attributes["href"]).path,
@@ -459,8 +297,8 @@ module T2Server
       }
     end
 
-    def get_runs
-      run_list = get_attribute("#{@links[:runs]}")
+    def get_runs(credentials = nil)
+      run_list = get_attribute("#{@links[:runs]}", credentials)
 
       doc = XML::Document.string(run_list)
 
@@ -473,7 +311,7 @@ module T2Server
       # add new runs
       uuids.each do |uuid|
         if !@runs.has_key? uuid
-          @runs[uuid] = Run.create(self, "", uuid)
+          @runs[uuid] = Run.create(self, "", credentials, uuid)
         end
       end
 

@@ -30,44 +30,34 @@
 #
 # Author: Robert Haines
 
-require 't2-server/xml'
-require 't2-server/exceptions'
-require 't2-server/credentials'
-require 't2-server/connection'
-require 't2-server/server'
-require 't2-server/run'
-
-# This is a Ruby library to interface with the Taverna 2 Server REST API.
-#
-# There are two API entry points:
-# * T2Server::Run - Use this for running single jobs on a server.
-# * T2Server::Server - Use this if you are providing a web interface to a
-#   Taverna 2 Server instance.
 module T2Server
-  # The version of this library
-  GEM_VERSION = "0.6.1"
-  # The version of the Taverna 2 Server API that this library can interface with
-  API_VERSION = "2.2a1"
-end
 
-# Add methods to the String class to operate on file paths.
-class String
-  # :call-seq:
-  #   str.strip_path -> string
-  #
-  # Returns a new String with one leading and one trailing slash
-  # removed from the ends of _str_ (if present).
-  def strip_path
-    self.gsub(/^\//, "").chomp("/")
+  class Credentials
+    def authenticate(request)
+      # no op
+    end
   end
+  
+  class HttpBasic < Credentials
+    
+    attr_reader :username
+    
+    def initialize(username, password)
+      @username = username
+      @password = password
+    end
+    
+    def authenticate(request)
+      request.basic_auth @username, @password
+    end
 
-  # :call-seq:
-  #   str.strip_path! -> str or nil
-  #
-  # Modifies _str_ in place as described for String#strip_path,
-  # returning _str_, or returning +nil+ if no modifications were made. 
-  def strip_path!
-    g = self.gsub!(/^\//, "")
-    self.chomp!("/") || g
+    def to_s
+      @username
+    end
+
+    @@to_s = Kernel.instance_method(:to_s)
+    def inspect
+      @@to_s.bind(self).call.sub!(/>\z/) {" Username:#{self}>"}
+    end
   end
 end
