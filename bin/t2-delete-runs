@@ -52,7 +52,6 @@ opts = OptionParser.new do |opt|
   end
   opt.on_tail("-v", "--version", "Show the version") do
     puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
-    puts "Taverna 2 Server REST API version: #{T2Server::API_VERSION}"
     exit
   end
 end
