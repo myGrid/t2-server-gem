@@ -71,3 +71,32 @@ class String
     self.chomp!("/") || g
   end
 end
+
+# Add a method to the URI class to strip user credentials from an address.
+module URI
+  
+  # :call-seq:
+  #   URI.strip_credentials(uri) -> URI, Credentials
+  #
+  # Strip user credentials from an address in URI or String format and return
+  # a tuple of the URI minus the credentials and a T2Server::Credentials
+  # object.
+  def self.strip_credentials(uri)
+    # we want to use URIs here but strings can be passed in
+    if !uri.is_a? URI
+      uri = URI.parse(uri.strip_path);
+    end
+
+    creds = nil
+
+    # strip username and password from the URI if present
+    if uri.user != nil
+      creds = T2Server::HttpBasic.new(uri.user, uri.password)
+
+      uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
+      uri.path, nil, nil, nil);
+    end
+
+    [uri, creds]
+  end
+end
