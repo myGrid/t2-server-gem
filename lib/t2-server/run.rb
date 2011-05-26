@@ -77,6 +77,9 @@ module T2Server
       
       @links = get_attributes(@server.get_run_attribute(uuid, "", @credentials))
       #@links.each {|key, val| puts "#{key}: #{val}"}
+      
+      # initialize @input_ports to nil as an empty list means no inputs
+      @input_ports = nil
     end
     # :startdoc:
 
@@ -141,6 +144,22 @@ module T2Server
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       @server.set_run_input_file(self, input, filename, @credentials)
+    end
+
+    # :call-seq:
+    #   run.input_ports -> array
+    #
+    # Return the names of all the input ports this run expects
+    def input_ports
+      _get_input_port_info.keys
+    end
+
+    # :call-seq:
+    #   input_port_depth(port) -> integer
+    #
+    # Get the depth of _port_.
+    def input_port_depth(port)
+      _get_input_port_info[port].depth
     end
 
     # :call-seq:
@@ -528,6 +547,25 @@ module T2Server
       result
     end
 
+    def _get_input_port_info
+      @input_ports = {} if @server.version < 2
+      if @input_ports == nil
+        @input_ports = {}
+        port_desc = @server.get_run_attribute(@uuid, @links[:inputexp], @credentials)
+
+        doc = XML::Document.string(port_desc)
+        nsmap = Namespaces::MAP
+
+        doc.find(XPaths::INP_INPUT, nsmap).each do |inp|
+          name = inp.find_first(XPaths::INP_NAME, nsmap).content
+          depth = inp.find_first(XPaths::INP_DEPTH, nsmap).content.to_i
+          @input_ports[name] = Port.new(name, depth)
+        end
+      end
+
+      @input_ports
+    end
+
     def get_attributes(desc)
       # first parse out the basic stuff
       links = parse_description(desc)
@@ -537,6 +575,9 @@ module T2Server
       doc = XML::Document.string(inputs)
       nsmap = Namespaces::MAP
       links[:baclava] = "#{links[:inputs]}/" + doc.find_first(XPaths::BACLAVA, nsmap).attributes["href"].split('/')[-1]
+      if @server.version > 1
+        links[:inputexp] = "#{links[:inputs]}/" + doc.find_first(XPaths::INPUTSEXP, nsmap).attributes["href"].split('/')[-1]
+      end
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"
@@ -564,5 +605,23 @@ module T2Server
         :listeners  => doc.find_first(XPaths::LISTENERS, nsmap).attributes["href"].split('/')[-1]
       }
     end
+
+    # This is a private class for internal use only. It is used to represent
+    # an input/output port of a workflow
+    class Port
+      
+      # The port's name
+      attr_reader :name
+      
+      # The "depth" of the port. 0 = a singleton value.
+      attr_reader :depth
+
+      # Create a new port with an optional depth.
+      def initialize(name, depth = 0)
+        @name = name
+        @depth = depth
+      end
+    end
+
   end
 end

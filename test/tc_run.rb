@@ -101,7 +101,14 @@ class TestRun < Test::Unit::TestCase
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.upload_baclava_file($list_input)
     end
-    
+
+    # test input port info and depth
+    if @run.server.version > 1
+      assert_equal(@run.input_ports, ["MANY_IN", "SINGLE_IN"])
+      assert_equal(@run.input_port_depth("MANY_IN"), 3)
+      assert_equal(@run.input_port_depth("SINGLE_IN"), 1)
+    end
+
     @run.start
     assert(@run.running?)
     assert_nothing_raised(T2Server::RunStateError) do

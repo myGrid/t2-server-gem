@@ -38,9 +38,12 @@ module T2Server
   module Namespaces
     SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
     REST   = SERVER + "rest/"
+    INPUT  = "http://ns.taverna.org.uk/2010/data/in"
+
     MAP    = {
       "nss" => Namespaces::SERVER,
-      "nsr" => Namespaces::REST
+      "nsr" => Namespaces::REST,
+      "inp" => Namespaces::INPUT
     }
   end
 
@@ -87,6 +90,12 @@ module T2Server
     SECURECTX  = XML::XPath::Expression.new("//nsr:securityContext")
     LISTENERS  = XML::XPath::Expression.new("//nsr:listeners")
     BACLAVA    = XML::XPath::Expression.new("//nsr:baclava")
+    INPUTSEXP  = XML::XPath::Expression.new("//nsr:expected")
+    
+    # Run inputs XPath queries
+    INP_INPUT  = XML::XPath::Expression.new("//inp:input")
+    INP_NAME   = XML::XPath::Expression.new("inp:name")
+    INP_DEPTH  = XML::XPath::Expression.new("inp:depth")
   end
   # :startdoc:
 end
