@@ -37,21 +37,21 @@ class TestServer < Test::Unit::TestCase
   def test_server
     # connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @server = T2Server::Server.connect($address)
+      @server = T2Server::Server.new($uri)
     end
     assert_not_nil(@server)
 
     # run creation
     assert_nothing_raised(T2Server::T2ServerError) do
-      @run = @server.create_run($wkf_pass)
+      @run = @server.create_run($wkf_pass, $creds)
     end
 
     # capacity
-    limit = @server.run_limit
+    limit = @server.run_limit($creds)
     assert_instance_of(Fixnum, limit)
     assert_raise(T2Server::ServerAtCapacityError) do
       limit.times do
-        @server.create_run($wkf_pass)
+        @server.create_run($wkf_pass, $creds)
       end
     end
   
@@ -61,7 +61,7 @@ class TestServer < Test::Unit::TestCase
     end
 
     assert_nothing_raised(T2Server::T2ServerError) do
-      @server.delete_all_runs
+      @server.delete_all_runs($creds)
     end
   end
 end

@@ -37,7 +37,7 @@ class TestRun < Test::Unit::TestCase
   def test_run
     # connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @run = T2Server::Run.create($address, $wkf_pass)
+      @run = T2Server::Run.create($uri, $wkf_pass, $creds)
     end
 
     # test bad state code
@@ -61,7 +61,13 @@ class TestRun < Test::Unit::TestCase
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
     assert_equal(@run.get_output("OUT"), "Hello, World!")
-    assert_raise(T2Server::AccessForbiddenError) do
+
+    # server version alters the exception raised here...
+    exp_err = T2Server::AttributeNotFoundError
+    if @run.server.version == 1
+      exp_err = T2Server::AccessForbiddenError
+    end
+    assert_raise(exp_err) do
       @run.get_output("wrong!")
     end
 
@@ -69,7 +75,7 @@ class TestRun < Test::Unit::TestCase
     assert(@run.delete)
 
     # run with xml input
-    @run = T2Server::Run.create($address, $wkf_xml)
+    @run = T2Server::Run.create($uri, $wkf_xml, $creds)
     @run.set_input("xml","<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>")
     @run.set_input("xpath","//yes")
     @run.start
@@ -77,7 +83,7 @@ class TestRun < Test::Unit::TestCase
     assert_equal(@run.get_output("nodes"), ["hello", "world"])
 
     # run with file input
-    @run = T2Server::Run.create($address, $wkf_pass)
+    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
 
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.upload_input_file("IN", $file_input)
@@ -91,7 +97,7 @@ class TestRun < Test::Unit::TestCase
     assert_equal(@run.get_output("OUT"), "Hello, World!")
 
     # run that returns list of lists, some empty, using baclava for input
-    @run = T2Server::Run.create($address, $wkf_lists)
+    @run = T2Server::Run.create($uri, $wkf_lists, $creds)
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.upload_baclava_file($list_input)
     end
@@ -107,7 +113,7 @@ class TestRun < Test::Unit::TestCase
       [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
 
     # run with baclava output
-    @run = T2Server::Run.create($address, $wkf_pass)
+    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
     @run.set_input("IN", "Some input...")
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.set_baclava_output

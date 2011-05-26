@@ -30,39 +30,19 @@
 #
 # Author: Robert Haines
 
-require 'test/unit'
 require 't2-server'
+require 'test/unit'
 
-# check for a server address passed through on the command line
-if ARGV.size != 0:
-  address = ARGV[0]
-  puts "Using server at #{address}"
-else
-  # get a server address to test - 30 second timeout
-  print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
-    "these tests will fully load the server and then delete all the runs " +
-    "that it has permission to do so - if you are not using security ALL " +
-    "runs will be deleted!\n(leave blank to skip tests): "
-  $stdout.flush
-  if select([$stdin], [], [], 30)
-    address = $stdin.gets.chomp
-  else
-    puts "\nSkipping tests that require a Taverna 2 Server instance..."
-    address = ""
+class TestUriStripping < Test::Unit::TestCase
+  def test_uri
+    uri = "http://%swww.example.com:8000/path/to/something"
+    username = "username"
+    password = "password"
+    address = uri % "#{username}:#{password}@"
+    
+    r_uri, r_creds = URI.strip_credentials(address)
+    
+    assert_equal(uri % "", r_uri.to_s())
+    assert_equal(username, r_creds.username)
   end
-end
-
-# the testcases to run
-require 'tc_paths'
-require 'tc_uri'
-if address != ""
-  $uri, $creds = URI.strip_credentials(address)
-  $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
-  $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
-  $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
-  $list_input = "test/workflows/empty_list_input.baclava"
-  $file_input = "test/workflows/in.txt"
-
-  require 'tc_server'
-  require 'tc_run'
 end
