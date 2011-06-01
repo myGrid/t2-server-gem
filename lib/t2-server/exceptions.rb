@@ -118,8 +118,7 @@ module T2Server
 
   # The server is at capacity and cannot accept anymore runs at this time.
   class ServerAtCapacityError < T2ServerError
-    # Create a new ServerAtCapacityError with the specified limit for
-    # information.
+    # Create a new ServerAtCapacityError.
     def initialize
       super "The server is already running its configured limit of concurrent workflows."
     end
@@ -165,9 +164,15 @@ module T2Server
     end
   end
 
+  # Raised if the server wishes to redirect the connection. This typically
+  # happens if a client tries to connect to a https server vis a http uri.
   class ConnectionRedirectError < T2ServerError
+
+    # The redirected connection
     attr_reader :redirect
 
+    # Create a new ConnectionRedirectError with the new, redirected,
+    # connection supplied.
     def initialize(connection)
       @redirect = connection
 

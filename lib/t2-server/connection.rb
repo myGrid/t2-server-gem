@@ -35,7 +35,10 @@ require 'net/https'
 
 module T2Server
 
-  # use abstract factory!
+  # This is a factory for connections to a Taverna Server. It will return
+  # either a http or https connection depending on what sort of uri is passed
+  # into it. This class maintains a list of connections that it knows about
+  # and will return an already established connection if it can.
   class Connection
 
     private_class_method :new
@@ -43,6 +46,12 @@ module T2Server
     # list of connections we know about
     @@connections = []
     
+    # :call-seq:
+    #   Connection.connect(uri) -> Connection
+    #
+    # Connect to a Taverna Server instance and return either a
+    # T2Server::HttpConnection or T2Server::HttpsConnection object to
+    # represent it.
     def Connection.connect(uri)
       # we want to use URIs here
       if !uri.is_a? URI
@@ -67,18 +76,26 @@ module T2Server
       conn
     end
   end
-  
+
+  # A class representing a http connection to a Taverna Server. This class
+  # should only ever be created via the T2Server::Connection factory class.
   class HttpConnection
     # The URI of this connection instance.
     attr_reader :uri
 
+    # Open a http connection to the Taverna Server at the uri supplied. 
     def initialize(uri)
       @uri = uri
 
       # set up http connection
       @http = Net::HTTP.new(@uri.host, @uri.port)
     end
-    
+
+    # :call-seq:
+    #   POST_run(path, value, credentials) -> String
+    #
+    # Initialize a T2Server::Run on a server by uploading its workflow.
+    # The new run's UUID (in String form) is returned.
     def POST_run(path, value, credentials)
       response = POST(path, value, "application/xml", credentials)
       
@@ -95,7 +112,11 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   POST_file(path, value, run, credentials) -> bool
+    #
+    # Upload a file to a run. If successful, true is returned.
     def POST_file(path, value, run, credentials)
       response = POST(path, value, "application/xml", credentials)
       
@@ -113,7 +134,12 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   POST_dir(path, value, run, dir, credentials) -> bool
+    #
+    # Create a directory in the scratch space of a run. If successful, true
+    # is returned.
     def POST_dir(path, value, run, dir, credentials)
       response = POST(path, value, "application/xml", credentials)
       
@@ -131,7 +157,12 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   GET(path, credentials) -> String
+    #
+    # Perform an HTTP GET on a path on the server. If successful the body of
+    # the response is returned.
     def GET(path, credentials)
       get = Net::HTTP::Get.new(path)
       credentials.authenticate(get) if credentials != nil
@@ -158,7 +189,12 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   PUT(path, value, type, credentials) -> bool
+    #
+    # Perform a HTTP PUT of _value_ to a path on the server. If successful
+    # true is returned.
     def PUT(path, value, type, credentials)
       put = Net::HTTP::Put.new(path)
       put.content_type = type
@@ -184,7 +220,12 @@ module T2Server
         raise UnexpectedServerResponse.new(response)
       end
     end
-    
+
+    # :call-seq:
+    #   POST(path, value, type, credentials)
+    #
+    # Perform an HTTP POST of _value_ to a path on the server. This method
+    # should only be used by other, wrapper methods, that need to POST.
     def POST(path, value, type, credentials)
       post = Net::HTTP::Post.new(path)
       post.content_type = type
@@ -196,7 +237,12 @@ module T2Server
         raise ConnectionError.new(e)
       end
     end
-    
+
+    # :call-seq:
+    #   DELETE(path, credentials) -> bool
+    #
+    # Perform an HTTP DELETE on a path on the server. If successful true
+    # is returned.
     def DELETE(path, credentials)
       run = path.split("/")[-1]
       delete = Net::HTTP::Delete.new(path)
@@ -231,11 +277,15 @@ module T2Server
       Connection.connect(new_uri)
     end
   end
-  
+
+  # A class representing a https connection to a Taverna Server. This class
+  # should only ever be created via the T2Server::Connection factory class.
   class HttpsConnection < HttpConnection
+
+    # Open a https connection to the Taverna Server at the uri supplied.
     def initialize(uri)
       super(uri)
-      
+
       @http.use_ssl = true
       # probably shouldn't do this, but...
       @http.verify_mode = OpenSSL::SSL::VERIFY_NONE

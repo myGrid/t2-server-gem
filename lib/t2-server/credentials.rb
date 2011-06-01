@@ -32,30 +32,56 @@
 
 module T2Server
 
+  # This class serves as a base class for concrete credential systems.
   class Credentials
+
+    # :call-seq:
+    #   authenticate(request)
+    #
+    # A no-op method due to this base class not actually being able to perform
+    # authentication.
     def authenticate(request)
       # no op
     end
   end
-  
+
+  # A class representing HTTP Basic credentials.
   class HttpBasic < Credentials
-    
+
+    # The username held by these credentials.
     attr_reader :username
-    
+
+    # Create a set of credentials with the supplied username and password.
     def initialize(username, password)
       @username = username
       @password = password
     end
-    
+
+    # :call-seq:
+    #   authenticate(request)
+    #
+    # Authenticate the supplied HTTP request with the credentials held within
+    # this class.
     def authenticate(request)
       request.basic_auth @username, @password
     end
 
+    # :call-seq:
+    #   to_s
+    #
+    # Return the username held by these credentials.
     def to_s
       @username
     end
 
+    # Used within #inspect, below to help override the built in version.
     @@to_s = Kernel.instance_method(:to_s)
+
+    # :call-seq:
+    #   inspect
+    #
+    # Override the Kernel#inspect method so that the password is not exposed
+    # when it is called.
     def inspect
       @@to_s.bind(self).call.sub!(/>\z/) {" Username:#{self}>"}
     end
