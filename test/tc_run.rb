@@ -123,8 +123,9 @@ class TestRun < Test::Unit::TestCase
     @run = T2Server::Run.create($uri, $wkf_pass, $creds)
     @run.set_input("IN", "Some input...")
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
-      @run.set_baclava_output
+      @run.request_baclava_output
     end
+    assert(@run.baclava_output?)
 
     @run.start
     assert(@run.running?)
@@ -132,8 +133,8 @@ class TestRun < Test::Unit::TestCase
       @run.wait
     end
 
-    assert_nothing_raised(T2Server::AttributeNotFoundError) do
-      output = @run.get_baclava_output
+    assert_nothing_raised(T2Server::AccessForbiddenError) do
+      output = @run.baclava_output
     end
   end
 end

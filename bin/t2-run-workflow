@@ -41,7 +41,7 @@ files = {}
 wkf_file = ""
 expiry = ""
 output_refs = false
-baclava_out = ""
+baclava_out = nil
 delete_run = false
 no_wait = false
 opts = OptionParser.new do |opt|
@@ -69,13 +69,9 @@ opts = OptionParser.new do |opt|
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
     inputs[:baclava] = val
   end
-  opt.on("-o", "--baclava-out[=BACLAVA]", "Return outputs in baclava format." +
+  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format." +
     " A filename may be specified or 'out.xml' is used") do |val|
-    if val != nil and val.include? "."
       baclava_out = val
-    else
-      baclava_out = "out.xml"
-    end
   end
   opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return " +
     "once it has started running") do |val|
@@ -153,7 +149,7 @@ else
 end
 
 # output baclava?
-run.set_baclava_output(baclava_out) unless baclava_out == ""
+run.request_baclava_output unless baclava_out == nil
 
 # start run and wait until it is finished
 run.start
@@ -176,9 +172,9 @@ if stdout != "" then puts "Stdout:\n#{stdout}" end
 if stderr != "" then puts "Stderr:\n#{stderr}" end
 
 if exitcd == 0
-  if baclava_out != ""
+  if baclava_out != nil
     File.open(baclava_out, "w") do |file|
-      file.syswrite(run.get_baclava_output)
+      file.syswrite(run.baclava_output)
     end
     puts "Baclava file written to '#{baclava_out}'"
   else

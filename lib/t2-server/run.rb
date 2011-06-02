@@ -65,13 +65,16 @@ module T2Server
       :stopped     => "Stopped"
     }
 
+    # The name to be used internally for retrieving results via baclava
+    BACLAVA_FILE = "out.xml"
+
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
     def initialize(server, uuid, credentials = nil)
       @server = server
       @uuid = uuid
       @workflow = ""
       @baclava_in = false
-      @baclava_out = ""
+      @baclava_out = false
       
       @credentials = credentials
       
@@ -380,34 +383,57 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.set_baclava_output(name="out.xml") -> bool
+    #   run.request_baclava_output -> bool
     #
-    # Set the server to save the outputs of this run in baclava format. The
-    # filename can be specified with the _name_ parameter otherwise a default
-    # of 'out.xml' is used. This must be done before the run is started.
-    def set_baclava_output(name="out.xml")
+    # Set the server to save the outputs of this run in baclava format. This
+    # must be done before the run is started.
+    def request_baclava_output
+      return if @baclava_out
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
       
-      @baclava_out = name.strip_path
-      @server.set_run_attribute(@uuid, @links[:output], @baclava_out,
-        @credentials)
+      @baclava_out = @server.set_run_attribute(@uuid, @links[:output],
+        BACLAVA_FILE, @credentials)
+    end
+
+    # :stopdoc:
+    def set_baclava_output(name="")
+      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be removed in 1.0. " +
+        "Please use 'Run#request_baclava_output' instead."
+      self.request_baclava_output
+    end
+    # :startdoc:
+
+    # :call-seq:
+    #   run.baclava_output? -> bool
+    #
+    # Has this run been set to return results in baclava format?
+    def baclava_output?
+      @baclava_out
     end
 
     # :call-seq:
-    #   run.get_baclava_output -> string
+    #   run.baclava_output -> string
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
     # before starting the run.
-    def get_baclava_output
+    def baclava_output
       state = status
       raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
       
-      raise AttributeNotFoundError.new("#{@links[:wdir]}/#{@baclava_out}") if @baclava_out == ""
-      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{@baclava_out}",
+      raise AccessForbiddenError.new("baclava output") if !@baclava_out
+      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{BACLAVA_FILE}",
         @credentials)
     end
+
+    # :stopdoc:
+    def get_baclava_output
+      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be removed in 1.0. " +
+              "Please use 'Run#baclava_output' instead."
+      baclava_output
+    end
+    # :startdoc:
 
     # :call-seq:
     #   run.initialized? -> bool
