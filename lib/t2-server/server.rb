@@ -84,6 +84,8 @@ module T2Server
 
       # initialise run list
       @runs = {}
+        
+      yield(self) if block_given?
     end
 
     # :call-seq:
@@ -104,7 +106,11 @@ module T2Server
     # Create a run on this server using the specified _workflow_.
     def create_run(workflow, credentials = nil)
       uuid = initialize_run(workflow, credentials)
-      @runs[uuid] = Run.create(self, "", credentials, uuid)
+      run = Run.create(self, "", credentials, uuid)
+      @runs[uuid] = run
+
+      yield(run) if block_given?
+      run
     end
 
     # :call-seq:

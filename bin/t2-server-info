@@ -66,19 +66,20 @@ uri, creds = URI.strip_credentials(uri)
 
 # connect to server and output information
 begin
-  server = T2Server::Server.new(uri)
-  print "     Server: #{server.uri}\n"
-  print "    Version: #{server.version}\n"
-  print "  Run limit: #{server.run_limit(creds)}\n"
-  runs = server.runs(creds)
-  print "No. of runs: #{runs.length}\n"
-  if runs.length > 0
-    puts (Hirb::Helpers::ObjectTable.render runs,
-      :fields=>[:uuid, :status, :expiry],
-      :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
-      :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
-      :max_fields=>{:expiry=>19},
-      :description=>false)
+  T2Server::Server.new(uri) do |server|
+    print "     Server: #{server.uri}\n"
+    print "    Version: #{server.version}\n"
+    print "  Run limit: #{server.run_limit(creds)}\n"
+    runs = server.runs(creds)
+    print "No. of runs: #{runs.length}\n"
+    if runs.length > 0
+      puts (Hirb::Helpers::ObjectTable.render runs,
+        :fields=>[:uuid, :status, :expiry],
+        :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
+        :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
+        :max_fields=>{:expiry=>19},
+        :description=>false)
+    end
   end
 rescue T2Server::T2ServerError => e
   puts e

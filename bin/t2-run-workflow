@@ -115,80 +115,80 @@ else
   wkf = IO.read(wkf_file)
 end
 
-# create run
 begin
-  run = T2Server::Run.create(uri, wkf, creds)
+  T2Server::Run.create(uri, wkf, creds) do |run|
+    puts "Created run with uuid: #{run.uuid}"
+    puts "Created at #{run.create_time}"
+
+    # set run expiry
+    if expiry != ""
+      run.expiry=(expiry)
+      puts "Expiry time set to #{run.expiry}"
+    end
+
+    # set inputs
+    if inputs.has_key?(:baclava)
+      run.upload_baclava_file(inputs[:baclava])
+      puts "Uploaded baclava input file"
+    else
+      inputs.each do |input, value|
+        puts "Set input '#{input}' to #{value}"
+        run.set_input(input, value)
+      end
+  
+      files.each do |input, file|
+        name = file.split("/")[-1];
+        puts "Set input '#{input}' to use file '#{name}'"
+        run.upload_input_file(input, file)
+      end
+    end
+
+    # output baclava?
+    run.request_baclava_output unless baclava_out == nil
+
+    # start run and wait until it is finished
+    run.start
+    puts "Started at #{run.start_time}"
+
+    # bail out if user doesn't want to wait
+    exit 0 if no_wait
+
+    # otherwise wait
+    print "Running"
+    run.wait(:progress => true)
+    puts "Finished at #{run.finish_time}"
+
+    # get outputs
+    stdout = run.stdout
+    stderr = run.stderr
+    exitcd = run.exitcode
+    puts "Exitcode: #{exitcd}"
+    if stdout != "" then puts "Stdout:\n#{stdout}" end
+    if stderr != "" then puts "Stderr:\n#{stderr}" end
+
+    if exitcd == 0
+      if baclava_out != nil
+        File.open(baclava_out, "w") do |file|
+          file.syswrite(run.baclava_output)
+        end
+        puts "Baclava file written to '#{baclava_out}'"
+      else
+        # go through the outputs and print them out
+        puts "Outputs:"
+        run.get_output_ports.each do |o|
+          print "          #{o} -> "
+          p run.get_output("#{o}", output_refs)
+        end
+      end
+    end
+
+    # delete run?
+    if delete_run
+      run.delete
+      puts "Run deleted"
+    end
+  end
 rescue T2Server::T2ServerError => e
   puts e
   exit 1
-end
-puts "Created run with uuid: #{run.uuid}"
-puts "Created at #{run.create_time}"
-
-# set run expiry
-if expiry != ""
-  run.expiry=(expiry)
-  puts "Expiry time set to #{run.expiry}"
-end
-
-# set inputs
-if inputs.has_key?(:baclava)
-  run.upload_baclava_file(inputs[:baclava])
-  puts "Uploaded baclava input file"
-else
-  inputs.each do |input, value|
-    puts "Set input '#{input}' to #{value}"
-    run.set_input(input, value)
-  end
-  
-  files.each do |input, file|
-    name = file.split("/")[-1];
-    puts "Set input '#{input}' to use file '#{name}'"
-    run.upload_input_file(input, file)
-  end
-end
-
-# output baclava?
-run.request_baclava_output unless baclava_out == nil
-
-# start run and wait until it is finished
-run.start
-puts "Started at #{run.start_time}"
-
-# bail out if user doesn't want to wait
-exit 0 if no_wait
-
-# otherwise wait
-print "Running"
-run.wait(:progress => true)
-puts "Finished at #{run.finish_time}"
-
-# get outputs
-stdout = run.stdout
-stderr = run.stderr
-exitcd = run.exitcode
-puts "Exitcode: #{exitcd}"
-if stdout != "" then puts "Stdout:\n#{stdout}" end
-if stderr != "" then puts "Stderr:\n#{stderr}" end
-
-if exitcd == 0
-  if baclava_out != nil
-    File.open(baclava_out, "w") do |file|
-      file.syswrite(run.baclava_output)
-    end
-    puts "Baclava file written to '#{baclava_out}'"
-  else
-    # go through the outputs and print them out
-    puts "Outputs:"
-    run.get_output_ports.each do |o|
-      print "          #{o} -> "
-      p run.get_output("#{o}", output_refs)
-    end
-  end
-end
-
-# delete run?
-if delete_run
-  run.delete
-  puts "Run deleted"
 end

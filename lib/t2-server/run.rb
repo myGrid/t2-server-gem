@@ -126,7 +126,9 @@ module T2Server
         uuid = server.initialize_run(workflow, credentials)
       end
       
-      new(server, uuid, credentials)
+      run = new(server, uuid, credentials)
+      yield(run) if block_given?
+      run
     end
 
     # :call-seq:
