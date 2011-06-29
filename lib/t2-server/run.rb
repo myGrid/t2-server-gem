@@ -266,10 +266,10 @@ module T2Server
     # * :progress - Print a dot (.) each interval to show that something is
     #   actually happening. Default +false+.
     #
-    # Raises RunStateError if the run is not in the +Running+ state.
+    # Raises RunStateError if the run is still in the +Initialised+ state.
     def wait(params={})
       state = status
-      raise RunStateError.new(state, STATE[:running]) if state != STATE[:running]
+      raise RunStateError.new(state, STATE[:running]) if state == STATE[:initialized]
 
       interval = params[:interval] || 1
       progress = params[:progress] || false
