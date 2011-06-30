@@ -33,17 +33,33 @@
 require 'rubygems'
 require 'base64'
 require 'uri'
-require 'libxml'
 
 module T2Server
 
   # An interface for directly communicating with one or more Taverna 2 Server
   # instances.
   class Server
-    include LibXML
+    include XML::Methods
 
     # The version of the remote Taverna Server instance.
     attr_reader :version
+
+    # :stopdoc:
+    XPaths = {
+      # Server top-level XPath queries
+      :server   => XML::Methods.xpath_compile("//nsr:serverDescription"),
+      :policy   => XML::Methods.xpath_compile("//nsr:policy"),
+      :run      => XML::Methods.xpath_compile("//nsr:run"),
+      :runs     => XML::Methods.xpath_compile("//nsr:runs"),
+
+      # Server policy XPath queries
+      :runlimit => XML::Methods.xpath_compile("//nsr:runLimit"),
+      :permwkf  => XML::Methods.xpath_compile("//nsr:permittedWorkflows"),
+      :permlstn => XML::Methods.xpath_compile("//nsr:permittedListeners"),
+      :permlstt => XML::Methods.xpath_compile("//nsr:permittedListenerTypes"),
+      :notify   => XML::Methods.xpath_compile("//nsr:enabledNotificationFabrics")
+    }
+    # :startdoc:
 
     def initialize(uri)
       # we want to use URIs here but strings can be passed in
@@ -62,10 +78,10 @@ module T2Server
 
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
-      server_description = XML::Document.string(get_attribute("#{uri.path}/rest/"))
+      server_description = xml_document(get_attribute("#{uri.path}/rest/"))
       @version = get_version(server_description)
       @links = get_description(server_description)
-      
+
       # initialise run list
       @runs = {}
     end
@@ -97,8 +113,8 @@ module T2Server
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its UUID instead.
     def initialize_run(workflow, credentials = nil)
-      @connection.POST_run("#{@links[:runs]}", Fragments::WORKFLOW % workflow,
-        credentials)
+      @connection.POST_run("#{@links[:runs]}",
+        XML::Fragments::WORKFLOW % workflow, credentials)
     end
 
     # :call-seq:
@@ -172,9 +188,9 @@ module T2Server
         run = run(run, credentials)
       end
 
-      xml_value = XML::Node.new_text(value)
+      xml_value = xml_text_node(value)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTVALUE % xml_value,
+      set_attribute(path, XML::Fragments::RUNINPUTVALUE % xml_value,
         "application/xml", credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run.uuid
@@ -195,9 +211,9 @@ module T2Server
         run = run(run, credentials)
       end
 
-      xml_value = XML::Node.new_text(filename)
+      xml_value = xml_text_node(filename)
       path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, Fragments::RUNINPUTFILE % xml_value,
+      set_attribute(path, XML::Fragments::RUNINPUTFILE % xml_value,
         "application/xml", credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run.uuid
@@ -220,7 +236,7 @@ module T2Server
 
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
       @connection.POST_dir("#{@links[:runs]}/#{run}/#{root}",
-        Fragments::MKDIR % dir, run, dir, credentials)
+        XML::Fragments::MKDIR % dir, run, dir, credentials)
     end
 
     # :call-seq:
@@ -238,7 +254,7 @@ module T2Server
       rename = filename.split('/')[-1] if rename == ""
 
       if @connection.POST_file("#{@links[:runs]}/#{run}/#{location}",
-        Fragments::UPLOAD % [rename, contents], run, credentials)
+        XML::Fragments::UPLOAD % [rename, contents], run, credentials)
         rename
       end
     end
@@ -299,7 +315,7 @@ module T2Server
     end
 
     def get_version(doc)
-      version = doc.find_first(XPaths::SERVER, Namespaces::MAP).attributes["serverVersion"]
+      version = xpath_attr(doc, XPaths[:server], "serverVersion")
       if version == nil
         return 1.0
       else
@@ -308,23 +324,21 @@ module T2Server
     end
 
     def get_description(doc)
-      nsmap = Namespaces::MAP
-      
       links = {}
-      links[:runs] = URI.parse(doc.find_first(XPaths::RUNS, nsmap).attributes["href"]).path
-      
+      links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href")).path
+
       if @version > 1.0
-        links[:policy] = URI.parse(doc.find_first(XPaths::POLICY, nsmap).attributes["href"]).path
-        doc = XML::Document.string(get_attribute(links[:policy]))
+        links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
+        doc = xml_document(get_attribute(links[:policy]))
         
-        links[:permlisteners] = URI.parse(doc.find_first(XPaths::PERMLSTT, nsmap).attributes["href"]).path
-        links[:notifications] = URI.parse(doc.find_first(XPaths::NOTIFY, nsmap).attributes["href"]).path
+        links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
+        links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
       else
-        links[:permlisteners] = URI.parse(doc.find_first(XPaths::PERMLSTN, nsmap).attributes["href"]).path
+        links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstn], "href")).path
       end
       
-      links[:runlimit]      = URI.parse(doc.find_first(XPaths::RUNLIMIT, nsmap).attributes["href"]).path
-      links[:permworkflows] = URI.parse(doc.find_first(XPaths::PERMWKF, nsmap).attributes["href"]).path
+      links[:runlimit]      = URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
+      links[:permworkflows] = URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
 
       links
     end
@@ -332,11 +346,11 @@ module T2Server
     def get_runs(credentials = nil)
       run_list = get_attribute("#{@links[:runs]}", credentials)
 
-      doc = XML::Document.string(run_list)
+      doc = xml_document(run_list)
 
       # get list of run uuids
       uuids = []
-      doc.find(XPaths::RUN, Namespaces::MAP).each do |run|
+      xpath_find(doc, XPaths[:run]).each do |run|
         uuids << run.attributes["href"].split('/')[-1]
       end
 

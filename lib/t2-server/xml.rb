@@ -35,67 +35,60 @@ require 'libxml'
 
 module T2Server
   # :stopdoc:
-  module Namespaces
-    SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
-    REST   = SERVER + "rest/"
-    INPUT  = "http://ns.taverna.org.uk/2010/data/in"
-
-    MAP    = {
-      "nss" => Namespaces::SERVER,
-      "nsr" => Namespaces::REST,
-      "inp" => Namespaces::INPUT
-    }
-  end
-
-  module Fragments
-    WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
-    RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
-    RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
-    RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
-    UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
-    MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
-  end
-
-  module XPaths
-    include LibXML
+  module XML
 
     # Shut the libxml error handler up
-    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+    LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
 
-    # Server XPath queries
-    SERVER   = XML::XPath::Expression.new("//nsr:serverDescription")
-    POLICY   = XML::XPath::Expression.new("//nsr:policy")
-    RUN      = XML::XPath::Expression.new("//nsr:run")
-    RUNS     = XML::XPath::Expression.new("//nsr:runs")
+    module Namespaces
+      SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
+      REST   = SERVER + "rest/"
+      INPUT  = "http://ns.taverna.org.uk/2010/data/in"
 
-    # Server policy XPath queries
-    RUNLIMIT = XML::XPath::Expression.new("//nsr:runLimit")
-    PERMWKF  = XML::XPath::Expression.new("//nsr:permittedWorkflows")
-    PERMLSTN = XML::XPath::Expression.new("//nsr:permittedListeners")
-    PERMLSTT = XML::XPath::Expression.new("//nsr:permittedListenerTypes")
-    NOTIFY   = XML::XPath::Expression.new("//nsr:enabledNotificationFabrics")
+      MAP    = {
+        "nss" => Namespaces::SERVER,
+        "nsr" => Namespaces::REST,
+        "inp" => Namespaces::INPUT
+      }
+    end
 
-    # Run XPath queries
-    DIR        = XML::XPath::Expression.new("//nss:dir")
-    FILE       = XML::XPath::Expression.new("//nss:file")
-    EXPIRY     = XML::XPath::Expression.new("//nsr:expiry")
-    WORKFLOW   = XML::XPath::Expression.new("//nsr:creationWorkflow")
-    STATUS     = XML::XPath::Expression.new("//nsr:status")
-    CREATETIME = XML::XPath::Expression.new("//nsr:createTime")
-    STARTTIME  = XML::XPath::Expression.new("//nsr:startTime")
-    FINISHTIME = XML::XPath::Expression.new("//nsr:finishTime")
-    WDIR       = XML::XPath::Expression.new("//nsr:workingDirectory")
-    INPUTS     = XML::XPath::Expression.new("//nsr:inputs")
-    OUTPUT     = XML::XPath::Expression.new("//nsr:output")
-    SECURECTX  = XML::XPath::Expression.new("//nsr:securityContext")
-    LISTENERS  = XML::XPath::Expression.new("//nsr:listeners")
-    BACLAVA    = XML::XPath::Expression.new("//nsr:baclava")
-    INPUTSEXP  = XML::XPath::Expression.new("//nsr:expected")
-    
-    # Run inputs XPath queries
-    INP_INPUT  = XML::XPath::Expression.new("//inp:input")
-    INP_NAME   = XML::XPath::Expression.new("inp:name")
-    INP_DEPTH  = XML::XPath::Expression.new("inp:depth")
+    module Fragments
+      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
+      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
+      RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
+      RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
+      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
+      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
+    end
+
+    module Methods
+      def xml_document(string)
+        LibXML::XML::Document.string(string)
+      end
+
+      def xml_text_node(text)
+        LibXML::XML::Node.new_text(text)
+      end
+
+      # This method needs to be declared as a module method so
+      # it can be used as a class method when it is mixed in.
+      def xpath_compile(xpath)
+        LibXML::XML::XPath::Expression.new(xpath)
+      end
+      module_function :xpath_compile
+
+      def xpath_find(doc, expr)
+        doc.find(expr, Namespaces::MAP)
+      end
+
+      def xpath_first(doc, expr)
+        doc.find_first(expr, Namespaces::MAP)
+      end
+
+      def xpath_attr(doc, expr, attribute)
+        doc.find_first(expr, Namespaces::MAP).attributes[attribute]
+      end
+    end
   end
   # :startdoc:
 end

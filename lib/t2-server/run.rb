@@ -31,7 +31,6 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 'libxml'
 require 'time'
 
 module T2Server
@@ -46,7 +45,7 @@ module T2Server
   # * Finished: The run has finished running and its outputs are available for
   #   download.
   class Run
-    include LibXML
+    include XML::Methods
 
     private_class_method :new
 
@@ -63,6 +62,30 @@ module T2Server
       :running     => "Operating",
       :finished    => "Finished",
       :stopped     => "Stopped"
+    }
+
+    XPaths = {
+      # Run XPath queries
+      :dir        => XML::Methods.xpath_compile("//nss:dir"),
+      :file       => XML::Methods.xpath_compile("//nss:file"),
+      :expiry     => XML::Methods.xpath_compile("//nsr:expiry"),
+      :workflow   => XML::Methods.xpath_compile("//nsr:creationWorkflow"),
+      :status     => XML::Methods.xpath_compile("//nsr:status"),
+      :createtime => XML::Methods.xpath_compile("//nsr:createTime"),
+      :starttime  => XML::Methods.xpath_compile("//nsr:startTime"),
+      :finishtime => XML::Methods.xpath_compile("//nsr:finishTime"),
+      :wdir       => XML::Methods.xpath_compile("//nsr:workingDirectory"),
+      :inputs     => XML::Methods.xpath_compile("//nsr:inputs"),
+      :output     => XML::Methods.xpath_compile("//nsr:output"),
+      :securectx  => XML::Methods.xpath_compile("//nsr:securityContext"),
+      :listeners  => XML::Methods.xpath_compile("//nsr:listeners"),
+      :baclava    => XML::Methods.xpath_compile("//nsr:baclava"),
+      :inputexp   => XML::Methods.xpath_compile("//nsr:expected"),
+
+      # Run inputs XPath queries
+      :inp_input  => XML::Methods.xpath_compile("//inp:input"),
+      :inp_name   => XML::Methods.xpath_compile("inp:name"),
+      :inp_depth  => XML::Methods.xpath_compile("inp:depth")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -503,31 +526,23 @@ module T2Server
       lists = []
       values = []
 
-      begin
-        doc = XML::Document.string(dir_list)
+      doc = xml_document(dir_list)
 
-        doc.find(XPaths::DIR, Namespaces::MAP).each do |e|
-          if top
-            lists << e.content.split('/')[-1]
-          else
-            index = (e.attributes['name'].to_i - 1)
-            lists[index] = e.content.split('/')[-1]
-          end
+      xpath_find(doc, XPaths[:dir]).each do |e|
+        if top
+          lists << e.content.split('/')[-1]
+        else
+          index = (e.attributes['name'].to_i - 1)
+          lists[index] = e.content.split('/')[-1]
         end
+      end
 
-        doc.find(XPaths::FILE, Namespaces::MAP).each do |e|
-          if top
-            values << e.content.split('/')[-1]
-          else
-            index = (e.attributes['name'].to_i - 1)
-            values[index] = e.content.split('/')[-1]
-          end
-        end
-      rescue XML::Error => xmle
-        # We expect to get a DOCUMENT_EMPTY error in some cases. All others
-        # should be re-raised.
-        if xmle.code != XML::Error::DOCUMENT_EMPTY
-          raise xmle
+      xpath_find(doc, XPaths[:file]).each do |e|
+        if top
+          values << e.content.split('/')[-1]
+        else
+          index = (e.attributes['name'].to_i - 1)
+          values[index] = e.content.split('/')[-1]
         end
       end
 
@@ -579,12 +594,11 @@ module T2Server
         @input_ports = {}
         port_desc = @server.get_run_attribute(@uuid, @links[:inputexp], @credentials)
 
-        doc = XML::Document.string(port_desc)
-        nsmap = Namespaces::MAP
+        doc = xml_document(port_desc)
 
-        doc.find(XPaths::INP_INPUT, nsmap).each do |inp|
-          name = inp.find_first(XPaths::INP_NAME, nsmap).content
-          depth = inp.find_first(XPaths::INP_DEPTH, nsmap).content.to_i
+        xpath_find(doc, XPaths[:inp_input]).each do |inp|
+          name = xpath_first(inp, XPaths[:inp_name]).content
+          depth = xpath_first(inp, XPaths[:inp_depth]).content.to_i
           @input_ports[name] = Port.new(name, depth)
         end
       end
@@ -594,15 +608,22 @@ module T2Server
 
     def get_attributes(desc)
       # first parse out the basic stuff
-      links = parse_description(desc)
+      links = {}
+
+      doc = xml_document(desc)
       
+      [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
+        :wdir, :inputs, :output, :securectx, :listeners].each do |key|
+          links[key] = xpath_attr(doc, XPaths[key], "href").split('/')[-1]
+      end
+
       # get inputs
       inputs = @server.get_run_attribute(@uuid, links[:inputs], @credentials)
-      doc = XML::Document.string(inputs)
-      nsmap = Namespaces::MAP
-      links[:baclava] = "#{links[:inputs]}/" + doc.find_first(XPaths::BACLAVA, nsmap).attributes["href"].split('/')[-1]
+      doc = xml_document(inputs)
+
+      links[:baclava] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
       if @server.version > 1
-        links[:inputexp] = "#{links[:inputs]}/" + doc.find_first(XPaths::INPUTSEXP, nsmap).attributes["href"].split('/')[-1]
+        links[:inputexp] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
       end
 
       # set io properties
@@ -612,24 +633,6 @@ module T2Server
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
       
       links
-    end
-
-    def parse_description(desc)
-      doc = XML::Document.string(desc)
-      nsmap = Namespaces::MAP
-      {
-        :expiry     => doc.find_first(XPaths::EXPIRY, nsmap).attributes["href"].split('/')[-1],
-        :workflow   => doc.find_first(XPaths::WORKFLOW, nsmap).attributes["href"].split('/')[-1],
-        :status     => doc.find_first(XPaths::STATUS, nsmap).attributes["href"].split('/')[-1],
-        :createtime => doc.find_first(XPaths::CREATETIME, nsmap).attributes["href"].split('/')[-1],
-        :starttime  => doc.find_first(XPaths::STARTTIME, nsmap).attributes["href"].split('/')[-1],
-        :finishtime => doc.find_first(XPaths::FINISHTIME, nsmap).attributes["href"].split('/')[-1],
-        :wdir       => doc.find_first(XPaths::WDIR, nsmap).attributes["href"].split('/')[-1],
-        :inputs     => doc.find_first(XPaths::INPUTS, nsmap).attributes["href"].split('/')[-1],
-        :output     => doc.find_first(XPaths::OUTPUT, nsmap).attributes["href"].split('/')[-1],
-        :securectx  => doc.find_first(XPaths::SECURECTX, nsmap).attributes["href"].split('/')[-1],
-        :listeners  => doc.find_first(XPaths::LISTENERS, nsmap).attributes["href"].split('/')[-1]
-      }
     end
 
     # This is a private class for internal use only. It is used to represent
