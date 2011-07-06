@@ -139,13 +139,12 @@ module T2Server
       @server.delete_run(uuid, @credentials)
     end
 
-    # :call-seq:
-    #   run.inputs -> string
-    #
-    # Return the path to the input ports of this run on the server.
+    # :stopdoc:
     def inputs
+      warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
       @links[:inputs]
     end
+    # :startdoc:
 
     # :call-seq:
     #   run.set_input(input, value) -> bool
@@ -157,7 +156,11 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @server.set_run_input(self, input, value, @credentials)
+      xml_value = xml_text_node(value)
+      path = "#{@links[:inputs]}/input/#{input}"
+      @server.set_run_attribute(self, path,
+        XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
+        @credentials)
     end
 
     # :call-seq:
@@ -171,7 +174,11 @@ module T2Server
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @server.set_run_input_file(self, input, filename, @credentials)
+      xml_value = xml_text_node(filename)
+      path = "#{@links[:inputs]}/input/#{input}"
+      @server.set_run_attribute(self, path,
+        XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
+        @credentials)
     end
 
     # :call-seq:
@@ -244,7 +251,8 @@ module T2Server
       # parse timezone offsets with a colon (eg +00:00)
       date_str = Time.parse(time).xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
-      @server.set_run_attribute(@uuid, @links[:expiry], date_str, @credentials)
+      @server.set_run_attribute(@uuid, @links[:expiry], date_str,
+        "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -278,7 +286,7 @@ module T2Server
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       @server.set_run_attribute(@uuid, @links[:status], STATE[:running],
-        @credentials)
+        "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -404,7 +412,8 @@ module T2Server
 
       @baclava_in = true
       rename = upload_file(filename)
-      @server.set_run_attribute(@uuid, @links[:baclava], rename, @credentials)
+      @server.set_run_attribute(@uuid, @links[:baclava], rename,
+        "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -418,7 +427,7 @@ module T2Server
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
       
       @baclava_out = @server.set_run_attribute(@uuid, @links[:output],
-        BACLAVA_FILE, @credentials)
+        BACLAVA_FILE, "text/plain", @credentials)
     end
 
     # :stopdoc:

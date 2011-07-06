@@ -194,16 +194,7 @@ module T2Server
         run = run(run, credentials)
       end
 
-      xml_value = xml_text_node(value)
-      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, XML::Fragments::RUNINPUTVALUE % xml_value,
-        "application/xml", credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run.uuid
-        raise e
-      else
-        raise RunNotFoundError.new(run.uuid)
-      end
+      run.set_input(input, value)
     end
 
     # :call-seq:
@@ -217,16 +208,7 @@ module T2Server
         run = run(run, credentials)
       end
 
-      xml_value = xml_text_node(filename)
-      path = "#{@links[:runs]}/#{run.uuid}/#{run.inputs}/input/#{input}"
-      set_attribute(path, XML::Fragments::RUNINPUTFILE % xml_value,
-        "application/xml", credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run.uuid
-        raise e
-      else
-        raise RunNotFoundError.new(run.uuid)
-      end
+      run.set_input_file(input, filename)
     end
 
     # :call-seq:
@@ -286,17 +268,17 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.set_run_attribute(run, path, value, credentials = nil) -> bool
+    #   server.set_run_attribute(run, path, value, type, credentials = nil) -> bool
     #
     # Set the attribute at _path_ in _run_ to _value_. _run_ can be either a
     # Run instance or a UUID.
-    def set_run_attribute(run, path, value, credentials = nil)
+    def set_run_attribute(run, path, value, type, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
 
-      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, "text/plain",
+      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
         credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
