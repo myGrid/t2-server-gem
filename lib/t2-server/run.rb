@@ -101,7 +101,8 @@ module T2Server
       
       @credentials = credentials
       
-      @links = get_attributes(@server.get_run_attribute(uuid, "", @credentials))
+      @links = get_attributes(@server.get_run_attribute(uuid, "",
+        "application/xml", @credentials))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # initialize @input_ports to nil as an empty list means no inputs
@@ -236,7 +237,7 @@ module T2Server
     # Return the expiry time of this run as an instance of class Time.
     def expiry
       Time.parse(@server.get_run_attribute(@uuid, @links[:expiry],
-        @credentials))
+        "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -262,7 +263,7 @@ module T2Server
     def workflow
       if @workflow == ""
         @workflow = @server.get_run_attribute(@uuid, @links[:workflow],
-          @credentials)
+          "application/xml", @credentials)
       end
       @workflow
     end
@@ -272,7 +273,8 @@ module T2Server
     #
     # Get the status of this run.
     def status
-      @server.get_run_attribute(@uuid, @links[:status], @credentials)
+      @server.get_run_attribute(@uuid, @links[:status], "text/plain",
+        @credentials)
     end
 
     # :call-seq:
@@ -326,7 +328,8 @@ module T2Server
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
-      @server.get_run_attribute(@uuid, @links[:exitcode], @credentials).to_i
+      @server.get_run_attribute(@uuid, @links[:exitcode], "text/plain",
+        @credentials).to_i
     end
 
     # :call-seq:
@@ -334,7 +337,8 @@ module T2Server
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
-      @server.get_run_attribute(@uuid, @links[:stdout], @credentials)
+      @server.get_run_attribute(@uuid, @links[:stdout], "text/plain",
+        @credentials)
     end
 
     # :call-seq:
@@ -342,7 +346,8 @@ module T2Server
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
-      @server.get_run_attribute(@uuid, @links[:stderr], @credentials)
+      @server.get_run_attribute(@uuid, @links[:stderr], "text/plain",
+        @credentials)
     end
 
     # :call-seq:
@@ -458,7 +463,7 @@ module T2Server
       
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
       @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{BACLAVA_FILE}",
-        @credentials)
+        "*/*", @credentials)
     end
 
     # :stopdoc:
@@ -499,7 +504,7 @@ module T2Server
     # Get the creation time of this run as an instance of class Time.
     def create_time
       Time.parse(@server.get_run_attribute(@uuid, @links[:createtime],
-        @credentials))
+        "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -508,7 +513,7 @@ module T2Server
     # Get the start time of this run as an instance of class Time.
     def start_time
       Time.parse(@server.get_run_attribute(@uuid, @links[:starttime],
-        @credentials))
+        "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -517,7 +522,7 @@ module T2Server
     # Get the finish time of this run as an instance of class Time.
     def finish_time
       Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime],
-        @credentials))
+        "text/plain", @credentials))
     end
 
     private
@@ -530,7 +535,7 @@ module T2Server
     def _ls_ports(dir="", top=true)
       dir.strip_path!
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}",
-        @credentials)
+        "*/*", @credentials)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
@@ -572,7 +577,8 @@ module T2Server
             return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
           else
             return @server.get_run_attribute(@uuid,
-              "#{@links[:wdir]}/out/#{output}", @credentials)
+              "#{@links[:wdir]}/out/#{output}", "application/octet-stream",
+              @credentials)
           end
         end
       end
@@ -592,7 +598,8 @@ module T2Server
           result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
         else
           result << @server.get_run_attribute(@uuid,
-            "#{@links[:wdir]}/out/#{output}/#{item}", @credentials)
+            "#{@links[:wdir]}/out/#{output}/#{item}", "application/octet-stream",
+            @credentials)
         end
       end
 
@@ -603,7 +610,8 @@ module T2Server
       @input_ports = {} if @server.version < 2
       if @input_ports == nil
         @input_ports = {}
-        port_desc = @server.get_run_attribute(@uuid, @links[:inputexp], @credentials)
+        port_desc = @server.get_run_attribute(@uuid, @links[:inputexp],
+          "application/xml", @credentials)
 
         doc = xml_document(port_desc)
 
@@ -629,7 +637,8 @@ module T2Server
       end
 
       # get inputs
-      inputs = @server.get_run_attribute(@uuid, links[:inputs], @credentials)
+      inputs = @server.get_run_attribute(@uuid, links[:inputs],
+        "application/xml",@credentials)
       doc = xml_document(inputs)
 
       links[:baclava] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]

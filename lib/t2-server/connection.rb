@@ -159,12 +159,13 @@ module T2Server
     end
 
     # :call-seq:
-    #   GET(path, credentials) -> String
+    #   GET(path, type, credentials) -> String
     #
     # Perform an HTTP GET on a path on the server. If successful the body of
     # the response is returned.
-    def GET(path, credentials)
+    def GET(path, type, credentials)
       get = Net::HTTP::Get.new(path)
+      get["Accept"] = type
       credentials.authenticate(get) if credentials != nil
       
       begin

@@ -78,7 +78,8 @@ module T2Server
 
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
-      server_description = xml_document(get_attribute("#{uri.path}/rest/"))
+      server_description = xml_document(get_attribute("#{uri.path}/rest/",
+        "application/xml"))
       @version = get_version(server_description)
       @links = get_description(server_description)
 
@@ -138,7 +139,7 @@ module T2Server
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
     # against this maximum.
     def run_limit(credentials = nil)
-      get_attribute(@links[:runlimit], credentials).to_i
+      get_attribute(@links[:runlimit], "text/plain", credentials).to_i
     end
 
     # :call-seq:
@@ -248,17 +249,17 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.get_run_attribute(run, path, credentials = nil) -> string
+    #   server.get_run_attribute(run, path, type, credentials = nil) -> string
     #
     # Get the attribute at _path_ in _run_. _run_ can be either a Run instance
     # or a UUID.
-    def get_run_attribute(run, path, credentials = nil)
+    def get_run_attribute(run, path, type, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
       end
 
-      get_attribute("#{@links[:runs]}/#{run}/#{path}", credentials)
+      get_attribute("#{@links[:runs]}/#{run}/#{path}", type, credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -289,9 +290,9 @@ module T2Server
     end
 
     private
-    def get_attribute(path, credentials = nil)
+    def get_attribute(path, type, credentials = nil)
       begin
-        @connection.GET(path, credentials)
+        @connection.GET(path, type, credentials)
       rescue ConnectionRedirectError => cre
         @connection = cre.redirect
         retry
@@ -317,7 +318,7 @@ module T2Server
 
       if @version > 1.0
         links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
-        doc = xml_document(get_attribute(links[:policy]))
+        doc = xml_document(get_attribute(links[:policy], "application/xml"))
         
         links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
         links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
@@ -332,7 +333,7 @@ module T2Server
     end
 
     def get_runs(credentials = nil)
-      run_list = get_attribute("#{@links[:runs]}", credentials)
+      run_list = get_attribute("#{@links[:runs]}", "application/xml", credentials)
 
       doc = xml_document(run_list)
 
