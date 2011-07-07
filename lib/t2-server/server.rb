@@ -184,12 +184,11 @@ module T2Server
       runs(credentials).each {|run| run.delete}
     end
 
-    # :call-seq:
-    #   server.set_run_input(run, input, value, credentials = nil) -> bool
-    #
-    # Set the workflow input port _input_ on run _run_ to _value_. _run_ can
-    # be either a Run instance or a UUID.
+    # :stopdoc:
     def set_run_input(run, input, value, credentials = nil)
+      warn "[DEPRECATION] 'Server#set_run_input' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#set_input' instead."
+
       # get the run from the uuid if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
@@ -198,12 +197,10 @@ module T2Server
       run.set_input(input, value)
     end
 
-    # :call-seq:
-    #   server.set_run_input_file(run, input, filename, credentials = nil) -> bool
-    #
-    # Set the workflow input port _input_ on run _run_ to use the file at
-    # _filename_ for its input. _run_ can be either a Run instance or a UUID.
     def set_run_input_file(run, input, filename, credentials = nil)
+      warn "[DEPRECATION] 'Server#set_run_input_file' is deprecated and " +
+        "will be removed in 1.0. Please use 'Run#set_input_file' instead."
+
       # get the run from the uuid if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
@@ -212,12 +209,7 @@ module T2Server
       run.set_input_file(input, filename)
     end
 
-    # :call-seq:
-    #   server.make_run_dir(run, root, dir, credentials = nil) -> bool
-    #
-    # Create a directory _dir_ within the directory _root_ on _run_. _run_ can
-    # be either a Run instance or a UUID. This is mainly for use by Run#mkdir.
-    def make_run_dir(run, root, dir, credentials = nil)
+    def create_dir(run, root, dir, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
@@ -228,12 +220,14 @@ module T2Server
         XML::Fragments::MKDIR % dir, run, dir, credentials)
     end
 
-    # :call-seq:
-    #   server.upload_run_file(run, filename, location, rename, credentials = nil) -> string
-    #
-    # Upload a file to _run_. _run_ can be either a Run instance or a UUID.
-    # Mainly for internal use by Run#upload_file.
-    def upload_run_file(run, filename, location, rename, credentials = nil)
+    def make_run_dir(run, root, dir, credentials = nil)
+      warn "[DEPRECATION] 'Server#make_run_dir' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#mkdir' instead."
+
+      create_dir(run, root, dir, credentials)
+    end
+
+    def upload_file(run, filename, location, rename, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
         run = run.uuid
@@ -248,11 +242,14 @@ module T2Server
       end
     end
 
-    # :call-seq:
-    #   server.get_run_attribute(run, path, type, credentials = nil) -> string
-    #
-    # Get the attribute at _path_ in _run_. _run_ can be either a Run instance
-    # or a UUID.
+    def upload_run_file(run, filename, location, rename, credentials = nil)
+      warn "[DEPRECATION] 'Server#upload_run_file' is deprecated and will " +
+        "be removed in 1.0. Please use 'Run#upload_file' or " +
+        "'Run#upload_input_file' instead."
+
+      upload_file(run, filename, location, rename, credentials)
+    end
+
     def get_run_attribute(run, path, type, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
@@ -268,11 +265,6 @@ module T2Server
       end
     end
 
-    # :call-seq:
-    #   server.set_run_attribute(run, path, value, type, credentials = nil) -> bool
-    #
-    # Set the attribute at _path_ in _run_ to _value_. _run_ can be either a
-    # Run instance or a UUID.
     def set_run_attribute(run, path, value, type, credentials = nil)
       # get the uuid from the run if that is what is passed in
       if run.instance_of? Run
@@ -288,6 +280,7 @@ module T2Server
         raise RunNotFoundError.new(run)
       end
     end
+    # :startdoc:
 
     private
     def get_attribute(path, type, credentials = nil)

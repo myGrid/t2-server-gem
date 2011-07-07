@@ -362,10 +362,10 @@ module T2Server
         # end and add the rest of the path to the wdir link
         leaf = dir.split("/")[-1]
         path = dir[0...-(leaf.length + 1)]
-        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf,
+        @server.create_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf,
           @credentials)
       else
-        @server.make_run_dir(@uuid, @links[:wdir], dir, @credentials)
+        @server.create_dir(@uuid, @links[:wdir], dir, @credentials)
       end
     end
 
@@ -383,7 +383,7 @@ module T2Server
       location = params[:dir] || ""
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
-      @server.upload_run_file(@uuid, filename, location, rename, @credentials)
+      @server.upload_file(@uuid, filename, location, rename, @credentials)
     end
 
     # :call-seq:
