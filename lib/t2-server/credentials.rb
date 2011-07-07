@@ -33,6 +33,7 @@
 module T2Server
 
   # This class serves as a base class for concrete credential systems.
+  # :stopdoc:
   class Credentials
 
     # :call-seq:
@@ -44,6 +45,7 @@ module T2Server
       # no op
     end
   end
+  # :startdoc:
 
   # A class representing HTTP Basic credentials.
   class HttpBasic < Credentials

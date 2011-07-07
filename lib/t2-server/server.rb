@@ -61,6 +61,12 @@ module T2Server
     }
     # :startdoc:
 
+    # :call-seq:
+    #   new(uri) -> Server
+    #   new(uri) {|self| ...}
+    #
+    # Create a new Server instance that represents the real server at _uri_.
+    # It will _yield_ itself if a block is given.
     def initialize(uri)
       # we want to use URIs here but strings can be passed in
       if !uri.is_a? URI
@@ -89,22 +95,20 @@ module T2Server
       yield(self) if block_given?
     end
 
-    # :call-seq:
-    #   Server.connect(uri, username="", password="") -> server
-    #
-    # Connect to the server specified by _uri_ which should be of the form:
-    # http://example.com:8888/blah or https://user:pass@example.com:8888/blah
-    #
-    # The credentials to be used can also be passed in directly.
-    # A Server instance is returned that represents the connection.
+    # :stopdoc:
     def Server.connect(uri, username="", password="")
+      warn "[DEPRECATION] 'Server#connect' is deprecated and will be " +
+        "removed in 1.0."
       new(uri)
     end
+    # :startdoc:
 
     # :call-seq:
-    #   server.create_run(workflow, credentials = nil) -> run
+    #   create_run(workflow, credentials = nil) -> run
+    #   create_run(workflow, credentials = nil) {|run| ...}
     #
     # Create a run on this server using the specified _workflow_.
+    # This method will _yield_ the newly created Run if a block is given.
     def create_run(workflow, credentials = nil)
       uuid = initialize_run(workflow, credentials)
       run = Run.create(self, "", credentials, uuid)
@@ -115,7 +119,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.initialize_run(workflow, credentials = nil) -> string
+    #   initialize_run(workflow, credentials = nil) -> string
     #
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its UUID instead.
@@ -125,7 +129,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.uri -> URI
+    #   uri -> URI
     #
     # The URI of the connection to the remote Taverna Server.
     def uri
@@ -133,7 +137,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.run_limit(credentials = nil) -> num
+    #   run_limit(credentials = nil) -> num
     #
     # The maximum number of runs that this server will allow at any one time.
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
@@ -143,7 +147,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.runs(credentials = nil) -> [runs]
+    #   runs(credentials = nil) -> [runs]
     #
     # Return the set of runs on this server.
     def runs(credentials = nil)
@@ -151,7 +155,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.run(uuid, credentials = nil) -> run
+    #   run(uuid, credentials = nil) -> run
     #
     # Return the specified run.
     def run(uuid, credentials = nil)
@@ -159,7 +163,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.delete_run(run, credentials = nil) -> bool
+    #   delete_run(run, credentials = nil) -> bool
     #
     # Delete the specified run from the server, discarding all of its state.
     # _run_ can be either a Run instance or a UUID.
@@ -176,7 +180,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   server.delete_all_runs(credentials = nil)
+    #   delete_all_runs(credentials = nil)
     #
     # Delete all runs on this server, discarding all of their state.
     def delete_all_runs(credentials = nil)

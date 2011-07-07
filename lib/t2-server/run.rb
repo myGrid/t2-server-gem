@@ -112,12 +112,15 @@ module T2Server
 
     # :call-seq:
     #   Run.create(server, workflow, credentials = nil) -> run
+    #   Run,create(server, workflow, credentials = nil) {|run| ...}
     #
     # Create a new run in the +Initialized+ state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
     # supplied as a string in t2flow or scufl format.
+    #
+    # This method will _yield_ the newly created Run if a block is given.
     def Run.create(server, workflow, credentials = nil, uuid="")
       if server.class != Server
         server = Server.new(server)
@@ -133,7 +136,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.delete
+    #   delete
     #
     # Delete this run from the server.
     def delete
@@ -148,7 +151,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   run.set_input(input, value) -> bool
+    #   set_input(input, value) -> bool
     #
     # Set the workflow input port _input_ to _value_.
     #
@@ -165,7 +168,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.set_input_file(input, filename) -> bool
+    #   set_input_file(input, filename) -> bool
     #
     # Set the workflow input port _input_ to use the file at _filename_ as its
     # input data.
@@ -183,7 +186,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.input_ports -> array
+    #   input_ports -> array
     #
     # Return the names of all the input ports this run expects
     def input_ports
@@ -199,7 +202,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.get_output_ports -> list
+    #   get_output_ports -> list
     #
     # Return a list of all the output ports
     def get_output_ports
@@ -208,7 +211,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.get_output(output, refs=false) -> string or list
+    #   get_output(output, refs=false) -> string or list
     #
     # Return the values of the workflow output port _output_. These are
     # returned as a list of strings or, if the output port represents a
@@ -221,7 +224,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.get_output_refs(output) -> string or list
+    #   get_output_refs(output) -> string or list
     #
     # Return references (URIs) to the values of the workflow output port
     # _output_. These are returned as a list of URIs or, if the output port
@@ -232,7 +235,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.expiry -> string
+    #   expiry -> string
     #
     # Return the expiry time of this run as an instance of class Time.
     def expiry
@@ -241,7 +244,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.expiry=(time) -> bool
+    #   expiry=(time) -> bool
     #
     # Set the expiry time of this run to _time_. The format of _time_ should
     # be something that the Ruby Time class can parse. If the value given does
@@ -257,7 +260,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.workflow -> string
+    #   workflow -> string
     #
     # Get the workflow that this run represents.
     def workflow
@@ -269,7 +272,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.status -> string
+    #   status -> string
     #
     # Get the status of this run.
     def status
@@ -278,7 +281,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.start
+    #   start
     #
     # Start this run on the server.
     #
@@ -292,7 +295,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.wait(params={})
+    #   wait(params={})
     #
     # Wait (block) for this run to finish. Possible values that can be passed
     # in via _params_ are:
@@ -324,7 +327,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.exitcode -> integer
+    #   exitcode -> integer
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
@@ -333,7 +336,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.stdout -> string
+    #   stdout -> string
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
@@ -342,7 +345,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.stderr -> string
+    #   stderr -> string
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
@@ -351,7 +354,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.mkdir(dir) -> bool
+    #   mkdir(dir) -> bool
     #
     # Create a directory in the run's working directory on the server. This
     # could be used to store input data.
@@ -370,7 +373,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.upload_file(filename, params={}) -> string
+    #   upload_file(filename, params={}) -> string
     #
     # Upload a file, with name _filename_, to the server. Possible values that
     # can be passed in via _params_ are:
@@ -387,7 +390,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.upload_input_file(input, filename, params={}) -> string
+    #   upload_input_file(input, filename, params={}) -> string
     #
     # Upload a file, with name _filename_, to the server and set it as the
     # input data for input port _input_. Possible values that can be passed
@@ -408,7 +411,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.upload_baclava_file(filename) -> bool
+    #   upload_baclava_file(filename) -> bool
     #
     # Upload a baclava file to be used for the workflow inputs.
     def upload_baclava_file(filename)
@@ -422,7 +425,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.request_baclava_output -> bool
+    #   request_baclava_output -> bool
     #
     # Set the server to save the outputs of this run in baclava format. This
     # must be done before the run is started.
@@ -444,7 +447,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   run.baclava_output? -> bool
+    #   baclava_output? -> bool
     #
     # Has this run been set to return results in baclava format?
     def baclava_output?
@@ -452,7 +455,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.baclava_output -> string
+    #   baclava_output -> string
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
@@ -475,7 +478,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   run.zip_output -> binary blob
+    #   zip_output -> binary blob
     #
     # Get the working directory of this run directly from the server in zip
     # format.
@@ -488,7 +491,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.initialized? -> bool
+    #   initialized? -> bool
     #
     # Is this run in the +Initialized+ state?
     def initialized?
@@ -496,7 +499,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.running? -> bool
+    #   running? -> bool
     #
     # Is this run in the +Running+ state?
     def running?
@@ -504,7 +507,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.finished? -> bool
+    #   finished? -> bool
     #
     # Is this run in the +Finished+ state?
     def finished?
@@ -512,7 +515,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.create_time -> string
+    #   create_time -> string
     #
     # Get the creation time of this run as an instance of class Time.
     def create_time
@@ -521,7 +524,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.start_time -> string
+    #   start_time -> string
     #
     # Get the start time of this run as an instance of class Time.
     def start_time
@@ -530,7 +533,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run.finish_time -> string
+    #   finish_time -> string
     #
     # Get the finish time of this run as an instance of class Time.
     def finish_time
