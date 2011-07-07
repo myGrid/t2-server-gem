@@ -51,7 +51,8 @@ spec = Gem::Specification.new do |s|
   s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
   s.bindir           = "bin"
-  s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output"]
+  s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info",
+                          "t2-get-output", "t2-server-admin"]
   s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]

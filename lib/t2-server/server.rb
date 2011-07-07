@@ -88,6 +88,7 @@ module T2Server
         "application/xml"))
       @version = get_version(server_description)
       @links = get_description(server_description)
+      @links[:admin] = "#{uri.path}/admin"
 
       # initialise run list
       @runs = {}
@@ -102,6 +103,19 @@ module T2Server
       new(uri)
     end
     # :startdoc:
+
+    # :call-seq:
+    #   administrator(credentials = nil) -> Administrator
+    #   administrator(credentials = nil) {|admin| ...}
+    #
+    # Return an instance of the Taverna Server administrator interface. This
+    # method will _yield_ the newly created administrator if a block is given.
+    def administrator(credentials = nil)
+      admin = Administrator.new(self, credentials)
+
+      yield(admin) if block_given?
+      admin
+    end
 
     # :call-seq:
     #   create_run(workflow, credentials = nil) -> run
@@ -299,6 +313,20 @@ module T2Server
       else
         raise RunNotFoundError.new(run)
       end
+    end
+
+    def get_admin_attribute(path, credentials = nil)
+      get_attribute("#{@links[:admin]}/#{path}", "*/*", credentials)
+    end
+
+    def set_admin_attribute(path, value, credentials = nil)
+      set_attribute("#{@links[:admin]}/#{path}", value, "text/plain",
+        credentials)
+    end
+
+    def admin_resource_writable?(path, credentials = nil)
+      headers = @connection.OPTIONS("#{@links[:admin]}/#{path}", credentials)
+      headers["allow"][0].split(",").include? "PUT"
     end
     # :startdoc:
 

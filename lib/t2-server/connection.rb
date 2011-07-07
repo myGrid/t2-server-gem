@@ -180,6 +180,8 @@ module T2Server
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
         return response.body
+      when Net::HTTPNoContent
+        return nil
       when Net::HTTPMovedTemporarily
         new_conn = redirect(response["location"])
         raise ConnectionRedirectError.new(new_conn)
@@ -266,6 +268,33 @@ module T2Server
         raise RunNotFoundError.new(run)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new("run #{run}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(credentials)
+      else
+        raise UnexpectedServerResponse.new(response)
+      end
+    end
+
+    # :call-seq:
+    #   OPTIONS(path, credentials) -> Hash
+    #
+    # Perform the HTTP OPTIONS command on the given _path_ and return a hash
+    # of the headers returned.
+    def OPTIONS(path, credentials)
+      options = Net::HTTP::Options.new(path)
+      credentials.authenticate(options) if credentials != nil
+
+      begin
+        response = @http.request(options)
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
+
+      case response
+      when Net::HTTPOK
+        response.to_hash
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("resource #{path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else

@@ -37,6 +37,7 @@ require 't2-server/connection'
 require 't2-server/port'
 require 't2-server/server'
 require 't2-server/run'
+require 't2-server/admin'
 
 # This is a Ruby library to interface with the Taverna 2 Server REST API.
 #

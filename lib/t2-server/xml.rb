@@ -43,11 +43,13 @@ module T2Server
     module Namespaces
       SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
       REST   = SERVER + "rest/"
+      ADMIN  = SERVER + "admin/"
       PORT   = "http://ns.taverna.org.uk/2010/port/"
 
       MAP    = {
         "nss"  => Namespaces::SERVER,
         "nsr"  => Namespaces::REST,
+        "nsa"  => Namespaces::ADMIN,
         "port" => Namespaces::PORT
       }
     end

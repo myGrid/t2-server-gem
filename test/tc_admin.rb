@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,49 +30,35 @@
 #
 # Author: Robert Haines
 
-require 'test/unit'
 require 't2-server'
 
-# check for a server address passed through on the command line
-if ARGV.size != 0
-  address = ARGV[0]
-  puts "Using server at #{address}"
-else
-  # get a server address to test - 30 second timeout
-  print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
-    "these tests will fully load the server and then delete all the runs " +
-    "that it has permission to do so - if you are not using security ALL " +
-    "runs will be deleted!\n(leave blank to skip tests): "
-  $stdout.flush
-  if select([$stdin], [], [], 30)
-    address = $stdin.gets.chomp
-  else
-    puts "\nSkipping tests that require a Taverna 2 Server instance..."
-    address = ""
-  end
-end
+class TestAdmin < Test::Unit::TestCase
 
-# the testcases to run
-require 'tc_paths'
-require 'tc_uri'
-if address != ""
-  $uri, $creds = URI.strip_credentials(address)
-  $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
-  $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
-  $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
-  $wkf_fail   = File.read("test/workflows/always_fail.t2flow")
-  $wkf_errors = File.read("test/workflows/list_with_errors.t2flow")
-  $list_input = "test/workflows/empty_list_input.baclava"
-  $file_input = "test/workflows/in.txt"
-  $file_strs  = "test/workflows/strings.txt"
+  def test_admin
+    # server connection
+    assert_nothing_raised(T2Server::ConnectionError) do
+      @server = T2Server::Server.new($uri)
+    end
+    assert_not_nil(@server)
 
-  require 'tc_server'
+    # unauthorized
+    assert_raise(T2Server::AuthorizationError) do
+      @server.administrator(T2Server::HttpBasic.new("u", "p"))
+    end
 
-  # get the server version to determine which test case to run
-  if T2Server::Server.new($uri).version == 1
-    require 'tc_run_v1'
-  else
-    require 'tc_run'
-    require 'tc_admin'
+    begin
+      @admin = @server.administrator($creds)
+    rescue T2Server::T2ServerError => e
+      # ignore, just don't run more tests
+      return
+    end
+
+    assert_equal(@admin["allownew"].name, "allowNew")
+
+    save = @admin["allownew"].value
+    @admin["allownew"].value = false
+    assert_equal(@admin["allownew"].value, "false")
+    @admin["allownew"].value = save
+    assert_equal(@admin["allownew"].value, save)
   end
 end
