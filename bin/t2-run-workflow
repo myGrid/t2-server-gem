@@ -38,13 +38,7 @@ require 'optparse'
 # set up options
 inputs  = {}
 files = {}
-wkf_file = ""
-expiry = ""
-output_refs = false
-baclava_out = nil
-delete_run = false
-no_wait = false
-zip_out = nil
+options = {}
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-run-workflow [options] server-address"
   opt.separator ""
@@ -53,7 +47,7 @@ opts = OptionParser.new do |opt|
   opt.separator "  and [options] can be:"
   opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If this is not " +
     "specified then the workflow is read from standard input") do |val|
-    wkf_file = val
+      options[:wkf_file] = val.chomp
   end
   opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to VALUE") do |val|
     input, value = val.chomp.split(':', 2)
@@ -65,31 +59,31 @@ opts = OptionParser.new do |opt|
       files[input] = filename
   end
   opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry  date/time of this run") do |val|
-    expiry = val.chomp
+    options[:expiry] = val.chomp
   end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
     inputs[:baclava] = val
   end
   opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format." +
     " A filename may be specified or 'out.xml' is used") do |val|
-      baclava_out = val
+      options[:baclava_out] = val.chomp
   end
   opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return " +
     "once it has started running") do |val|
-      no_wait = true
+      options[:no_wait] = true
   end
   opt.on("-r", "--output-refs", "Return URIs that point to the data items " +
     "of the output rather than the data items themselves.") do |val|
-    output_refs = val
+      options[:output_refs] = val
   end
   opt.on("-D", "--delete", "Delete the run from the server when it is " +
     "complete. By default the run and its results are preserved. Note that " +
     "the run will still be deleted when its expiry time is reached") do |val|
-    delete_run = val    
+      options[:delete] = val
   end
   opt.on("-z", "--zip=FILE", "Get the entire working directory of the run " +
     "in zip format and save it to the provided filename.") do |val|
-    zip_out = val
+      options[:zip_out] = val.chomp
   end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
@@ -114,10 +108,10 @@ end
 uri, creds = URI.strip_credentials(uri)
 
 # read workflow
-if wkf_file == ""
-  wkf = ARGF.read
+if options[:wkf_file]
+  wkf = IO.read(options[:wkf_file])
 else
-  wkf = IO.read(wkf_file)
+  wkf = ARGF.read
 end
 
 begin
@@ -126,8 +120,8 @@ begin
     puts "Created at #{run.create_time}"
 
     # set run expiry
-    if expiry != ""
-      run.expiry=(expiry)
+    if options[:expiry]
+      run.expiry=(options[:expiry])
       puts "Expiry time set to #{run.expiry}"
     end
 
@@ -149,14 +143,14 @@ begin
     end
 
     # output baclava?
-    run.request_baclava_output unless baclava_out == nil
+    run.request_baclava_output if options[:baclava_out]
 
     # start run and wait until it is finished
     run.start
     puts "Started at #{run.start_time}"
 
     # bail out if user doesn't want to wait
-    exit 0 if no_wait
+    exit 0 if options[:no_wait]
 
     # otherwise wait
     print "Running"
@@ -172,28 +166,28 @@ begin
     if stderr != "" then puts "Stderr:\n#{stderr}" end
 
     if exitcd == 0
-      if baclava_out != nil
-        File.open(baclava_out, "w") do |file|
+      if options[:baclava_out]
+        File.open(options[:baclava_out], "w") do |file|
           file.syswrite(run.baclava_output)
         end
-        puts "Baclava file written to '#{baclava_out}'"
-      elsif zip_out != nil
-        File.open(zip_out,"w") do |file|
+        puts "Baclava file written to '#{options[:baclava_out]}'"
+      elsif options[:zip_out]
+        File.open(options[:zip_out],"w") do |file|
           file.syswrite(run.zip_output)
         end
-        puts "Zip file written to '#{zip_out}'"
+        puts "Zip file written to '#{options[:zip_out]}'"
       else
         # go through the outputs and print them out
         puts "Outputs:"
         run.get_output_ports.each do |o|
           print "          #{o} -> "
-          p run.get_output("#{o}", output_refs)
+          p run.get_output("#{o}", options[:output_refs])
         end
       end
     end
 
     # delete run?
-    if delete_run
+    if options[:delete]
       run.delete
       puts "Run deleted"
     end

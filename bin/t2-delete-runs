@@ -36,7 +36,7 @@ require 't2-server'
 require 'optparse'
 
 # set up options
-delete_all = false
+options = {}
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-delete-runs [options] server-address [run-ids...]"
   opt.separator ""
@@ -44,7 +44,7 @@ opts = OptionParser.new do |opt|
   opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the id numbers"
   opt.separator "  of the runs you want to delete and [options] can be:"
   opt.on("--all", "Delete all runs on the server") do
-    delete_all = true
+    options[:all] = true
   end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
@@ -87,7 +87,7 @@ rescue T2Server::T2ServerError => e
 end
 
 # ...and delete them!
-if delete_all
+if options[:all]
   begin
     server.delete_all_runs(creds)
   rescue T2Server::AuthorizationError => ae
