@@ -44,6 +44,7 @@ output_refs = false
 baclava_out = nil
 delete_run = false
 no_wait = false
+zip_out = nil
 opts = OptionParser.new do |opt|
   opt.banner = "Usage: t2-run-workflow [options] server-address"
   opt.separator ""
@@ -85,6 +86,10 @@ opts = OptionParser.new do |opt|
     "complete. By default the run and its results are preserved. Note that " +
     "the run will still be deleted when its expiry time is reached") do |val|
     delete_run = val    
+  end
+  opt.on("-z", "--zip=FILE", "Get the entire working directory of the run " +
+    "in zip format and save it to the provided filename.") do |val|
+    zip_out = val
   end
   opt.on_tail("-h", "-?", "--help", "Show this message") do
     puts opt
@@ -172,6 +177,11 @@ begin
           file.syswrite(run.baclava_output)
         end
         puts "Baclava file written to '#{baclava_out}'"
+      elsif zip_out != nil
+        File.open(zip_out,"w") do |file|
+          file.syswrite(run.zip_output)
+        end
+        puts "Zip file written to '#{zip_out}'"
       else
         # go through the outputs and print them out
         puts "Outputs:"

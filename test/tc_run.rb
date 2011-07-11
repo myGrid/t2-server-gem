@@ -119,6 +119,11 @@ class TestRun < Test::Unit::TestCase
     assert_equal(@run.get_output("MANY"),
       [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
 
+    # get zip file
+    assert_nothing_raised(T2Server::T2ServerError) do
+      assert_not_equal(@run.zip_output, "")
+    end
+
     # run with baclava output
     @run = T2Server::Run.create($uri, $wkf_pass, $creds)
     @run.set_input("IN", "Some input...")

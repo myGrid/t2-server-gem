@@ -475,6 +475,19 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
+    #   run.zip_output -> binary blob
+    #
+    # Get the working directory of this run directly from the server in zip
+    # format.
+    def zip_output
+      state = status
+      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
+
+      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out",
+        "application/zip", @credentials)
+    end
+
+    # :call-seq:
     #   run.initialized? -> bool
     #
     # Is this run in the +Initialized+ state?
