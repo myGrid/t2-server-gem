@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # Copyright (c) 2010, 2011 The University of Manchester, UK.
 #
 # All rights reserved.
@@ -15,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -31,40 +30,57 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
+require 'optparse'
 require 't2-server'
-require 't2-server-cli'
-require 'hirb'
 
-include T2Server::CLI
+module T2Server
+  module CLI
+    @opts = nil
 
-creds = register_options("Usage: t2-server-info [options] server-address") do |opt|
-  opt.separator "  Where server-address is the full URI of the server to"
-  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
-  opt.separator "  and [options] can be:"
-end
+    # set up common options and return creds if provided
+    def register_options(banner)
+      user = nil
+      pass = ""
+      @opts = OptionParser.new do |opt|
+        opt.banner = banner
+        if block_given?
+          yield opt
+        end
 
-# read and check server address and credentials
-uri, creds = parse_address(ARGV.shift, creds)
+        # common options
+        opt.on_tail("-u", "--username=USERNAME", "The username to use for " +
+          "server operations.") do |val|
+            user = val.chomp
+        end
+        opt.on_tail("-p", "--password=PASSWORD", "The password to use for " +
+          "the supplied username.") do |val|
+            pass = val.chomp
+        end
+        opt.on_tail("-h", "-?", "--help", "Show this help message.") do
+          puts opt
+          exit
+        end
+        opt.on_tail("-v", "--version", "Show the version.") do
+          puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
+          exit
+        end
+      end
 
-# connect to server and output information
-begin
-  T2Server::Server.new(uri) do |server|
-    print "     Server: #{server.uri}\n"
-    print "    Version: #{server.version}\n"
-    print "  Run limit: #{server.run_limit(creds)}\n"
-    runs = server.runs(creds)
-    print "No. of runs: #{runs.length}\n"
-    if runs.length > 0
-      puts (Hirb::Helpers::ObjectTable.render runs,
-        :fields=>[:uuid, :status, :expiry],
-        :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
-        :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
-        :max_fields=>{:expiry=>19},
-        :description=>false)
+      # parse options
+      @opts.parse!
+
+      user != nil ? HttpBasic.new(user, pass) : nil
+    end
+
+    # separate the creds if they are supplied in the uri
+    def parse_address(address, creds)
+      if address == nil or address == ""
+        puts @opts
+        exit 1
+      end
+
+      p_uri, p_creds = URI.strip_credentials(address)
+      creds != nil ? [p_uri, creds] : [p_uri, p_creds]
     end
   end
-rescue T2Server::T2ServerError => e
-  puts e
-  exit 1
 end

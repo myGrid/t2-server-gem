@@ -33,31 +33,20 @@
 
 require 'rubygems'
 require 't2-server'
-require 'optparse'
+require 't2-server-cli'
+
+include T2Server::CLI
 
 # set up options
 options = {}
-opts = OptionParser.new do |opt|
-  opt.banner = "Usage: t2-delete-runs [options] server-address [run-ids...]"
-  opt.separator ""
+creds = register_options("Usage: t2-delete-runs [options] server-address [run-ids...]") do |opt|
   opt.separator "  Where server-address is the full URI of the server to connect to,"
   opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the id numbers"
   opt.separator "  of the runs you want to delete and [options] can be:"
   opt.on("--all", "Delete all runs on the server") do
     options[:all] = true
   end
-  opt.on_tail("-h", "-?", "--help", "Show this message") do
-    puts opt
-    exit
-  end
-  opt.on_tail("-v", "--version", "Show the version") do
-    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
-    exit
-  end
 end
-
-# parse options
-opts.parse!
 
 # get runs and server address from the arguments
 runs = []
@@ -70,13 +59,7 @@ for arg in ARGV
   end
 end
 
-# can't do anything without a server address
-if address == ""
-  puts opts
-  exit 1
-end
-
-uri, creds = URI.strip_credentials(address)
+uri, creds = parse_address(address, creds)
 
 # connect...
 begin

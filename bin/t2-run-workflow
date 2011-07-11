@@ -33,15 +33,15 @@
 
 require 'rubygems'
 require 't2-server'
-require 'optparse'
+require 't2-server-cli'
+
+include T2Server::CLI
 
 # set up options
 inputs  = {}
 files = {}
 options = {}
-opts = OptionParser.new do |opt|
-  opt.banner = "Usage: t2-run-workflow [options] server-address"
-  opt.separator ""
+creds = register_options("Usage: t2-run-workflow [options] server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
@@ -95,17 +95,8 @@ opts = OptionParser.new do |opt|
   end
 end
 
-# parse options
-opts.parse!
-
 # read and check server address
-uri = ARGV.shift
-if uri == nil
-  puts opts
-  exit 1
-end
-
-uri, creds = URI.strip_credentials(uri)
+uri, creds = parse_address(ARGV.shift, creds)
 
 # read workflow
 if options[:wkf_file]

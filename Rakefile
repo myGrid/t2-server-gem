@@ -89,7 +89,8 @@ Rake::RDocTask.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
     item.include?("t2server.rb") or
-    item.include?("xml.rb")
+    item.include?("xml.rb") or
+    item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
   r.options << "-t Taverna 2 Server Ruby Interface Library"
