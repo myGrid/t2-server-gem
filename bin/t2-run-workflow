@@ -98,12 +98,13 @@ end
 # read and check server address
 uri, creds = parse_address(ARGV.shift, creds)
 
-# read workflow
+# read workflow and ensure that it is not empty
 if options[:wkf_file]
   wkf = IO.read(options[:wkf_file])
 else
   wkf = ARGF.read
 end
+exit 1 if wkf == ""
 
 begin
   T2Server::Run.create(uri, wkf, creds) do |run|
