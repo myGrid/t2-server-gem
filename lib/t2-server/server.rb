@@ -287,9 +287,23 @@ module T2Server
     # :startdoc:
 
     private
-    def get_attribute(path, type, credentials = nil)
+    def get_attribute(path, type, *rest)
+      credentials = nil
+      range = nil
+
+      rest.each do |param|
+        case param
+        when Credentials
+          credentials = param
+        when Range
+          range = param
+        when Array
+          range = param[0]..param[1]
+        end
+      end
+
       begin
-        @connection.GET(path, type, credentials)
+        @connection.GET(path, type, range, credentials)
       rescue ConnectionRedirectError => cre
         @connection = cre.redirect
         retry

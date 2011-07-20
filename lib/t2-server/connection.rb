@@ -159,13 +159,16 @@ module T2Server
     end
 
     # :call-seq:
-    #   GET(path, type, credentials) -> String
+    #   GET(path, type, range, credentials) -> String
     #
-    # Perform an HTTP GET on a path on the server. If successful the body of
-    # the response is returned.
-    def GET(path, type, credentials)
+    # HTTP GET a resource at _path_ of _type_ from the server. If successful
+    # the body of the response is returned. A portion of the data can be
+    # retrieved by specifying a byte range, start..end, with the _range_
+    # parameter.
+    def GET(path, type, range, credentials)
       get = Net::HTTP::Get.new(path)
       get["Accept"] = type
+      get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
       credentials.authenticate(get) if credentials != nil
       
       begin
@@ -175,7 +178,7 @@ module T2Server
       end
       
       case response
-      when Net::HTTPOK
+      when Net::HTTPOK, Net::HTTPPartialContent
         return response.body
       when Net::HTTPMovedTemporarily
         new_conn = redirect(response["location"])
