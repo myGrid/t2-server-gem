@@ -70,6 +70,10 @@ module T2Server
         LibXML::XML::Node.new_text(text)
       end
 
+      def xml_children(doc, &block)
+        doc.each { |node| yield node }
+      end
+
       # This method needs to be declared as a module method so
       # it can be used as a class method when it is mixed in.
       def xpath_compile(xpath)

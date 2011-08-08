@@ -176,9 +176,13 @@ begin
       else
         # go through the outputs and print them out
         puts "Outputs:"
-        run.get_output_ports.each do |o|
-          print "          #{o} -> "
-          p run.get_output("#{o}", options[:output_refs])
+        run.output_ports.each_value do |port|
+          print "    #{port.name} (#{port.depth}) -> "
+          if options[:output_refs]
+            p port.refs
+          else
+            p port.values
+          end
         end
       end
     end

@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2010, 2011 The University of Manchester, UK.
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+#  * Neither the names of The University of Manchester nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Robert Haines
+
+require 'rubygems'
+require 't2-server'
+require 't2-server-cli'
+
+include T2Server::CLI
+
+# set up options
+options = {}
+ports = []
+creds = register_options("Usage: t2-get-output [options] server-address run-id") do |opt|
+  opt.separator "  Where server-address is the full URI of the server to"
+  opt.separator "  connect to, e.g.: http://example.com:8080/taverna, run-ids"
+  opt.separator "  are the id numbers of the runs you want to collect output"
+  opt.separator "  from and [options] can be:"
+  opt.on("-r", "--refs", "Return references to the output data rather than " +
+    "the data itself.") do
+    options[:refs] = true
+  end
+  opt.on("-o", "--output=OUTPUT", "Return the named output port. If none " +
+    "are specified then list all the output ports.") do |val|
+    ports << val.chomp
+  end
+  opt.on("-E", "--exitcode", "Return the exitcode of the run.") do
+    options[:exitcode] = true
+  end
+  opt.on("-e", "--stderr", 'Return the "standard error" output of the run.') do
+    options[:stderr] = true
+  end
+  opt.on("-s", "--stdout", 'Return the "standard out" output of the run.') do
+    options[:stdout] = true
+  end
+  opt.on("-t", "--total-size", "Return the total size of the data in the " +
+    "output.") do
+    options[:tsize] = true
+  end
+end
+
+# get run id and server address from the arguments
+run_id = ""
+address = ""
+for arg in ARGV
+  argc = arg.chomp
+  if argc.match(/https?:\/\//).nil?
+    run_id = argc
+  else
+    address = argc
+  end
+end
+
+uri, creds = parse_address(address, creds)
+
+if run_id.empty?
+  puts opts
+  exit 1
+end
+
+# connect...
+begin
+  server = T2Server::Server.new(uri)
+  run = server.run(run_id, creds)
+
+  ports = run.output_ports.keys if ports.empty?
+  ports.each do |p|
+    port = run.output_port(p)
+    puts "#{port.name}"
+    print "  Values: "
+    p port.values
+
+    if options[:tsize]
+      puts "  Total data size: #{port.total_size}"
+    end
+  end
+
+  if options[:exitcode]
+    puts "Exitcode: #{run.exitcode}"
+  end
+
+  if options[:stdout]
+    puts "Stdout: #{run.stdout}"
+  end
+
+  if options[:stderr]
+    puts "Stderr: #{run.stderr}"
+  end
+rescue T2Server::T2ServerError => e
+  puts e
+  exit 1
+end

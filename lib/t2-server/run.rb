@@ -82,8 +82,9 @@ module T2Server
       :baclava    => XML::Methods.xpath_compile("//nsr:baclava"),
       :inputexp   => XML::Methods.xpath_compile("//nsr:expected"),
 
-      # Run inputs XPath queries
+      # Port descriptions XPath queries
       :port_in    => XML::Methods.xpath_compile("//port:input"),
+      :port_out   => XML::Methods.xpath_compile("//port:output")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -103,8 +104,9 @@ module T2Server
         "application/xml", @credentials))
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
-      # initialize @input_ports to nil as an empty list means no inputs
+      # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
+      @output_ports = nil
     end
     # :startdoc:
 
@@ -202,37 +204,46 @@ module T2Server
     end
 
     # :call-seq:
-    #   get_output_ports -> list
+    #   output_ports -> Hash
     #
-    # Return a list of all the output ports
+    # Return a hash (name, port) of all the output ports this run has. Until
+    # the run is finished this method will return _nil_.
+    def output_ports
+      if finished? and @output_ports.nil?
+        @output_ports = _get_output_port_info
+      end
+
+      @output_ports
+    end
+
+    # :call-seq:
+    #   output_port(port) -> Port
+    #
+    # Get output port _port_.
+    def output_port(port)
+      output_ports[port] if finished?
+    end
+
+    # :stopdoc:
     def get_output_ports
+      warn "[DEPRECATION] 'get_output_ports' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#output_ports' instead."
       lists, items = _ls_ports("out")
       items + lists
     end
 
-    # :call-seq:
-    #   get_output(output, refs=false) -> string or list
-    #
-    # Return the values of the workflow output port _output_. These are
-    # returned as a list of strings or, if the output port represents a
-    # singleton value, then a string returned. By default this method returns
-    # the actual data from the output port but if _refs_ is set to true then
-    # it will instead return URIs to the actual data in the same list format.
-    # See also Run#get_output_refs.
     def get_output(output, refs=false)
+      warn "[DEPRECATION] 'get_output' is deprecated and will be removed " +
+        "in 1.0. Please use 'Run#output_port(port).values' instead."
       _get_output(output, refs)
     end
 
-    # :call-seq:
-    #   get_output_refs(output) -> string or list
-    #
-    # Return references (URIs) to the values of the workflow output port
-    # _output_. These are returned as a list of URIs or, if the output port
-    # represents a singleton value, then a single URI is returned. The URIs
-    # are returned as strings.
     def get_output_refs(output)
+      warn "[DEPRECATION] 'get_output_refs' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#output_port(port).data' instead."
       _get_output(output, true)
     end
+    # :startdoc:
 
     # :call-seq:
     #   expiry -> string
@@ -556,6 +567,16 @@ module T2Server
         "text/plain", @credentials))
     end
 
+    # :stopdoc:
+    # Outputs are represented as a directory structure with the eventual list
+    # items (leaves) as files. This method (not part of the public API)
+    # downloads a file from the run's working directory.
+    def download_output_data(path, range = nil)
+      @server.download_run_file(@uuid, "#{@links[:wdir]}/out/#{path}",
+        range, @credentials)
+    end
+    # :startdoc:
+
     private
 
     # List a directory in the run's workspace on the server. If dir is left
@@ -649,6 +670,24 @@ module T2Server
           port = InputPort.new(self, inp)
           ports[port.name] = port
         end
+
+      ports
+    end
+
+    def _get_output_port_info
+      return {} if @server.version < 2
+
+      ports = {}
+      port_desc = @server.get_run_attribute(@uuid, @links[:output],
+        "application/xml", @credentials)
+
+      doc = xml_document(port_desc)
+
+      xpath_find(doc, XPaths[:port_out]).each do |out|
+        #puts out.to_s
+        port = OutputPort.new(self, out)
+        ports[port.name] = port
+      end
 
       ports
     end

@@ -82,5 +82,9 @@ module T2Server
       p_uri, p_creds = URI.strip_credentials(address)
       creds != nil ? [p_uri, creds] : [p_uri, p_creds]
     end
+
+    def opts
+      @opts
+    end
   end
 end

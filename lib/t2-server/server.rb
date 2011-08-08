@@ -284,6 +284,22 @@ module T2Server
         raise RunNotFoundError.new(run)
       end
     end
+
+    def download_run_file(run, path, range, credentials = nil)
+      # get the uuid from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.uuid
+      end
+
+      get_attribute("#{@links[:runs]}/#{run}/#{path}",
+        "application/octet-stream", range, credentials)
+    rescue AttributeNotFoundError => e
+      if get_runs(credentials).has_key? run
+        raise e
+      else
+        raise RunNotFoundError.new(run)
+      end
+    end
     # :startdoc:
 
     private
