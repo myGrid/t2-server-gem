@@ -34,7 +34,7 @@ require 'test/unit'
 require 't2-server'
 
 # check for a server address passed through on the command line
-if ARGV.size != 0:
+if ARGV.size != 0
   address = ARGV[0]
   puts "Using server at #{address}"
 else
@@ -60,9 +60,18 @@ if address != ""
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
+  $wkf_fail   = File.read("test/workflows/always_fail.t2flow")
+  $wkf_errors = File.read("test/workflows/list_with_errors.t2flow")
   $list_input = "test/workflows/empty_list_input.baclava"
   $file_input = "test/workflows/in.txt"
+  $file_strs  = "test/workflows/strings.txt"
 
   require 'tc_server'
-  require 'tc_run'
+
+  # get the server version to determine which test case to run
+  if T2Server::Server.new($uri).version == 1
+    require 'tc_run_v1'
+  else
+    require 'tc_run'
+  end
 end

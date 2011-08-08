@@ -56,9 +56,7 @@ class TestServer < Test::Unit::TestCase
     end
   
     # deleting
-    assert_nothing_raised(T2Server::T2ServerError) do
-      @run.delete
-    end
+    assert_nothing_raised(T2Server::T2ServerError) { @run.delete }
 
     assert_nothing_raised(T2Server::T2ServerError) do
       @server.delete_all_runs($creds)

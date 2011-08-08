@@ -56,9 +56,11 @@ class TestRun < Test::Unit::TestCase
 
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
-    assert_equal(@run.output_port("OUT").values, "Hello, World!")
-    assert_equal(@run.output_port("wrong!"), nil)
+    assert_equal(@run.get_output("OUT"), "Hello, World!")
 
+    assert_raise(T2Server::AccessForbiddenError) do
+      @run.get_output("wrong!")
+    end
 
     # deletion
     assert(@run.delete)
@@ -69,7 +71,7 @@ class TestRun < Test::Unit::TestCase
     @run.set_input("xpath","//yes")
     @run.start
     @run.wait
-    assert_equal(@run.output_port("nodes").values, ["hello", "world"])
+    assert_equal(@run.get_output("nodes"), ["hello", "world"])
 
     # run with file input
     @run = T2Server::Run.create($uri, $wkf_pass, $creds)
@@ -81,7 +83,7 @@ class TestRun < Test::Unit::TestCase
     @run.start
     assert(@run.running?)
     assert_nothing_raised(T2Server::RunStateError) { @run.wait }
-    assert_equal(@run.output_port("OUT").values, "Hello, World!")
+    assert_equal(@run.get_output("OUT"), "Hello, World!")
 
     # run that returns list of lists, some empty, using baclava for input
     @run = T2Server::Run.create($uri, $wkf_lists, $creds)
@@ -89,22 +91,13 @@ class TestRun < Test::Unit::TestCase
       @run.upload_baclava_input($list_input)
     end
 
-    assert_equal(@run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
-    assert_equal(@run.input_port("MANY_IN").depth, 3)
-    assert_equal(@run.input_port("SINGLE_IN").depth, 1)
-    assert(@run.input_port("SINGLE_IN").baclava?)
-    assert(@run.input_port("SINGLE_IN").set?)
-
     @run.start
     assert(@run.running?)
     assert_nothing_raised(T2Server::RunStateError) { @run.wait }
-    assert_equal(@run.output_ports.keys.sort, ["MANY", "SINGLE"])
-    assert_equal(@run.output_port("SINGLE").values, [])
-    assert_equal(@run.output_port("MANY").values,
+    assert_equal(@run.get_output_ports, ["SINGLE", "MANY"])
+    assert_equal(@run.get_output("SINGLE"), [])
+    assert_equal(@run.get_output("MANY"),
       [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
-    assert_equal(@run.output_port("MANY").total_size, 12)
-    assert_equal(@run.output_port("MANY")[1][0][1].value(1..3), "ell")
-    assert_raise(NoMethodError) { @run.output_port("SINGLE")[0].value }
 
     # get zip file
     assert_nothing_raised(T2Server::T2ServerError) do
@@ -126,54 +119,5 @@ class TestRun < Test::Unit::TestCase
     assert_nothing_raised(T2Server::AccessForbiddenError) do
       output = @run.baclava_output
     end
-
-    # test partial result download
-    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
-    @run.upload_input_file("IN", $file_strs)
-    @run.start
-    @run.wait
-
-    # no data downloaded yet
-    assert(@run.output_port("OUT").value(:debug).nil?)
-
-    # get just the first 10 bytes
-    assert_equal(@run.output_port("OUT").value(0...10),
-      "123456789\n")
-
-    # get a bad range - should return the first 10 bytes
-    assert_equal(@run.output_port("OUT").value(-10...10),
-      "123456789\n")
-
-    # confirm only the first 10 bytes have been downloaded
-    assert_equal(@run.output_port("OUT").value(:debug),
-      "123456789\n")
-
-    # ask for a separate 10 byte range
-    assert_equal(@run.output_port("OUT").value(20...30),
-      "323456789\n")
-
-    # confirm that enough was downloaded to connect the two ranges
-    assert_equal(@run.output_port("OUT").value(:debug),
-      "123456789\n223456789\n323456789\n")
-
-    # ask for a range that we already have
-    assert_equal(@run.output_port("OUT").value(5..25),
-      "6789\n223456789\n323456")
-
-    # confirm that no more has actually been downloaded
-    assert_equal(@run.output_port("OUT").value(:debug),
-      "123456789\n223456789\n323456789\n")
-
-    # test error handling
-    @run = T2Server::Run.create($uri, $wkf_fail, $creds)
-    @run.start
-    @run.wait
-    assert(@run.output_port("OUT").value.nil?)
-    assert(@run.output_port("OUT").error?)
-
-    @run = T2Server::Run.create($uri, $wkf_errors, $creds)
-    @run.start
-    @run.wait
-    assert(@run.output_port("OUT").error?)
   end
 end
