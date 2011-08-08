@@ -83,9 +83,7 @@ module T2Server
       :inputexp   => XML::Methods.xpath_compile("//nsr:expected"),
 
       # Run inputs XPath queries
-      :inp_input  => XML::Methods.xpath_compile("//inp:input"),
-      :inp_name   => XML::Methods.xpath_compile("inp:name"),
-      :inp_depth  => XML::Methods.xpath_compile("inp:depth")
+      :port_in    => XML::Methods.xpath_compile("//port:input"),
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -186,19 +184,21 @@ module T2Server
     end
 
     # :call-seq:
-    #   input_ports -> array
+    #   input_ports -> Hash
     #
-    # Return the names of all the input ports this run expects
+    # Return a hash (name, port) of all the input ports this run expects.
     def input_ports
-      _get_input_port_info.keys
+      @input_ports = _get_input_port_info if @input_ports.nil?
+
+      @input_ports
     end
 
     # :call-seq:
-    #   input_port_depth(port) -> integer
+    #   input_port(port) -> Port
     #
-    # Get the depth of _port_.
-    def input_port_depth(port)
-      _get_input_port_info[port].depth
+    # Get _port_.
+    def input_port(port)
+      input_ports[port]
     end
 
     # :call-seq:
@@ -399,7 +399,7 @@ module T2Server
     #   corresponding directory will need to have been created by Run#mkdir.
     # * :rename - Save the file on the server with a different name.
     #
-    # The name of the file on the server is returned.
+    # The name of the file on the server is returned or nil on failure.
     #
     # Raises RunStateError if the run is not in the +Initialized+ state.
     def upload_input_file(input, filename, params={})
@@ -407,22 +407,37 @@ module T2Server
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
       file = upload_file(filename, params)
-      set_input_file(input, file)
+      set_input_file(input, file) ? file : nil
     end
 
     # :call-seq:
-    #   upload_baclava_file(filename) -> bool
+    #   upload_baclava_input(filename) -> bool
     #
     # Upload a baclava file to be used for the workflow inputs.
-    def upload_baclava_file(filename)
+    def upload_baclava_input(filename)
       state = status
       raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
 
-      @baclava_in = true
       rename = upload_file(filename)
-      @server.set_run_attribute(@uuid, @links[:baclava], rename,
+      result = @server.set_run_attribute(@uuid, @links[:baclava], rename,
         "text/plain", @credentials)
+
+      if result
+        # set all input ports' baclava flags
+        input_ports.each_value { |port| port.baclava = true }
+        @baclava_in = true
+      end
+
+      result        
     end
+
+    # :stopdoc:
+    def upload_baclava_file(filename)
+      warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#upload_baclava_input' instead."
+      upload_baclava_input(filename)
+    end
+    # :startdoc:
 
     # :call-seq:
     #   request_baclava_output -> bool
@@ -623,22 +638,19 @@ module T2Server
     end
 
     def _get_input_port_info
-      @input_ports = {} if @server.version < 2
-      if @input_ports == nil
-        @input_ports = {}
+      return {} if @server.version < 2
+        ports = {}
         port_desc = @server.get_run_attribute(@uuid, @links[:inputexp],
           "application/xml", @credentials)
 
         doc = xml_document(port_desc)
 
-        xpath_find(doc, XPaths[:inp_input]).each do |inp|
-          name = xpath_first(inp, XPaths[:inp_name]).content
-          depth = xpath_first(inp, XPaths[:inp_depth]).content.to_i
-          @input_ports[name] = Port.new(name, depth)
+        xpath_find(doc, XPaths[:port_in]).each do |inp|
+          port = InputPort.new(self, inp)
+          ports[port.name] = port
         end
-      end
 
-      @input_ports
+      ports
     end
 
     def get_attributes(desc)
@@ -670,23 +682,5 @@ module T2Server
       
       links
     end
-
-    # This is a private class for internal use only. It is used to represent
-    # an input/output port of a workflow
-    class Port
-      
-      # The port's name
-      attr_reader :name
-      
-      # The "depth" of the port. 0 = a singleton value.
-      attr_reader :depth
-
-      # Create a new port with an optional depth.
-      def initialize(name, depth = 0)
-        @name = name
-        @depth = depth
-      end
-    end
-
   end
 end

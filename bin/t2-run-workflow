@@ -118,19 +118,24 @@ begin
     end
 
     # set inputs
+    in_ports = run.input_ports
     if inputs.has_key?(:baclava)
-      run.upload_baclava_file(inputs[:baclava])
+      run.upload_baclava_input(inputs[:baclava])
       puts "Uploaded baclava input file"
     else
-      inputs.each do |input, value|
-        puts "Set input '#{input}' to #{value}"
-        run.set_input(input, value)
-      end
-  
-      files.each do |input, file|
-        name = file.split("/")[-1];
-        puts "Set input '#{input}' to use file '#{name}'"
-        run.upload_input_file(input, file)
+      in_ports.each_value do |port|
+        input = port.name
+        if inputs.include? input
+          port.value = inputs[input]
+          puts "Input '#{input}' set to #{port.value}"
+        elsif files.include? input
+          port.file = files[input]
+          puts "Input '#{input}' set to use file '#{port.file}'"
+        else
+          puts "Input '#{input}' has not been set."
+          run.delete
+          exit 1
+        end
       end
     end
 
