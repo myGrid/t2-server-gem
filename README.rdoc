@@ -38,7 +38,9 @@ In both cases the gem should be initialized by requiring the top level ruby
 file:
   require 't2-server.rb'
 
-See the rdoc for more information.
+See the rdoc for more information. Please note that anything which does not
+appear in the documentation is not intended to be part of the public API. Use
+of undocumented classes and methods is entirely at your own risk!
 
 As well as rdoc there are also a couple of example scripts which
 demonstrate good use of the T2Server API. These are available in the
@@ -47,6 +49,7 @@ gem is installed:
 * t2-run-workflow
 * t2-server-info
 * t2-delete-runs
+* t2-get-output
 Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
 switch will show how to use them, e.g.:
   t2-run-workflow --help

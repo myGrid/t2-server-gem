@@ -90,6 +90,8 @@ Rake::RDocTask.new do |r|
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
     item.include?("t2server.rb") or
     item.include?("xml.rb") or
+    item.include?("connection.rb") or
+    item.include?("credentials.rb") or
     item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
