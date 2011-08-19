@@ -104,7 +104,7 @@ module T2Server
     # The new run's identifier (in String form) is returned.
     def POST_run(path, value, credentials)
       response = POST(path, value, "application/xml", credentials)
-      
+
       case response
       when Net::HTTPCreated
         # return the identifier of the newly created run
@@ -125,7 +125,7 @@ module T2Server
     # Upload a file to a run. If successful, true is returned.
     def POST_file(path, value, run, credentials)
       response = POST(path, value, "application/xml", credentials)
-      
+
       case response
       when Net::HTTPCreated
         # OK, carry on...
@@ -148,7 +148,7 @@ module T2Server
     # is returned.
     def POST_dir(path, value, run, dir, credentials)
       response = POST(path, value, "application/xml", credentials)
-      
+
       case response
       when Net::HTTPCreated
         # OK, carry on...
@@ -175,14 +175,8 @@ module T2Server
       get = Net::HTTP::Get.new(path)
       get["Accept"] = type
       get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
-      credentials.authenticate(get) if credentials != nil
-      
-      begin
-        response = @http.request(get)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-      
+      response = submit(get, nil, credentials)
+
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
         return response.body
@@ -210,14 +204,8 @@ module T2Server
     def PUT(path, value, type, credentials)
       put = Net::HTTP::Put.new(path)
       put.content_type = type
-      credentials.authenticate(put) if credentials != nil
-      
-      begin
-        response = @http.request(put, value)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-      
+      response = submit(put, value, credentials)
+
       case response
       when Net::HTTPOK
         # OK, so carry on
@@ -241,13 +229,7 @@ module T2Server
     def POST(path, value, type, credentials)
       post = Net::HTTP::Post.new(path)
       post.content_type = type
-      credentials.authenticate(post) if credentials != nil
-      
-      begin
-        @http.request(post, value)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
+      submit(post, value, credentials)
     end
 
     # :call-seq:
@@ -258,14 +240,8 @@ module T2Server
     def DELETE(path, credentials)
       run = path.split("/")[-1]
       delete = Net::HTTP::Delete.new(path)
-      credentials.authenticate(delete) if credentials != nil
-      
-      begin
-        response = @http.request(delete)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
-      
+      response = submit(delete, nil, credentials)
+
       case response
       when Net::HTTPNoContent
         # Success, carry on...
@@ -288,13 +264,7 @@ module T2Server
     # of the headers returned.
     def OPTIONS(path, credentials)
       options = Net::HTTP::Options.new(path)
-      credentials.authenticate(options) if credentials != nil
-
-      begin
-        response = @http.request(options)
-      rescue InternalHTTPError => e
-        raise ConnectionError.new(e)
-      end
+      response = submit(options, nil, credentials)
 
       case response
       when Net::HTTPOK
@@ -309,6 +279,16 @@ module T2Server
     end
 
     private
+    def submit(request, value, credentials)
+      credentials.authenticate(request) unless credentials.nil?
+
+      begin
+        @http.request(request, value)
+      rescue InternalHTTPError => e
+        raise ConnectionError.new(e)
+      end
+    end
+
     def redirect(location)
       uri = URI.parse(location)
       new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
