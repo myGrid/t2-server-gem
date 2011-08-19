@@ -32,24 +32,8 @@
 
 module T2Server
 
-  # This class serves as a base class for concrete credential systems.
-  # :stopdoc:
-  class Credentials
-
-    # :call-seq:
-    #   authenticate(request)
-    #
-    # A no-op method due to this base class not actually being able to perform
-    # authentication.
-    def authenticate(request)
-      # no op
-    end
-  end
-  # :startdoc:
-
-  # A class representing HTTP Basic credentials.
-  class HttpBasic < Credentials
-
+  # This class serves as a base class for concrete HTTP credential systems.
+  class HttpCredentials
     # The username held by these credentials.
     attr_reader :username
 
@@ -57,15 +41,6 @@ module T2Server
     def initialize(username, password)
       @username = username
       @password = password
-    end
-
-    # :call-seq:
-    #   authenticate(request)
-    #
-    # Authenticate the supplied HTTP request with the credentials held within
-    # this class.
-    def authenticate(request)
-      request.basic_auth @username, @password
     end
 
     # :call-seq:
@@ -86,6 +61,24 @@ module T2Server
     # when it is called.
     def inspect
       @@to_s.bind(self).call.sub!(/>\z/) {" Username:#{self}>"}
+    end
+  end
+
+  # A class representing HTTP Basic credentials.
+  class HttpBasic < HttpCredentials
+
+    # Create a set of credentials with the supplied username and password.
+    def initialize(username, password)
+      super(username, password)
+    end
+
+    # :call-seq:
+    #   authenticate(request)
+    #
+    # Authenticate the supplied HTTP request with the credentials held within
+    # this class.
+    def authenticate(request)
+      request.basic_auth @username, @password
     end
   end
 end

@@ -130,7 +130,7 @@ module T2Server
           id = param
         when ConnectionParameters
           conn_params = param
-        when Credentials
+        when HttpCredentials
           credentials = param
         end
       end

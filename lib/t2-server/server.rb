@@ -340,7 +340,7 @@ module T2Server
 
       rest.each do |param|
         case param
-        when Credentials
+        when HttpCredentials
           credentials = param
         when Range
           range = param
