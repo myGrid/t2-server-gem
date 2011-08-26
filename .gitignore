@@ -3,3 +3,4 @@ pkg/
 html/
 .buildpath
 .project
+.idea
