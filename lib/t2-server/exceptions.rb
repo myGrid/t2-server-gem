@@ -85,8 +85,8 @@ module T2Server
     # response. The response to be passed in is that which was returned by a
     # call to Net::HTTP#request.
     def initialize(response)
-      body = "\n#{response.body}" if response.body
-      super "Unexpected server response: #{response.code}\n#{response.error!}#{body}"
+      body = response.body ? "\n#{response.body}" : ""
+      super "Unexpected server response: #{response.code}\n#{body}"
     end
   end
 
