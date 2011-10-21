@@ -190,7 +190,7 @@ module T2Server
         run = run.identifier
       end
       
-      if @connection.DELETE("#{@links[:runs]}/#{run}", credentials)
+      if delete_attribute("#{@links[:runs]}/#{run}", credentials)
         @runs.delete(run)
         true
       end
@@ -271,6 +271,22 @@ module T2Server
       upload_file(run, filename, location, rename, credentials)
     end
 
+    def create_run_attribute(run, path, value, type, credentials = nil)
+      # get the identifier from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.identifier
+      end
+
+      create_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
+        credentials)
+      rescue AttributeNotFoundError => e
+      if get_runs(credentials).has_key? run
+        raise e
+      else
+        raise RunNotFoundError.new(run)
+      end
+    end
+
     def get_run_attribute(run, path, type, credentials = nil)
       # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
@@ -294,6 +310,21 @@ module T2Server
 
       set_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
         credentials)
+    rescue AttributeNotFoundError => e
+      if get_runs(credentials).has_key? run
+        raise e
+      else
+        raise RunNotFoundError.new(run)
+      end
+    end
+
+    def delete_run_attribute(run, path, credentials = nil)
+      # get the identifier from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.identifier
+      end
+
+      delete_attribute("#{@links[:runs]}/#{run}/#{path}", credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -334,6 +365,10 @@ module T2Server
     # :startdoc:
 
     private
+    def create_attribute(path, value, type, credentials = nil)
+      @connection.POST(path, value, type, credentials)
+    end
+
     def get_attribute(path, type, *rest)
       credentials = nil
       range = nil
@@ -359,6 +394,10 @@ module T2Server
 
     def set_attribute(path, value, type, credentials = nil)
       @connection.PUT(path, value, type, credentials)
+    end
+
+    def delete_attribute(path, credentials = nil)
+      @connection.DELETE(path, credentials)
     end
 
     def get_version(doc)

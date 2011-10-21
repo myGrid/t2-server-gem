@@ -103,13 +103,12 @@ module T2Server
     # Initialize a T2Server::Run on a server by uploading its workflow.
     # The new run's identifier (in String form) is returned.
     def POST_run(path, value, credentials)
-      response = POST(path, value, "application/xml", credentials)
+      response = _POST(path, value, "application/xml", credentials)
 
       case response
       when Net::HTTPCreated
         # return the identifier of the newly created run
-        epr = URI.parse(response['location'])
-        epr.path[-36..-1]
+        path_leaf_from_uri(response['location'])
       when Net::HTTPForbidden
         raise ServerAtCapacityError.new
       when Net::HTTPUnauthorized
@@ -124,7 +123,7 @@ module T2Server
     #
     # Upload a file to a run. If successful, true is returned.
     def POST_file(path, value, run, credentials)
-      response = POST(path, value, "application/xml", credentials)
+      response = _POST(path, value, "application/xml", credentials)
 
       case response
       when Net::HTTPCreated
@@ -147,7 +146,7 @@ module T2Server
     # Create a directory in the scratch space of a run. If successful, true
     # is returned.
     def POST_dir(path, value, run, dir, credentials)
-      response = POST(path, value, "application/xml", credentials)
+      response = _POST(path, value, "application/xml", credentials)
 
       case response
       when Net::HTTPCreated
@@ -224,12 +223,24 @@ module T2Server
     # :call-seq:
     #   POST(path, value, type, credentials)
     #
-    # Perform an HTTP POST of _value_ to a path on the server. This method
-    # should only be used by other, wrapper methods, that need to POST.
+    # Perform an HTTP POST of _value_ to a path on the server and return the
+    # identifier of the created attribute as a string.
     def POST(path, value, type, credentials)
-      post = Net::HTTP::Post.new(path)
-      post.content_type = type
-      submit(post, value, credentials)
+      response = _POST(path, value, type, credentials)
+
+      case response
+      when Net::HTTPCreated
+        # return the identifier of the newly created item
+        path_leaf_from_uri(response['location'])
+      when Net::HTTPNotFound
+        raise AttributeNotFoundError.new(path)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("attribute #{path}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(credentials)
+      else
+        raise UnexpectedServerResponse.new(response)
+      end
     end
 
     # :call-seq:
@@ -279,6 +290,16 @@ module T2Server
     end
 
     private
+    def _POST(path, value, type, credentials)
+      post = Net::HTTP::Post.new(path)
+      post.content_type = type
+      submit(post, value, credentials)
+    end
+
+    def path_leaf_from_uri(uri)
+      URI.parse(uri).path.split('/')[-1]
+    end
+
     def submit(request, value, credentials)
       credentials.authenticate(request) unless credentials.nil?
 
