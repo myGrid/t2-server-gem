@@ -56,9 +56,13 @@ module T2Server
     # The server instance that this run is hosted on.
     attr_reader :server
 
+    # The owner (username) of this run
+    attr_reader :owner
+
     # :stopdoc:
     XPaths = {
       # Run XPath queries
+      :run_desc   => XML::Methods.xpath_compile("/nsr:runDescription"),
       :dir        => XML::Methods.xpath_compile("//nss:dir"),
       :file       => XML::Methods.xpath_compile("//nss:file"),
       :expiry     => XML::Methods.xpath_compile("//nsr:expiry"),
@@ -93,8 +97,10 @@ module T2Server
       
       @credentials = credentials
       
-      @links = get_attributes(@server.get_run_attribute(@identifier, "",
+      run_desc = xml_document(@server.get_run_attribute(@identifier, "",
         "application/xml", @credentials))
+      @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
+      @links = get_attributes(run_desc)
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # initialize ports lists to nil as an empty list means no inputs/outputs
@@ -590,6 +596,18 @@ module T2Server
         "text/plain", @credentials))
     end
 
+    # :call-seq:
+    #   owner? -> bool
+    #
+    # Are the credentials being used to access this run those of the owner?
+    # The owner of the run can give other users certain access rights to their
+    # runs but only the owner can change these rights - or even see what they
+    # are. Sometimes it is useful to know if the user accessing the run is
+    # actually the owner of it or not.
+    def owner?
+      @credentials.username == @owner
+    end
+
     # :stopdoc:
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
@@ -715,12 +733,10 @@ module T2Server
       ports
     end
 
-    def get_attributes(desc)
+    def get_attributes(doc)
       # first parse out the basic stuff
       links = {}
 
-      doc = xml_document(desc)
-      
       [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
         :wdir, :inputs, :output, :securectx, :listeners].each do |key|
           links[key] = xpath_attr(doc, XPaths[key], "href").split('/')[-1]
