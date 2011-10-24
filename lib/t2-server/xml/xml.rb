@@ -69,6 +69,16 @@ module T2Server
                       "<t2sr:permission>%s</t2sr:permission>"
       PERM_UPDATE   = "<t2sr:permissionUpdate xmlns:t2sr=\"#{Namespaces::REST}\">" +
                       "#{PERMISSION}</t2sr:permissionUpdate>"
+
+      SERVICE_URI   = "<t2s:serviceURI>%s</t2s:serviceURI>"
+      CREDENTIAL    = "<t2sr:credential xmlns:t2sr=\"#{Namespaces::REST}\"" +
+                      " xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
+                      "%s\n</t2sr:credential>"
+      USERPASS_CRED = "<t2s:userpass>\n" +
+                      "  #{SERVICE_URI}\n" +
+                      "  <t2s:username>%s</t2s:username>\n" +
+                      "  <t2s:password>%s</t2s:password>\n" +
+                      "</t2s:userpass>"
     end
 
     module Methods

@@ -89,7 +89,9 @@ module T2Server
       :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
       :sec_perm   => XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
       :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
-      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission")
+      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
+      :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
+      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -678,6 +680,95 @@ module T2Server
       @server.delete_run_attribute(@identifier, path, @credentials)
     end
 
+    # :call-seq:
+    #   add_password_credential(service_uri, username, password) -> String
+    #
+    # Provide a username and password credential for the secure service at the
+    # specified URI. The id of the credential on the server is returned. Only
+    # the owner of a run may supply credentials for it. +nil+ is returned if a
+    # user other than the owner uses this method.
+    def add_password_credential(uri, username, password)
+      return unless owner?
+
+      # Is this a new credential, or an update?
+      id = credential(uri)
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      if id.nil?
+        @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+          "application/xml", @credentials)
+      else
+        path = "#{@links[:sec_creds]}/#{id}"
+        @server.set_run_attribute(@identifier, path, value, "application/xml",
+          @credentials)
+      end
+    end
+
+    # :call-seq:
+    #   credentials -> Hash
+    #
+    # Return a hash (service_uri => identifier) of all the credentials provided
+    # for this run. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credentials
+      return unless owner?
+
+      creds = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_creds], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_cred]).each do |c|
+        uri = xml_node_content(xpath_first(c, XPaths[:sec_suri]))
+        id = xml_node_attribute(c, "href").split('/')[-1]
+        creds[uri] = id
+      end
+
+      creds
+    end
+
+    # :call-seq:
+    #   credential(service_uri) -> String
+    #
+    # Return the identifier of the credential set for the supplied service, if
+    # any. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credential(uri)
+      return unless owner?
+
+      credentials[uri]
+    end
+
+    # :call-seq:
+    #   delete_credential(service_uri) -> bool
+    #
+    # Delete the credential that has been provided for the specified service.
+    # Only the owner of a run may delete its credentials. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def delete_credential(uri)
+      return unless owner?
+
+      path = "#{@links[:sec_creds]}/#{credentials[uri]}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_credentials -> bool
+    #
+    # Delete all credentials associated with this workflow run. Only the owner
+    # of a run may delete its credentials. +nil+ is returned if a user other
+    # than the owner uses this method.
+    def delete_all_credentials
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_creds],
+        @credentials)
+    end
+
     # :stopdoc:
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
@@ -689,6 +780,22 @@ module T2Server
     # :startdoc:
 
     private
+
+    # Check that the uri passed in is suitable for credential use:
+    #  * rserve uris must not have a path.
+    #  * http(s) uris must have at least "/" as their path.
+    def _check_cred_uri(uri)
+      u = URI(uri)
+
+      case u.scheme
+      when "rserve"
+        u.path = ""
+      when /https?/
+        u.path = "/" if u.path == ""
+      end
+
+      u.to_s
+    end
 
     # List a directory in the run's workspace on the server. If dir is left
     # blank then / is listed. As there is no concept of changing into a
