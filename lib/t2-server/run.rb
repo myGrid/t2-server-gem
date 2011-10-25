@@ -86,7 +86,10 @@ module T2Server
       # Run security XPath queries
       :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
       :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
-      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts")
+      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
+      :sec_perm   => XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
+      :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
+      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -611,6 +614,68 @@ module T2Server
     # actually the owner of it or not.
     def owner?
       @credentials.username == @owner
+    end
+
+    # :call-seq:
+    #   grant_permission(username, permission) -> username
+    #
+    # Grant the user the stated permission. A permission can be one of
+    # <tt>:none</tt>, <tt>:read</tt>, <tt>:update</tt> or <tt>:destroy</tt>.
+    # Only the owner of a run may grant permissions on it. +nil+ is returned
+    # if a user other than the owner uses this method.
+    def grant_permission(username, permission)
+      return unless owner?
+
+      value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
+      @server.create_run_attribute(@identifier, @links[:sec_perms], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   permissions -> hash
+    #
+    # Return a hash (username => permission) of all the permissions set for
+    # this run. Only the owner of a run may query its permissions. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def permissions
+      return unless owner?
+
+      perms = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_perms], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_perm]).each do |p|
+        user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
+        perm = xml_node_content(xpath_first(p, XPaths[:sec_uperm])).to_sym
+        perms[user] = perm
+      end
+
+      perms
+    end
+
+    # :call-seq:
+    #   permission(username) -> permission
+    #
+    # Return the permission granted to the supplied username, if any. Only the
+    # owner of a run may query its permissions. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def permission(username)
+      return unless owner?
+
+      permissions[username]
+    end
+
+    # :call-seq:
+    #   revoke_permission(username) -> bool
+    #
+    # Revoke whatever permissions that have been granted to the user. Only the
+    # owner of a run may revoke permissions on it. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def revoke_permission(username)
+      return unless owner?
+
+      path = "#{@links[:sec_perms]}/#{username}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
     end
 
     # :stopdoc:
