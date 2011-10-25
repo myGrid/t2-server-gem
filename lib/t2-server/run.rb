@@ -81,7 +81,12 @@ module T2Server
 
       # Port descriptions XPath queries
       :port_in    => XML::Methods.xpath_compile("//port:input"),
-      :port_out   => XML::Methods.xpath_compile("//port:output")
+      :port_out   => XML::Methods.xpath_compile("//port:output"),
+
+      # Run security XPath queries
+      :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
+      :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
+      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -758,6 +763,18 @@ module T2Server
       links[:stderr]   = "#{links[:io]}/properties/stderr"
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
       
+      # security properties - only available to the owner of a run
+      if @server.version > 1 && owner?
+        securectx = @server.get_run_attribute(@identifier, links[:securectx],
+          "application/xml", @credentials)
+        doc = xml_document(securectx)
+
+        [:sec_creds, :sec_perms, :sec_trusts].each do |key|
+          links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
+            "href").split('/')[-1]
+        end
+      end
+
       links
     end
 
