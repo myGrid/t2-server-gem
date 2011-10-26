@@ -86,14 +86,6 @@ creds = register_options("Usage: t2-run-workflow [options] server-address") do |
     "in zip format and save it to the provided filename.") do |val|
       options[:zip_out] = val.chomp
   end
-  opt.on_tail("-h", "-?", "--help", "Show this message") do
-    puts opt
-    exit
-  end
-  opt.on_tail("-v", "--version", "Show the version") do
-    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
-    exit
-  end
 end
 
 # read and check server address
