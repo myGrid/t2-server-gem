@@ -32,6 +32,7 @@
 # Author: Robert Haines
 
 require 'rubygems'
+require 'time'
 require 't2-server'
 require 't2-server-cli'
 
@@ -59,7 +60,7 @@ creds = register_options("Usage: t2-run-workflow [options] server-address") do |
       files[input] = filename
   end
   opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry  date/time of this run") do |val|
-    options[:expiry] = val.chomp
+    options[:expiry] = Time.parse(val.chomp)
   end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
     inputs[:baclava] = val

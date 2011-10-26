@@ -257,14 +257,18 @@ module T2Server
     # :call-seq:
     #   expiry=(time) -> bool
     #
-    # Set the expiry time of this run to _time_. The format of _time_ should
-    # be something that the Ruby Time class can parse. If the value given does
+    # Set the expiry time of this run to _time_. _time_ should either be a Time
+    # object or something that the Time class can parse. If the value given does
     # not specify a date then today's date will be assumed. If a time/date in
     # the past is specified, the expiry time will not be changed.
     def expiry=(time)
+      unless time.instance_of? Time
+        time = Time.parse(time)
+      end
+
       # need to massage the xmlschema format slightly as the server cannot
       # parse timezone offsets with a colon (eg +00:00)
-      date_str = Time.parse(time).xmlschema(2)
+      date_str = time.xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
       @server.set_run_attribute(@uuid, @links[:expiry], date_str,
         "text/plain", @credentials)
