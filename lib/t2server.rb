@@ -32,4 +32,7 @@
 
 # This is simply here to provide backwards compatibility. Old versions had an
 # inconsistancy between the gem name and the file to require to use it.
+warn "[DEPRECATION] Code should no longer require 't2server'. Please use " +
+  "require 't2-server' as this is consistent with the gem name. In version " +
+  "1.0 require 't2server' will cease to work."
 require 't2-server'
