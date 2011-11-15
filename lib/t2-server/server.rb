@@ -80,7 +80,7 @@ module T2Server
       end
 
       # setup connection
-      @connection = Connection.connect(uri)
+      @connection = ConnectionFactory.connect(uri)
 
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113

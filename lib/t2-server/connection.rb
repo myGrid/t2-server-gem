@@ -39,7 +39,7 @@ module T2Server
   # either a http or https connection depending on what sort of uri is passed
   # into it. This class maintains a list of connections that it knows about
   # and will return an already established connection if it can.
-  class Connection
+  class ConnectionFactory
 
     private_class_method :new
 
@@ -47,12 +47,12 @@ module T2Server
     @@connections = []
     
     # :call-seq:
-    #   Connection.connect(uri) -> Connection
+    #   ConnectionFactory.connect(uri) -> Connection
     #
     # Connect to a Taverna Server instance and return either a
     # T2Server::HttpConnection or T2Server::HttpsConnection object to
     # represent it.
-    def Connection.connect(uri)
+    def ConnectionFactory.connect(uri)
       # we want to use URIs here
       if !uri.is_a? URI
         raise URI::InvalidURIError.new
@@ -307,7 +307,7 @@ module T2Server
       uri = URI.parse(location)
       new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
         @uri.path, nil, nil, nil);
-      Connection.connect(new_uri)
+      ConnectionFactory.connect(new_uri)
     end
   end
 
