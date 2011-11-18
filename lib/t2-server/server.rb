@@ -62,12 +62,15 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   new(uri) -> Server
-    #   new(uri) {|self| ...}
+    #   new(uri, connection_parameters = nil) -> Server
+    #   new(uri, connection_parameters = nil) {|self| ...}
     #
     # Create a new Server instance that represents the real server at _uri_.
+    # If _connection_parameters_ are supplied they will be used to set up the
+    # network connection to the server.
+    #
     # It will _yield_ itself if a block is given.
-    def initialize(uri)
+    def initialize(uri, params = nil)
       # we want to use URIs here but strings can be passed in
       if !uri.is_a? URI
         uri = URI.parse(uri.strip_path);
@@ -80,7 +83,7 @@ module T2Server
       end
 
       # setup connection
-      @connection = ConnectionFactory.connect(uri)
+      @connection = ConnectionFactory.connect(uri, params)
 
       # add a slash to the end of this address to work around this bug:
       # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113

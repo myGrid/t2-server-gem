@@ -52,20 +52,25 @@ module T2Server
     # Connect to a Taverna Server instance and return either a
     # T2Server::HttpConnection or T2Server::HttpsConnection object to
     # represent it.
-    def ConnectionFactory.connect(uri)
+    def ConnectionFactory.connect(uri, params = nil)
       # we want to use URIs here
       if !uri.is_a? URI
         raise URI::InvalidURIError.new
       end
-      
+
+      # if we're given params they must be of the right type
+      if !params.nil? and !params.is_a? ConnectionParameters
+        raise ArgumentError, "Parameters must be ConnectionParameters", caller
+      end
+
       # see if we've already got this connection
       conn = @@connections.find {|c| c.uri == uri}
 
       if !conn
         if uri.scheme == "http"
-          conn = HttpConnection.new(uri)
+          conn = HttpConnection.new(uri, params)
         elsif uri.scheme == "https"
-          conn = HttpsConnection.new(uri)
+          conn = HttpsConnection.new(uri, params)
         else
           raise URI::InvalidURIError.new
         end
@@ -84,8 +89,9 @@ module T2Server
     attr_reader :uri
 
     # Open a http connection to the Taverna Server at the uri supplied. 
-    def initialize(uri)
+    def initialize(uri, params = nil)
       @uri = uri
+      @params = params || DefaultConnectionParameters.new
 
       # set up http connection
       @http = Net::HTTP.new(@uri.host, @uri.port)
@@ -307,7 +313,7 @@ module T2Server
       uri = URI.parse(location)
       new_uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
         @uri.path, nil, nil, nil);
-      ConnectionFactory.connect(new_uri)
+      ConnectionFactory.connect(new_uri, @params)
     end
   end
 
@@ -316,8 +322,8 @@ module T2Server
   class HttpsConnection < HttpConnection
 
     # Open a https connection to the Taverna Server at the uri supplied.
-    def initialize(uri)
-      super(uri)
+    def initialize(uri, params = nil)
+      super(uri, params)
 
       @http.use_ssl = true
       # probably shouldn't do this, but...
