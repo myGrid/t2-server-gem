@@ -111,22 +111,42 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   Run.create(server, workflow, credentials = nil) -> run
-    #   Run,create(server, workflow, credentials = nil) {|run| ...}
+    #   Run.create(server, workflow) -> run
+    #   Run.create(server, workflow, connection_parameters) -> run
+    #   Run.create(server, workflow, user_credentials) -> run
+    #   Run.create(server, workflow, ...) {|run| ...}
     #
     # Create a new run in the +Initialized+ state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
-    # supplied as a string in t2flow or scufl format.
+    # supplied as a string in t2flow or scufl format. User credentials and
+    # connection parameters can be supplied if required but are both optional.
+    # If _server_ is an instance of T2Server::Server then
+    # _connection_parameters_ will be ignored.
     #
     # This method will _yield_ the newly created Run if a block is given.
-    def Run.create(server, workflow, credentials = nil, uuid="")
+    def Run.create(server, workflow, *rest)
+      credentials = nil
+      uuid = nil
+      conn_params = nil
+
+      rest.each do |param|
+        case param
+        when String
+          uuid = param
+        when ConnectionParameters
+          conn_params = param
+        when Credentials
+          credentials = param
+        end
+      end
+
       if server.class != Server
-        server = Server.new(server)
+        server = Server.new(server, conn_params)
       end
       
-      if uuid == ""
+      if uuid.nil?
         uuid = server.initialize_run(workflow, credentials)
       end
       
