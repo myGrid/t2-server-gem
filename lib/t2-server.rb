@@ -84,8 +84,8 @@ module URI
   # object.
   def self.strip_credentials(uri)
     # we want to use URIs here but strings can be passed in
-    if !uri.is_a? URI
-      uri = URI.parse(uri.strip_path);
+    unless uri.is_a? URI
+      uri = URI.parse(uri.strip_path)
     end
 
     creds = nil

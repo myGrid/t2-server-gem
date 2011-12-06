@@ -72,8 +72,8 @@ module T2Server
     # It will _yield_ itself if a block is given.
     def initialize(uri, params = nil)
       # we want to use URIs here but strings can be passed in
-      if !uri.is_a? URI
-        uri = URI.parse(uri.strip_path);
+      unless uri.is_a? URI
+        uri = URI.parse(uri.strip_path)
       end
 
       # strip username and password from the URI if present
