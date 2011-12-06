@@ -55,6 +55,7 @@ end
 # the testcases to run
 require 'tc_paths'
 require 'tc_uri'
+require 'tc_params'
 if address != ""
   $uri, $creds = URI.strip_credentials(address)
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
@@ -66,10 +67,16 @@ if address != ""
   $file_input = "test/workflows/in.txt"
   $file_strs  = "test/workflows/strings.txt"
 
+  if $uri.scheme == "http"
+    $conn_params = T2Server::DefaultConnectionParameters.new
+  else
+    $conn_params = T2Server::InsecureSSLConnectionParameters.new
+  end
+
   require 'tc_server'
 
   # get the server version to determine which test case to run
-  if T2Server::Server.new($uri).version == 1
+  if T2Server::Server.new($uri, $conn_params).version == 1
     require 'tc_run_v1'
   else
     require 'tc_run'

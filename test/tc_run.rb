@@ -37,7 +37,7 @@ class TestRun < Test::Unit::TestCase
   def test_run
     # connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @run = T2Server::Run.create($uri, $wkf_pass, $creds)
+      @run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
     end
 
     # test bad state code
@@ -64,7 +64,7 @@ class TestRun < Test::Unit::TestCase
     assert(@run.delete)
 
     # run with xml input
-    @run = T2Server::Run.create($uri, $wkf_xml, $creds)
+    @run = T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params)
     @run.set_input("xml","<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>")
     @run.set_input("xpath","//yes")
     @run.start
@@ -72,7 +72,7 @@ class TestRun < Test::Unit::TestCase
     assert_equal(@run.output_port("nodes").values, ["hello", "world"])
 
     # run with file input
-    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
+    @run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
 
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.upload_input_file("IN", $file_input)
@@ -84,7 +84,7 @@ class TestRun < Test::Unit::TestCase
     assert_equal(@run.output_port("OUT").values, "Hello, World!")
 
     # run that returns list of lists, some empty, using baclava for input
-    @run = T2Server::Run.create($uri, $wkf_lists, $creds)
+    @run = T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params)
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.upload_baclava_input($list_input)
     end
@@ -112,7 +112,7 @@ class TestRun < Test::Unit::TestCase
     end
 
     # run with baclava output
-    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
+    @run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
     @run.set_input("IN", "Some input...")
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
       @run.request_baclava_output
@@ -128,7 +128,7 @@ class TestRun < Test::Unit::TestCase
     end
 
     # test partial result download
-    @run = T2Server::Run.create($uri, $wkf_pass, $creds)
+    @run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
     @run.upload_input_file("IN", $file_strs)
     @run.start
     @run.wait
@@ -165,13 +165,13 @@ class TestRun < Test::Unit::TestCase
       "123456789\n223456789\n323456789\n")
 
     # test error handling
-    @run = T2Server::Run.create($uri, $wkf_fail, $creds)
+    @run = T2Server::Run.create($uri, $wkf_fail, $creds, $conn_params)
     @run.start
     @run.wait
     assert(@run.output_port("OUT").value.nil?)
     assert(@run.output_port("OUT").error?)
 
-    @run = T2Server::Run.create($uri, $wkf_errors, $creds)
+    @run = T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params)
     @run.start
     @run.wait
     assert(@run.output_port("OUT").error?)

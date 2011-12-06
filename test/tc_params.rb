@@ -32,33 +32,15 @@
 
 require 't2-server'
 
-class TestAdmin < Test::Unit::TestCase
+class TestParams < Test::Unit::TestCase
 
-  def test_admin
-    # server connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      @server = T2Server::Server.new($uri, $conn_params)
-    end
-    assert_not_nil(@server)
+  def test_params
+    params = T2Server::ConnectionParameters.new
 
-    # unauthorized
-    assert_raise(T2Server::AuthorizationError) do
-      @server.administrator(T2Server::HttpBasic.new("u", "p"))
-    end
+    params[:verify_peer] = true
+    assert_not_nil(params[:verify_peer])
 
-    begin
-      @admin = @server.administrator($creds)
-    rescue T2Server::T2ServerError => e
-      # ignore, just don't run more tests
-      return
-    end
-
-    assert_equal(@admin["allownew"].name, "allowNew")
-
-    save = @admin["allownew"].value
-    @admin["allownew"].value = false
-    assert_equal(@admin["allownew"].value, "false")
-    @admin["allownew"].value = save
-    assert_equal(@admin["allownew"].value, save)
+    params[:not_a_chance] = true
+    assert_nil(params[:not_a_chance])
   end
 end

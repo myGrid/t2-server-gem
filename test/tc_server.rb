@@ -37,7 +37,7 @@ class TestServer < Test::Unit::TestCase
   def test_server
     # connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @server = T2Server::Server.new($uri)
+      @server = T2Server::Server.new($uri, $conn_params)
     end
     assert_not_nil(@server)
 
