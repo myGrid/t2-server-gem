@@ -325,9 +325,27 @@ module T2Server
     def initialize(uri, params = nil)
       super(uri, params)
 
+      # Configure connection options using params
       @http.use_ssl = true
-      # probably shouldn't do this, but...
-      @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+      # Peer verification
+      if @params[:verify_peer]
+        if @params[:ca_file]
+          @http.ca_file = @params[:ca_file]
+        else
+          @http.ca_path = @params[:ca_path]
+        end
+        @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      else
+        @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+
+      # Client authentication
+      if @params[:client_certificate]
+        pem = File.read(@params[:client_certificate])
+        @http.cert = OpenSSL::X509::Certificate.new(pem)
+        @http.key = OpenSSL::PKey::RSA.new(pem, @params[:client_password])
+      end
     end
   end  
 end
