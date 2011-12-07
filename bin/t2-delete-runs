@@ -39,7 +39,7 @@ include T2Server::CLI
 
 # set up options
 options = {}
-creds = register_options("Usage: t2-delete-runs [options] server-address [run-ids...]") do |opt|
+conn_params, creds = register_options("Usage: t2-delete-runs [options] server-address [run-ids...]") do |opt|
   opt.separator "  Where server-address is the full URI of the server to connect to,"
   opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the id numbers"
   opt.separator "  of the runs you want to delete and [options] can be:"
@@ -63,7 +63,7 @@ uri, creds = parse_address(address, creds)
 
 # connect...
 begin
-  server = T2Server::Server.new(uri)
+  server = T2Server::Server.new(uri, conn_params)
 rescue T2Server::T2ServerError => e
   puts e
   exit 1

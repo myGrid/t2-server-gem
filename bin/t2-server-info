@@ -38,7 +38,7 @@ require 'hirb'
 
 include T2Server::CLI
 
-creds = register_options("Usage: t2-server-info [options] server-address") do |opt|
+conn_params, creds = register_options("Usage: t2-server-info [options] server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
@@ -49,7 +49,7 @@ uri, creds = parse_address(ARGV.shift, creds)
 
 # connect to server and output information
 begin
-  T2Server::Server.new(uri) do |server|
+  T2Server::Server.new(uri, conn_params) do |server|
     print "     Server: #{server.uri}\n"
     print "    Version: #{server.version}\n"
     print "  Run limit: #{server.run_limit(creds)}\n"

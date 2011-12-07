@@ -40,7 +40,7 @@ include T2Server::CLI
 # set up options
 options = {}
 ports = []
-creds = register_options("Usage: t2-get-output [options] server-address run-id") do |opt|
+conn_params, creds = register_options("Usage: t2-get-output [options] server-address run-id") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna, run-ids"
   opt.separator "  are the id numbers of the runs you want to collect output"
@@ -89,7 +89,7 @@ end
 
 # connect...
 begin
-  server = T2Server::Server.new(uri)
+  server = T2Server::Server.new(uri, conn_params)
   run = server.run(run_id, creds)
 
   ports = run.output_ports.keys if ports.empty?

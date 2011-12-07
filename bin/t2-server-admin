@@ -40,7 +40,7 @@ include T2Server::CLI
 
 set = {}
 options = {}
-creds = register_options("Usage: t2-server-admin [options] server-address [resource(s)]") do |opt|
+conn_params, creds = register_options("Usage: t2-server-admin [options] server-address [resource(s)]") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
@@ -79,7 +79,7 @@ def access(write)
 end
 
 begin
-  server = T2Server::Server.new(uri)
+  server = T2Server::Server.new(uri, conn_params)
 
   server.administrator(creds) do |admin|
     # list and exit?

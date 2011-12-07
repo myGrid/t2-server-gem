@@ -42,7 +42,7 @@ include T2Server::CLI
 inputs  = {}
 files = {}
 options = {}
-creds = register_options("Usage: t2-run-workflow [options] server-address") do |opt|
+conn_params, creds = register_options("Usage: t2-run-workflow [options] server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
@@ -100,7 +100,7 @@ end
 exit 1 if wkf == ""
 
 begin
-  T2Server::Run.create(uri, wkf, creds) do |run|
+  T2Server::Run.create(uri, wkf, creds, conn_params) do |run|
     puts "Created run with uuid: #{run.uuid}"
     puts "Created at #{run.create_time}"
 

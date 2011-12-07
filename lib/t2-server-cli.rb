@@ -41,10 +41,35 @@ module T2Server
     def register_options(banner)
       user = nil
       pass = ""
+      conn_params = DefaultConnectionParameters.new
+
       @opts = OptionParser.new do |opt|
         opt.banner = banner
         if block_given?
           yield opt
+        end
+
+        # SSL options
+        opt.on("-E CERT_FILE:PASSWORD", "--cert=CERT_FILE:PASSWORD", "Use " +
+          "the specified certificate file for client authentication. If the " +
+          "optional password is not provided it will be asked for on the " +
+          "command line. Must be in PEM format.") do |val|
+            cert, cpass = val.chomp.split(":", 2)
+            conn_params[:client_certificate] = cert
+            conn_params[:client_password] = cpass if cpass
+        end
+        opt.on("--cacert=CERT_FILE", "Use the specified certificate file to " +
+          "verify the peer. Must be in PEM format.") do |val|
+            conn_params[:ca_file] = val.chomp
+        end
+        opt.on("--capath=CERTS_PATH", "Use the specified certificate " +
+          "directory to verify the peer. Certificates must be in PEM " +
+          "format") do |val|
+            conn_params[:ca_path] = val.chomp
+        end
+        opt.on("-k", "--insecure", "Allow insecure connections: no peer " +
+          "verification.") do
+            conn_params[:verify_peer] = false
         end
 
         # common options
@@ -69,7 +94,8 @@ module T2Server
       # parse options
       @opts.parse!
 
-      user != nil ? HttpBasic.new(user, pass) : nil
+      creds = user.nil? ? nil : HttpBasic.new(user, pass)
+      [conn_params, creds]
     end
 
     # separate the creds if they are supplied in the uri
