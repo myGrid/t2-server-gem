@@ -39,10 +39,10 @@ module T2Server
   # setup and configuration required.
   #
   # A run can be in one of three states:
-  # * Initialized: The run has been accepted by the server. It may not yet be
+  # * :initialized - The run has been accepted by the server. It may not yet be
   #   ready to run though as its input port may not have been set.
-  # * Running: The run is being run by the server.
-  # * Finished: The run has finished running and its outputs are available for
+  # * :running - The run is being run by the server.
+  # * :finished - The run has finished running and its outputs are available for
   #   download.
   class Run
     include XML::Methods
@@ -57,13 +57,6 @@ module T2Server
     attr_reader :server
 
     # :stopdoc:
-    STATE = {
-      :initialized => "Initialized",
-      :running     => "Operating",
-      :finished    => "Finished",
-      :stopped     => "Stopped"
-    }
-
     XPaths = {
       # Run XPath queries
       :dir        => XML::Methods.xpath_compile("//nss:dir"),
@@ -116,7 +109,7 @@ module T2Server
     #   Run.create(server, workflow, user_credentials) -> run
     #   Run.create(server, workflow, ...) {|run| ...}
     #
-    # Create a new run in the +Initialized+ state. The run will be created on
+    # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
@@ -175,10 +168,10 @@ module T2Server
     #
     # Set the workflow input port _input_ to _value_.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def set_input(input, value)
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
       xml_value = xml_text_node(value)
       path = "#{@links[:inputs]}/input/#{input}"
@@ -193,10 +186,10 @@ module T2Server
     # Set the workflow input port _input_ to use the file at _filename_ as its
     # input data.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def set_input_file(input, filename)
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
       xml_value = xml_text_node(filename)
       path = "#{@links[:inputs]}/input/#{input}"
@@ -309,10 +302,11 @@ module T2Server
     # :call-seq:
     #   status -> string
     #
-    # Get the status of this run.
+    # Get the status of this run. Status can be one of :initialized,
+    # :running or :finished.
     def status
-      @server.get_run_attribute(@uuid, @links[:status], "text/plain",
-        @credentials)
+      text_to_state(@server.get_run_attribute(@uuid, @links[:status],
+        "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -320,12 +314,12 @@ module T2Server
     #
     # Start this run on the server.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def start
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @server.set_run_attribute(@uuid, @links[:status], STATE[:running],
+      @server.set_run_attribute(@uuid, @links[:status], state_to_text(:running),
         "text/plain", @credentials)
     end
 
@@ -339,10 +333,10 @@ module T2Server
     # * :progress - Print a dot (.) each interval to show that something is
     #   actually happening. Default +false+.
     #
-    # Raises RunStateError if the run is still in the +Initialised+ state.
+    # Raises RunStateError if the run is still in the :initialised state.
     def wait(params={})
       state = status
-      raise RunStateError.new(state, STATE[:running]) if state == STATE[:initialized]
+      raise RunStateError.new(state, :running) if state == :initialized
 
       interval = params[:interval] || 1
       progress = params[:progress] || false
@@ -436,10 +430,10 @@ module T2Server
     #
     # The name of the file on the server is returned or nil on failure.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def upload_input_file(input, filename, params={})
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
       file = upload_file(filename, params)
       set_input_file(input, file) ? file : nil
@@ -451,7 +445,7 @@ module T2Server
     # Upload a baclava file to be used for the workflow inputs.
     def upload_baclava_input(filename)
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
       rename = upload_file(filename)
       result = @server.set_run_attribute(@uuid, @links[:baclava], rename,
@@ -482,7 +476,7 @@ module T2Server
     def request_baclava_output
       return if @baclava_out
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
       
       @baclava_out = @server.set_run_attribute(@uuid, @links[:output],
         BACLAVA_FILE, "text/plain", @credentials)
@@ -512,7 +506,7 @@ module T2Server
     # before starting the run.
     def baclava_output
       state = status
-      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
+      raise RunStateError.new(state, :finished) if state != :finished
       
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
       @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{BACLAVA_FILE}",
@@ -534,7 +528,7 @@ module T2Server
     # format.
     def zip_output
       state = status
-      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
+      raise RunStateError.new(state, :finished) if state != :finished
 
       @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out",
         "application/zip", @credentials)
@@ -543,25 +537,25 @@ module T2Server
     # :call-seq:
     #   initialized? -> bool
     #
-    # Is this run in the +Initialized+ state?
+    # Is this run in the :initialized state?
     def initialized?
-      status == STATE[:initialized]
+      status == :initialized
     end
 
     # :call-seq:
     #   running? -> bool
     #
-    # Is this run in the +Running+ state?
+    # Is this run in the :running state?
     def running?
-      status == STATE[:running]
+      status == :running
     end
 
     # :call-seq:
     #   finished? -> bool
     #
-    # Is this run in the +Finished+ state?
+    # Is this run in the :finished state?
     def finished?
-      status == STATE[:finished]
+      status == :finished
     end
 
     # :call-seq:
@@ -744,6 +738,30 @@ module T2Server
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
       
       links
+    end
+
+    # :stopdoc:
+    STATE2TEXT = {
+      :initialized => "Initialized",
+      :running     => "Operating",
+      :finished    => "Finished",
+      :stopped     => "Stopped"
+    }
+
+    TEXT2STATE = {
+      "Initialized" => :initialized,
+      "Operating"   => :running,
+      "Finished"    => :finished,
+      "Stopped"     => :stopped
+    }
+    # :startdoc:
+
+    def state_to_text(state)
+      STATE2TEXT[state.to_sym]
+    end
+
+    def text_to_state(text)
+      TEXT2STATE[text]
     end
   end
 end

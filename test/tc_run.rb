@@ -40,7 +40,8 @@ class TestRun < Test::Unit::TestCase
       @run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
     end
 
-    # test bad state code
+    # test correct/incorrect status codes
+    assert_equal(@run.status, :initialized)
     assert_raise(T2Server::RunStateError) { @run.wait }
 
     # test mkdir
@@ -52,13 +53,14 @@ class TestRun < Test::Unit::TestCase
     end
     @run.start
     assert(@run.running?)
+    assert_equal(@run.status, :running)
     assert_nothing_raised(T2Server::RunStateError) { @run.wait }
+    assert_equal(@run.status, :finished)
 
     # exitcode and output
     assert_instance_of(Fixnum, @run.exitcode)
     assert_equal(@run.output_port("OUT").values, "Hello, World!")
     assert_equal(@run.output_port("wrong!"), nil)
-
 
     # deletion
     assert(@run.delete)
