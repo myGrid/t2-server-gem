@@ -39,10 +39,10 @@ module T2Server
   # setup and configuration required.
   #
   # A run can be in one of three states:
-  # * Initialized: The run has been accepted by the server. It may not yet be
+  # * :initialized - The run has been accepted by the server. It may not yet be
   #   ready to run though as its input port may not have been set.
-  # * Running: The run is being run by the server.
-  # * Finished: The run has finished running and its outputs are available for
+  # * :running - The run is being run by the server.
+  # * :finished - The run has finished running and its outputs are available for
   #   download.
   class Run
     include XML::Methods
@@ -109,7 +109,7 @@ module T2Server
     #   Run.create(server, workflow, user_credentials) -> run
     #   Run.create(server, workflow, ...) {|run| ...}
     #
-    # Create a new run in the +Initialized+ state. The run will be created on
+    # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
@@ -168,7 +168,7 @@ module T2Server
     #
     # Set the workflow input port _input_ to _value_.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def set_input(input, value)
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
@@ -186,7 +186,7 @@ module T2Server
     # Set the workflow input port _input_ to use the file at _filename_ as its
     # input data.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def set_input_file(input, filename)
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
@@ -302,7 +302,8 @@ module T2Server
     # :call-seq:
     #   status -> string
     #
-    # Get the status of this run.
+    # Get the status of this run. Status can be one of :initialized,
+    # :running or :finished.
     def status
       text_to_state(@server.get_run_attribute(@uuid, @links[:status],
         "text/plain", @credentials))
@@ -313,7 +314,7 @@ module T2Server
     #
     # Start this run on the server.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def start
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
@@ -332,7 +333,7 @@ module T2Server
     # * :progress - Print a dot (.) each interval to show that something is
     #   actually happening. Default +false+.
     #
-    # Raises RunStateError if the run is still in the +Initialised+ state.
+    # Raises RunStateError if the run is still in the :initialised state.
     def wait(params={})
       state = status
       raise RunStateError.new(state, :running) if state == :initialized
@@ -429,7 +430,7 @@ module T2Server
     #
     # The name of the file on the server is returned or nil on failure.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def upload_input_file(input, filename, params={})
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
@@ -536,7 +537,7 @@ module T2Server
     # :call-seq:
     #   initialized? -> bool
     #
-    # Is this run in the +Initialized+ state?
+    # Is this run in the :initialized state?
     def initialized?
       status == :initialized
     end
@@ -544,7 +545,7 @@ module T2Server
     # :call-seq:
     #   running? -> bool
     #
-    # Is this run in the +Running+ state?
+    # Is this run in the :running state?
     def running?
       status == :running
     end
@@ -552,7 +553,7 @@ module T2Server
     # :call-seq:
     #   finished? -> bool
     #
-    # Is this run in the +Finished+ state?
+    # Is this run in the :finished state?
     def finished?
       status == :finished
     end
