@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -398,7 +398,7 @@ module T2Server
       # get list of run uuids
       uuids = []
       xpath_find(doc, XPaths[:run]).each do |run|
-        uuids << run.attributes["href"].split('/')[-1]
+        uuids << xml_node_attribute(run, "href").split('/')[-1]
       end
 
       # add new runs

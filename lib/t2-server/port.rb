@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -34,6 +34,8 @@ module T2Server
 
   # Base class of InputPort and OutputPort
   class Port
+    include XML::Methods
+
     # The port's name
     attr_reader :name
 
@@ -51,8 +53,8 @@ module T2Server
 
     private
     def parse_xml(xml)
-      @name = xml.attributes[:name]
-      @depth = xml.attributes[:depth].to_i
+      @name = xml_node_attribute(xml, 'name')
+      @depth = xml_node_attribute(xml, 'depth').to_i
     end
   end
 
@@ -290,12 +292,12 @@ module T2Server
         end
         return data
       when 'value'
-        return PortValue.new(self, node.attributes[:href], false,
-          node.attributes[:contentType],
-          node.attributes[:byteLength].to_i)
+        return PortValue.new(self, xml_node_attribute(node, 'href'), false,
+          xml_node_attribute(node, 'contentType'),
+          xml_node_attribute(node, 'byteLength').to_i)
       when 'error'
         @error = true
-        return PortValue.new(self, node.attributes[:href], true)
+        return PortValue.new(self, xml_node_attribute(node, 'href'), true)
       end
     end
 

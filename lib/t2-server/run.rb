@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -616,19 +616,19 @@ module T2Server
 
       xpath_find(doc, XPaths[:dir]).each do |e|
         if top
-          lists << e.content.split('/')[-1]
+          lists << xml_node_content(e).split('/')[-1]
         else
-          index = (e.attributes['name'].to_i - 1)
-          lists[index] = e.content.split('/')[-1]
+          index = (xml_node_attribute(e, 'name').to_i - 1)
+          lists[index] = xml_node_content(e).split('/')[-1]
         end
       end
 
       xpath_find(doc, XPaths[:file]).each do |e|
         if top
-          values << e.content.split('/')[-1]
+          values << xml_node_content(e).split('/')[-1]
         else
-          index = (e.attributes['name'].to_i - 1)
-          values[index] = e.content.split('/')[-1]
+          index = (xml_node_attribute(e, 'name').to_i - 1)
+          values[index] = xml_node_content(e).split('/')[-1]
         end
       end
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -74,6 +74,14 @@ module T2Server
 
       def xml_children(doc, &block)
         doc.each { |node| yield node }
+      end
+
+      def xml_node_content(node)
+        node.content
+      end
+
+      def xml_node_attribute(node, attribute)
+        node.attributes[attribute]
       end
 
       # This method needs to be declared as a module method so
