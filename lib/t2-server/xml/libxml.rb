@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,39 +30,50 @@
 #
 # Author: Robert Haines
 
-require 't2-server/xml/libxml'
+require 'rubygems'
+require 'libxml'
 
 module T2Server
   module XML
-
-    module Namespaces
-      SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
-      REST   = SERVER + "rest/"
-      ADMIN  = SERVER + "admin/"
-      PORT   = "http://ns.taverna.org.uk/2010/port/"
-
-      MAP    = {
-        "nss"  => Namespaces::SERVER,
-        "nsr"  => Namespaces::REST,
-        "nsa"  => Namespaces::ADMIN,
-        "port" => Namespaces::PORT
-      }
-    end
-
-    module Fragments
-      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
-      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
-      RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
-      RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
-      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
-      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
-    end
+    # Shut the libxml error handler up
+    LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
 
     module Methods
-      # The methods in this namespace are provided by the particular XML library
-      # selected above. The xpath_compile method needs to be declared as a
-      # module method so it can be used as a class method when it is mixed in.
-      module_function :xpath_compile
+      def xml_document(string)
+        LibXML::XML::Document.string(string)
+      end
+
+      def xml_text_node(text)
+        LibXML::XML::Node.new_text(text)
+      end
+
+      def xml_children(doc, &block)
+        doc.each { |node| yield node }
+      end
+
+      def xml_node_content(node)
+        node.content
+      end
+
+      def xml_node_attribute(node, attribute)
+        node.attributes[attribute]
+      end
+
+      def xpath_compile(xpath)
+        LibXML::XML::XPath::Expression.new(xpath)
+      end
+
+      def xpath_find(doc, expr)
+        doc.find(expr, Namespaces::MAP)
+      end
+
+      def xpath_first(doc, expr)
+        doc.find_first(expr, Namespaces::MAP)
+      end
+
+      def xpath_attr(doc, expr, attribute)
+        doc.find_first(expr, Namespaces::MAP).attributes[attribute]
+      end
     end
   end
 end
