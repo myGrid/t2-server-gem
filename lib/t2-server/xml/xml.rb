@@ -30,7 +30,15 @@
 #
 # Author: Robert Haines
 
-require 't2-server/xml/libxml'
+begin
+  require 't2-server/xml/libxml'
+rescue LoadError
+  begin
+    require 't2-server/xml/nokogiri'
+  rescue LoadError
+    require 't2-server/xml/rexml'
+  end
+end
 
 module T2Server
   module XML
