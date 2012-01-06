@@ -149,7 +149,7 @@ module T2Server
       super(run, xml)
 
       @error = false
-      @structure = parse_data(xml.first)
+      @structure = parse_data(xml_first_child(xml))
 
       # cached outputs
       @values = nil
@@ -284,7 +284,7 @@ module T2Server
 
     # Parse the XML port description into a raw data value structure.
     def parse_data(node)
-      case node.name
+      case xml_node_name(node)
       when 'list'
         data = []
         xml_children(node) do |child|

@@ -45,8 +45,16 @@ module T2Server
         REXML::Text.new(text).to_s
       end
 
+      def xml_first_child(node)
+        node.first
+      end
+
       def xml_children(doc, &block)
         doc.each { |node| yield node }
+      end
+
+      def xml_node_name(node)
+        node.name
       end
 
       def xml_node_content(node)

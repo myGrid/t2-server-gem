@@ -31,32 +31,30 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 'libxml'
+require 'nokogiri'
 
 module T2Server
   module XML
-    # Shut the libxml error handler up
-    LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
 
     module Methods
       def xml_document(string)
-        LibXML::XML::Document.string(string)
+        Nokogiri::XML(string)
       end
 
       def xml_text_node(text)
-        LibXML::XML::Node.new_text(text)
+        Nokogiri::XML::Text.new(text, Nokogiri::XML::Document.new).to_s
       end
 
       def xml_first_child(node)
-        node.first
+        node.first_element_child
       end
 
       def xml_children(doc, &block)
-        doc.each { |node| yield node }
+        doc.children.each &block
       end
 
       def xml_node_name(node)
-        node.name
+        node.node_name
       end
 
       def xml_node_content(node)
@@ -64,23 +62,23 @@ module T2Server
       end
 
       def xml_node_attribute(node, attribute)
-        node.attributes[attribute]
+        node[attribute]
       end
 
       def xpath_compile(xpath)
-        LibXML::XML::XPath::Expression.new(xpath)
+        xpath
       end
 
       def xpath_find(doc, expr)
-        doc.find(expr, Namespaces::MAP)
+        doc.xpath(expr, Namespaces::MAP)
       end
 
       def xpath_first(doc, expr)
-        doc.find_first(expr, Namespaces::MAP)
+        doc.at_xpath(expr, Namespaces::MAP)
       end
 
       def xpath_attr(doc, expr, attribute)
-        doc.find_first(expr, Namespaces::MAP).attributes[attribute]
+        doc.at_xpath(expr, Namespaces::MAP)[attribute]
       end
     end
   end
