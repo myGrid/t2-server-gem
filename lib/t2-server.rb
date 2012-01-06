@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,7 +30,7 @@
 #
 # Author: Robert Haines
 
-require 't2-server/xml'
+require 't2-server/xml/xml'
 require 't2-server/exceptions'
 require 't2-server/credentials'
 require 't2-server/connection'

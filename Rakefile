@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -58,7 +58,8 @@ spec = Gem::Specification.new do |s|
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '>=0.8.7')
-  s.add_runtime_dependency('libxml-ruby', '>=1.1.4')
+  s.add_development_dependency('libxml-ruby', '>=1.1.4')
+  s.add_development_dependency('nokogiri', '>=1.5.0')
   s.add_runtime_dependency('hirb', '>=0.4.0')
 end
 
@@ -90,7 +91,7 @@ Rake::RDocTask.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
     item.include?("t2server.rb") or
-    item.include?("xml.rb") or
+    item.include?("/xml/") or
     item.include?("connection.rb") or
     item.include?("credentials.rb") or
     item.include?("t2-server-cli.rb")

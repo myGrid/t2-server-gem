@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -82,7 +82,7 @@ module T2Server
       links = {}
 
       xml_children(doc.root) do |res|
-        path = res.attributes[:href].split('/')[-1]
+        path = xml_node_attribute(res, 'href').split('/')[-1]
         write = @server.admin_resource_writable?(path, @credentials)
         links[res.name.downcase] = AdminResource.new(res.name, path,
           write, self)
