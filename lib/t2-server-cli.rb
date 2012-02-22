@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -86,7 +86,7 @@ module T2Server
           exit
         end
         opt.on_tail("-v", "--version", "Show the version.") do
-          puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
+          puts "Taverna 2 Server Ruby Gem version: #{T2Server::Version::STRING}"
           exit
         end
       end

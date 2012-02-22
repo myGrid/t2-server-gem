@@ -30,6 +30,7 @@
 #
 # Author: Robert Haines
 
+require 'yaml'
 require 't2-server/xml/xml'
 require 't2-server/exceptions'
 require 't2-server/credentials'
@@ -47,8 +48,13 @@ require 't2-server/admin'
 # * T2Server::Server - Use this if you are providing a web interface to a
 #   Taverna 2 Server instance.
 module T2Server
-  # The version of this library
-  GEM_VERSION = "0.6.1"
+  module Version
+    # Version information in a Hash
+    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..", "version.yml"))
+
+    # Version number as a String
+    STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')
+  end
 end
 
 # Add methods to the String class to operate on file paths.

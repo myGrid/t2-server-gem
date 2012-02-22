@@ -36,11 +36,13 @@ require 'rake/tasklib'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
-task :default => [:test]
+require 'lib/t2-server'
 
+task :default => [:test]
+  
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
-  s.version          = "0.6.1"
+  s.version          = T2Server::Version::STRING
   s.author           = "Robert Haines"
   s.email            = "rhaines@manchester.ac.uk"
   s.homepage         = "http://www.taverna.org.uk/"
@@ -97,7 +99,7 @@ Rake::RDocTask.new do |r|
     item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
-  r.options << "-t Taverna 2 Server Ruby Interface Library"
+  r.options << "-t Taverna 2 Server Ruby Interface Library version #{T2Server::Version::STRING}"
   r.options << "-N"
   r.options << "--tab-width=2"
 end
