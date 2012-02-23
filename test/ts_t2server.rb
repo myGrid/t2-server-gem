@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -54,10 +54,10 @@ end
 
 # the testcases to run
 require 'tc_paths'
-require 'tc_uri'
+require 'tc_util'
 require 'tc_params'
 if address != ""
-  $uri, $creds = URI.strip_credentials(address)
+  $uri, $creds = T2Server::Util.strip_uri_credentials(address)
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")

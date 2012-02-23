@@ -30,52 +30,19 @@
 #
 # Author: Robert Haines
 
-require 'yaml'
-require 't2-server/util'
-require 't2-server/xml/xml'
-require 't2-server/exceptions'
-require 't2-server/credentials'
-require 't2-server/connection'
-require 't2-server/connection-parameters'
-require 't2-server/port'
-require 't2-server/server'
-require 't2-server/run'
-require 't2-server/admin'
+require 't2-server'
+require 'test/unit'
 
-# This is a Ruby library to interface with the Taverna 2 Server REST API.
-#
-# There are two API entry points:
-# * T2Server::Run - Use this for running single jobs on a server.
-# * T2Server::Server - Use this if you are providing a web interface to a
-#   Taverna 2 Server instance.
-module T2Server
-  module Version
-    # Version information in a Hash
-    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..", "version.yml"))
-
-    # Version number as a String
-    STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')
-  end
-end
-
-# Add methods to the String class to operate on file paths.
-class String
-  # :call-seq:
-  #   str.strip_path -> string
-  #
-  # Returns a new String with one leading and one trailing slash
-  # removed from the ends of _str_ (if present).
-  def strip_path
-    self.gsub(/^\//, "").chomp("/")
-  end
-
-  # :call-seq:
-  #   str.strip_path! -> str or nil
-  #
-  # Modifies _str_ in place as described for String#strip_path,
-  # returning _str_, or returning +nil+ if no modifications were made. 
-  def strip_path!
-    g = self.gsub!(/^\//, "")
-    self.chomp!("/") || g
+class TestUriStripping < Test::Unit::TestCase
+  def test_uri
+    uri = "http://%swww.example.com:8000/path/to/something"
+    username = "username"
+    password = "password"
+    address = uri % "#{username}:#{password}@"
+    
+    r_uri, r_creds = T2Server::Util.strip_uri_credentials(address)
+    
+    assert_equal(uri % "", r_uri.to_s())
+    assert_equal(username, r_creds.username)
   end
 end

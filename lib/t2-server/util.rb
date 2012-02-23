@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,19 +30,33 @@
 #
 # Author: Robert Haines
 
-require 't2-server'
-require 'test/unit'
+module T2Server
+  module Util
 
-class TestUriStripping < Test::Unit::TestCase
-  def test_uri
-    uri = "http://%swww.example.com:8000/path/to/something"
-    username = "username"
-    password = "password"
-    address = uri % "#{username}:#{password}@"
-    
-    r_uri, r_creds = URI.strip_credentials(address)
-    
-    assert_equal(uri % "", r_uri.to_s())
-    assert_equal(username, r_creds.username)
+    # :call-seq:
+    #   Util.strip_uri_credentials(uri) -> URI, Credentials
+    #
+    # Strip user credentials from an address in URI or String format and return
+    # a tuple of the URI minus the credentials and a T2Server::Credentials
+    # object.
+    def self.strip_uri_credentials(uri)
+      # we want to use URIs here but strings can be passed in
+      unless uri.is_a? URI
+        uri = URI.parse(uri.strip_path)
+      end
+
+      creds = nil
+
+      # strip username and password from the URI if present
+      if uri.user != nil
+        creds = T2Server::HttpBasic.new(uri.user, uri.password)
+
+        uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
+        uri.path, nil, nil, nil);
+      end
+
+      [uri, creds]
+    end
+
   end
 end

@@ -105,7 +105,7 @@ module T2Server
         exit 1
       end
 
-      p_uri, p_creds = URI.strip_credentials(address)
+      p_uri, p_creds = Util.strip_uri_credentials(address)
       creds != nil ? [p_uri, creds] : [p_uri, p_creds]
     end
 
