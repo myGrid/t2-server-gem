@@ -42,7 +42,7 @@ module T2Server
     def self.strip_uri_credentials(uri)
       # we want to use URIs here but strings can be passed in
       unless uri.is_a? URI
-        uri = URI.parse(uri.strip_path)
+        uri = URI.parse(Util.strip_path_slashes(uri))
       end
 
       creds = nil
@@ -56,6 +56,15 @@ module T2Server
       end
 
       [uri, creds]
+    end
+
+    # :call-seq:
+    #   Util.strip_path_slashes(path) -> String
+    #
+    # Returns a new String with one leading and one trailing slash
+    # removed from the ends of _path_ (if present).
+    def self.strip_path_slashes(path)
+      path.gsub(/^\//, "").chomp("/")
     end
 
   end

@@ -57,25 +57,3 @@ module T2Server
     STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')
   end
 end
-
-# Add methods to the String class to operate on file paths.
-class String
-  # :call-seq:
-  #   str.strip_path -> string
-  #
-  # Returns a new String with one leading and one trailing slash
-  # removed from the ends of _str_ (if present).
-  def strip_path
-    self.gsub(/^\//, "").chomp("/")
-  end
-
-  # :call-seq:
-  #   str.strip_path! -> str or nil
-  #
-  # Modifies _str_ in place as described for String#strip_path,
-  # returning _str_, or returning +nil+ if no modifications were made. 
-  def strip_path!
-    g = self.gsub!(/^\//, "")
-    self.chomp!("/") || g
-  end
-end

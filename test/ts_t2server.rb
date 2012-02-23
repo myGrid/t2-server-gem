@@ -53,7 +53,6 @@ else
 end
 
 # the testcases to run
-require 'tc_paths'
 require 'tc_util'
 require 'tc_params'
 if address != ""

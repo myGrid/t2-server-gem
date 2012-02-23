@@ -73,7 +73,7 @@ module T2Server
     def initialize(uri, params = nil)
       # we want to use URIs here but strings can be passed in
       unless uri.is_a? URI
-        uri = URI.parse(uri.strip_path)
+        uri = URI.parse(Util.strip_path_slashes(uri))
       end
 
       # strip username and password from the URI if present

@@ -388,7 +388,7 @@ module T2Server
     # Create a directory in the run's working directory on the server. This
     # could be used to store input data.
     def mkdir(dir)
-      dir.strip_path!
+      dir = Util.strip_path_slashes(dir)
       if dir.include? ?/
         # if a path is given then separate the leaf from the
         # end and add the rest of the path to the wdir link
@@ -603,7 +603,7 @@ module T2Server
     # should be full paths starting at "root". The contents of a directory are
     # returned as a list of two lists, "lists" and "values" respectively.
     def _ls_ports(dir="", top=true)
-      dir.strip_path!
+      dir = Util.strip_path_slashes(dir)
       dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}",
         "*/*", @credentials)
 
@@ -636,7 +636,7 @@ module T2Server
     end
 
     def _get_output(output, refs=false, top=true)
-      output.strip_path!
+      output = Util.strip_path_slashes(output)
 
       # if at the top level we need to check if the port represents a list
       # or a singleton value
