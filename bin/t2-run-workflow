@@ -144,8 +144,12 @@ begin
 
     # otherwise wait
     print "Running"
-    run.wait(:progress => true)
-    puts "Finished at #{run.finish_time}"
+    until run.finished?
+      sleep(1)
+      print "."
+      $stdout.flush
+    end
+    puts "\nFinished at #{run.finish_time}"
 
     # get outputs
     stdout = run.stdout

@@ -324,35 +324,32 @@ module T2Server
     end
 
     # :call-seq:
-    #   wait(params={})
+    #   wait(check_interval = 1)
     #
-    # Wait (block) for this run to finish. Possible values that can be passed
-    # in via _params_ are:
-    # * :interval - How often (in seconds) to test for run completion.
-    #   Default +1+.
-    # * :progress - Print a dot (.) each interval to show that something is
-    #   actually happening. Default +false+.
+    # Wait (block) for this run to finish. How often (in seconds) the run is
+    # tested for completion can be specified with check_interval.
     #
     # Raises RunStateError if the run is still in the :initialised state.
-    def wait(params={})
+    def wait(*params)
       state = status
       raise RunStateError.new(state, :running) if state == :initialized
 
-      interval = params[:interval] || 1
-      progress = params[:progress] || false
-      keepalive = params[:keepalive] || false ### TODO maybe move out of params
-      
+      interval = 1
+      params.each do |param|
+        case param
+        when Hash
+          warn "[DEPRECATION] 'Run#wait(params={})' is deprecated and will " +
+            "be removed in 1.0. Please use Run#wait(check_interval) instead."
+          interval = param[:interval] || 1
+        when Integer
+          interval = param
+        end
+      end
+
       # wait
       until finished?
         sleep(interval)
-        if progress
-          print "."
-          STDOUT.flush
-        end
       end
-      
-      # tidy up output if there is any
-      puts if progress
     end
 
     # :call-seq:
