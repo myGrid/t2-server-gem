@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -101,7 +101,7 @@ exit 1 if wkf == ""
 
 begin
   T2Server::Run.create(uri, wkf, creds, conn_params) do |run|
-    puts "Created run with uuid: #{run.uuid}"
+    puts "Created run with identifier: #{run.identifier}"
     puts "Created at #{run.create_time}"
 
     # set run expiry

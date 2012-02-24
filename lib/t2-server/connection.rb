@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -101,13 +101,13 @@ module T2Server
     #   POST_run(path, value, credentials) -> String
     #
     # Initialize a T2Server::Run on a server by uploading its workflow.
-    # The new run's UUID (in String form) is returned.
+    # The new run's identifier (in String form) is returned.
     def POST_run(path, value, credentials)
       response = POST(path, value, "application/xml", credentials)
       
       case response
       when Net::HTTPCreated
-        # return the uuid of the newly created run
+        # return the identifier of the newly created run
         epr = URI.parse(response['location'])
         epr.path[-36..-1]
       when Net::HTTPForbidden

@@ -127,9 +127,9 @@ module T2Server
     # Create a run on this server using the specified _workflow_.
     # This method will _yield_ the newly created Run if a block is given.
     def create_run(workflow, credentials = nil)
-      uuid = initialize_run(workflow, credentials)
-      run = Run.create(self, "", credentials, uuid)
-      @runs[uuid] = run
+      id = initialize_run(workflow, credentials)
+      run = Run.create(self, "", credentials, id)
+      @runs[id] = run
 
       yield(run) if block_given?
       run
@@ -139,7 +139,7 @@ module T2Server
     #   initialize_run(workflow, credentials = nil) -> string
     #
     # Create a run on this server using the specified _workflow_ but do not
-    # return it as a Run instance. Return its UUID instead.
+    # return it as a Run instance. Return its identifier instead.
     def initialize_run(workflow, credentials = nil)
       @connection.POST_run("#{@links[:runs]}",
         XML::Fragments::WORKFLOW % workflow, credentials)
@@ -172,22 +172,22 @@ module T2Server
     end
 
     # :call-seq:
-    #   run(uuid, credentials = nil) -> run
+    #   run(identifier, credentials = nil) -> run
     #
     # Return the specified run.
-    def run(uuid, credentials = nil)
-      get_runs(credentials)[uuid]
+    def run(identifier, credentials = nil)
+      get_runs(credentials)[identifier]
     end
 
     # :call-seq:
     #   delete_run(run, credentials = nil) -> bool
     #
     # Delete the specified run from the server, discarding all of its state.
-    # _run_ can be either a Run instance or a UUID.
+    # _run_ can be either a Run instance or a identifier.
     def delete_run(run, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
       
       if @connection.DELETE("#{@links[:runs]}/#{run}", credentials)
@@ -210,7 +210,7 @@ module T2Server
       warn "[DEPRECATION] 'Server#set_run_input' is deprecated and will be " +
         "removed in 1.0. Please use 'Run#set_input' instead."
 
-      # get the run from the uuid if that is what is passed in
+      # get the run from the identifier if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
       end
@@ -222,7 +222,7 @@ module T2Server
       warn "[DEPRECATION] 'Server#set_run_input_file' is deprecated and " +
         "will be removed in 1.0. Please use 'Run#set_input_file' instead."
 
-      # get the run from the uuid if that is what is passed in
+      # get the run from the identifier if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
       end
@@ -231,9 +231,9 @@ module T2Server
     end
 
     def create_dir(run, root, dir, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
 
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
@@ -249,9 +249,9 @@ module T2Server
     end
 
     def upload_file(run, filename, location, rename, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
 
       contents = Base64.encode64(IO.read(filename))
@@ -272,9 +272,9 @@ module T2Server
     end
 
     def get_run_attribute(run, path, type, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
 
       get_attribute("#{@links[:runs]}/#{run}/#{path}", type, credentials)
@@ -287,9 +287,9 @@ module T2Server
     end
 
     def set_run_attribute(run, path, value, type, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
 
       set_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
@@ -303,9 +303,9 @@ module T2Server
     end
 
     def download_run_file(run, path, range, credentials = nil)
-      # get the uuid from the run if that is what is passed in
+      # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
-        run = run.uuid
+        run = run.identifier
       end
 
       get_attribute("#{@links[:runs]}/#{run}/#{path}",
@@ -395,22 +395,22 @@ module T2Server
 
       doc = xml_document(run_list)
 
-      # get list of run uuids
-      uuids = []
+      # get list of run identifiers
+      ids = []
       xpath_find(doc, XPaths[:run]).each do |run|
-        uuids << xml_node_attribute(run, "href").split('/')[-1]
+        ids << xml_node_attribute(run, "href").split('/')[-1]
       end
 
       # add new runs
-      uuids.each do |uuid|
-        if !@runs.has_key? uuid
-          @runs[uuid] = Run.create(self, "", credentials, uuid)
+      ids.each do |id|
+        if !@runs.has_key? id
+          @runs[id] = Run.create(self, "", credentials, id)
         end
       end
 
       # clear out the expired runs
-      if @runs.length > uuids.length
-        @runs.delete_if {|key, val| !uuids.member? key}
+      if @runs.length > ids.length
+        @runs.delete_if {|key, val| !ids.member? key}
       end
 
       @runs

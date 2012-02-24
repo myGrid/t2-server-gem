@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -57,8 +57,9 @@ begin
     print "No. of runs: #{runs.length}\n"
     if runs.length > 0
       puts (Hirb::Helpers::ObjectTable.render runs,
-        :fields=>[:uuid, :status, :expiry],
-        :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
+        :fields=>[:identifier, :status, :expiry],
+        :headers=>{:identifier=>'Run ID', :status=>'Status',
+          :expiry=>'Expiry time (local)'},
         :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
         :max_fields=>{:expiry=>19},
         :description=>false)

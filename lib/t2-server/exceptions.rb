@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -94,12 +94,12 @@ module T2Server
   # expectation is that the run exists then it could have been destroyed by
   # a timeout or another user.
   class RunNotFoundError < T2ServerError
-    attr_reader :uuid
+    attr_reader :identifier
 
-    # Create a new RunNotFoundError with the specified UUID.
-    def initialize(uuid)
-      @uuid = uuid
-      super "Could not find run #{@uuid}"
+    # Create a new RunNotFoundError with the specified identifier.
+    def initialize(id)
+      @identifier = id
+      super "Could not find run #{@identifier}"
     end
   end
 
