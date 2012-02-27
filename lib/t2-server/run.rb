@@ -31,6 +31,7 @@
 # Author: Robert Haines
 
 require 'rubygems'
+require 'base64'
 require 'time'
 
 module T2Server
@@ -91,7 +92,8 @@ module T2Server
       :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
       :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
       :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
-      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI")
+      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI"),
+      :sec_trust  => XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -766,6 +768,73 @@ module T2Server
       return unless owner?
 
       @server.delete_run_attribute(@identifier, @links[:sec_creds],
+        @credentials)
+    end
+
+    # :call-seq:
+    #   add_trust(filename, type = :x509) -> String
+    #
+    # Add a trusted identity (server public key) to verify peers when using
+    # https connections to Web Services. The id of the trust on the server is
+    # returned. Only the owner of a run may add a trust. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def add_trust(filename, type = :x509)
+      return unless owner?
+
+      type = type.to_s.upcase
+
+      contents = Base64.encode64(IO.read(filename))
+
+      value = XML::Fragments::TRUST % [contents, type]
+      @server.create_run_attribute(@identifier, @links[:sec_trusts], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   trusts -> Array
+    #
+    # Return a list of all the ids of trusts that have been registered for this
+    # run. At present there is no way to differentiate between trusts without
+    # noting the id returned when originally uploaded. Only the owner of a run
+    # may query its trusts. +nil+ is returned if a user other than the owner
+    # uses this method.
+    def trusts
+      return unless owner?
+
+      t_ids = []
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_trusts], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_trust]). each do |t|
+        t_ids << xml_node_attribute(t, "href").split('/')[-1]
+      end
+
+      t_ids
+    end
+
+    # :call-seq:
+    #   delete_trust(id) -> bool
+    #
+    # Delete the trust with the provided id. Only the owner of a run may
+    # delete its trusts. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def delete_trust(id)
+      return unless owner?
+
+      path = "#{@links[:sec_trusts]}/#{id}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_trusts -> bool
+    #
+    # Delete all trusted identities associated with this workflow run. Only
+    # the owner of a run may delete its trusts. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def delete_all_trusts
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_trusts],
         @credentials)
     end
 

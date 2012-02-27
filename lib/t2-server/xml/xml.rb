@@ -79,6 +79,11 @@ module T2Server
                       "  <t2s:username>%s</t2s:username>\n" +
                       "  <t2s:password>%s</t2s:password>\n" +
                       "</t2s:userpass>"
+
+      TRUST         = "<t2s:trustedIdentity xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
+                      "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n" +
+                      "  <t2s:fileType>%s</t2s:fileType>\n" +
+                      "</t2s:trustedIdentity>"
     end
 
     module Methods
