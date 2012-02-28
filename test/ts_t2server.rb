@@ -33,10 +33,23 @@
 require 'test/unit'
 require 't2-server'
 
-# check for a server address passed through on the command line
+# Check for a server address and user credentials passed through on the
+# command line.
 if ARGV.size != 0
   address = ARGV[0]
-  puts "Using server at #{address}"
+
+  unless ARGV[1].nil?
+    user1, pass1 = ARGV[1].split(":")
+    user1 = nil if pass1.nil?
+  end
+
+  unless ARGV[2].nil?
+    user2, pass2 = ARGV[2].split(":")
+    user2 = nil if pass2.nil?
+  end
+
+  puts "Using server at: #{address}"
+  puts "   With user(s): #{user1} #{user2}" if user1
 else
   # get a server address to test - 30 second timeout
   print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
@@ -57,6 +70,11 @@ require 'tc_util'
 require 'tc_params'
 if address != ""
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
+
+  # override creds if passed in on the command line
+  $creds = T2Server::HttpBasic.new(user1, pass1) if user1
+  $creds1 = T2Server::HttpBasic.new(user2, pass2) if user2
+
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
@@ -74,11 +92,17 @@ if address != ""
 
   require 'tc_server'
 
-  # get the server version to determine which test case to run
+  # get the server version to determine which test cases to run
   if T2Server::Server.new($uri, $conn_params).version == 1
     require 'tc_run_v1'
   else
     require 'tc_run'
     require 'tc_admin'
+    require 'tc_secure'
+
+    # if we have two sets of credentials we can run permissions tests
+    if $creds1
+      require 'tc_perms'
+    end
   end
 end
