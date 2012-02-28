@@ -712,6 +712,35 @@ module T2Server
     end
 
     # :call-seq:
+    #   add_keypair_credential(service_uri, filename, password,
+    #     alias = "Imported Certificate", type = :pkcs12) -> String
+    #
+    # Provide a client certificate credential for the secure service at the
+    # specified URI. You will need to provide the password to unlock the
+    # private key. You will also need to provide the 'alias' or 'friendlyName'
+    # of the key you wish to use if it differs from the default. The id of the
+    # credential on the server is returned. Only the owner of a run may supply
+    # credentials for it. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def add_keypair_credential(uri, filename, password,
+                               name = "Imported Certificate", type = :pkcs12)
+      return unless owner?
+
+      type = type.to_s.upcase
+      contents = Base64.encode64(IO.read(filename))
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::KEYPAIR_CRED % [uri, name, contents,
+        type, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
     #   credentials -> Hash
     #
     # Return a hash (service_uri => identifier) of all the credentials provided
