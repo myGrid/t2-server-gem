@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -34,32 +34,36 @@ require 't2-server'
 
 class TestServer < Test::Unit::TestCase
 
-  def test_server
-    # connection
+  def test_server_connection
     assert_nothing_raised(T2Server::ConnectionError) do
-      @server = T2Server::Server.new($uri, $conn_params)
+      T2Server::Server.new($uri, $conn_params)
     end
-    assert_not_nil(@server)
+  end
 
-    # run creation
-    assert_nothing_raised(T2Server::T2ServerError) do
-      @run = @server.create_run($wkf_pass, $creds)
-    end
-
-    # capacity
-    limit = @server.run_limit($creds)
-    assert_instance_of(Fixnum, limit)
-    assert_raise(T2Server::ServerAtCapacityError) do
-      limit.times do
-        @server.create_run($wkf_pass, $creds)
+  def test_run_creation_deletion
+    T2Server::Server.new($uri, $conn_params) do |server|
+      assert_nothing_raised(T2Server::T2ServerError) do
+        run = server.create_run($wkf_pass, $creds)
+        server.delete_run(run, $creds)
       end
     end
-  
-    # deleting
-    assert_nothing_raised(T2Server::T2ServerError) { @run.delete }
+  end
 
-    assert_nothing_raised(T2Server::T2ServerError) do
-      @server.delete_all_runs($creds)
+  # Need to do these together so testing the limit is cleaned up!
+  def test_server_limits_delete_all
+    T2Server::Server.new($uri, $conn_params) do |server|
+      limit = server.run_limit($creds)
+      assert_instance_of(Fixnum, limit)
+      assert_raise(T2Server::ServerAtCapacityError) do
+        # add 1 just in case there are no runs at this point
+        (limit + 1).times do
+          server.create_run($wkf_pass, $creds)
+        end
+      end
+
+      assert_nothing_raised(T2Server::T2ServerError) do
+        server.delete_all_runs($creds)
+      end
     end
   end
 end
