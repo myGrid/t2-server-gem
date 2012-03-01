@@ -53,6 +53,114 @@ Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
 switch will show how to use them, e.g.:
   t2-run-workflow --help
 
+== Interacting with secure Web Services
+
+This library can be used to run workflows that contain secure
+services. Such services may be secured in a number of ways depending
+on how the credentials are passed and whether they are REST, SOAP or Rshell
+services.
+
+Running workflows that contain secure services requires that you pass
+your credentials to Taverna Server so that it can authenticate itself
+as you on your behalf.
+
+<b>It is essential that you trust the Taverna Server that you are
+using!</b>
+
+<b>Ideally, you should only pass sensitive information, such as
+passwords, via https so that you can be sure that it is not being read
+in transit.</b>
+
+=== Username and password credentials
+==== REST
+
+REST services are commonly secured via HTTP Basic or HTTP Digest
+authentication and Taverna treats these two schemes in the same
+way. Simply pass in your username and password with the *host* name of
+the server on which the service is running:
+
+ run.add_password_credential("https://example.com:8443/", "username", "password")
+
+The above example shows a https server running on port 8443. If the
+service is on port 80 for http or port 443 for https then you don't
+need to specify the port.
+
+If there are services on the same host that require different credentials then
+you will need to specify the realm for which each set of credentials applies.
+This is done by adding the name of the realm to the end of the host name with
+a # separating them:
+
+ run.add_password_credential("https://example.com:8443/#realm", "username", "password")
+
+==== SOAP
+
+SOAP services are commonly secured via WS-Security. Simply pass in the
+WSDL address of the service with your username and password:
+
+ run.add_password_credential("https://example.com:8443/services/MyService?wsdl", "username", "password")
+
+==== R Servers (via Rshells)
+
+You can authenticate to R Servers in almost exactly the same as for
+REST services - only the protocol scheme is different. So instead of
+http or https it is rserve:
+
+ run.add_password_credential("rserve://example.com:6311", "username", "password")
+
+=== Keypair (certificate-based) credentials
+
+Some https servers authenticate clients using certificates. If you
+have services that require this type of authentication you can upload
+a keypair:
+
+ run.add_keypair_credential("https://example.com:8443/", "certificate.p12", "password")
+
+=== Trusts (peer verification)
+
+If the services in your workflows are on a https server then Taverna
+requires that it can verify that the server is the one you expect it
+to be. This is done by peer verification. In most cases this happens
+automatically and transparently but if the remote server has a
+non-standard or "self-signed" certificate then you will need to
+provide Taverna with the corresponding public key for verification to
+take place:
+
+ run.add_trust("public-key.pem")
+
+== Interacting with other Taverna Server users
+
+Taverna Server is a multi-user system and as such insulates users from one
+another as much as possible. Each run that a user creates can only be accessed
+by that user by default. If you want to give another user permission to
+perform certain actions on a run then you can do so:
+
+ run.grant_permission("username", :permission)
+
+Available permissions are:
+* <tt>:none</tt> - No permissions.
+* <tt>:read</tt> - Read the state of the run and get its outputs.
+* <tt>:update</tt> - Set the state of the run (e.g. start it).
+* <tt>:destroy</tt> - Delete the run.
+
+Permissions are accumulative so giving a user the <tt>:destroy</tt> permission
+also allows that user to read and set the run's state. Note that there is no
+way for any user other than the owner of a run to perform any security related
+actions on it. This means that only the owner may grant, query and revoke
+permissions and only the owner may add, query and delete trusts and
+credentials.
+
+You can revoke a user's permission:
+
+ run.revoke_permission("username")
+
+You can get a list of the permissions you have granted for a run:
+
+ run.permissions
+
+And also see what permission you have granted a particular user:
+
+ run.permission("username")
+
 == Support
 
 Please email mailto:support@mygrid.org.uk for any questions relating to
