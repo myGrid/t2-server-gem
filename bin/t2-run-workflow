@@ -113,7 +113,7 @@ begin
     # set inputs
     in_ports = run.input_ports
     if inputs.has_key?(:baclava)
-      run.upload_baclava_input(inputs[:baclava])
+      run.baclava_input = inputs[:baclava]
       puts "Uploaded baclava input file"
     else
       in_ports.each_value do |port|
@@ -123,7 +123,7 @@ begin
           puts "Input '#{input}' set to #{port.value}"
         elsif files.include? input
           port.file = files[input]
-          puts "Input '#{input}' set to use file '#{port.file}'"
+          puts "Input '#{input}' set to use file '#{port.file[1]}'"
         else
           puts "Input '#{input}' has not been set."
           run.delete

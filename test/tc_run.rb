@@ -50,8 +50,9 @@ class TestRun < Test::Unit::TestCase
 
       # set input, start, check state and wait
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.set_input("IN", "Hello, World!")
+        run.input_port("IN").value = "Hello, World!"
       end
+      assert_equal(run.input_port("IN").value, "Hello, World!")
 
       # test correct/incorrect status codes
       assert_equal(run.status, :initialized)
@@ -81,8 +82,9 @@ class TestRun < Test::Unit::TestCase
   # Test run with xml input
   def test_run_xml_input
     T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params) do |run|
-      run.set_input("xml","<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>")
-      run.set_input("xpath","//yes")
+      run.input_port("xml").value =
+        "<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>"
+      run.input_port("xpath").value = "//yes"
       run.start
       run.wait
       assert_equal(run.output_port("nodes").values, ["hello", "world"])
@@ -94,7 +96,7 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.upload_input_file("IN", $file_input)
+        run.input_port("IN").file = $file_input
       end
 
       run.start
@@ -134,7 +136,7 @@ class TestRun < Test::Unit::TestCase
   # Test run with baclava output
   def test_baclava_output
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      run.set_input("IN", "Some input...")
+      run.input_port("IN").value = "Some input..."
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.request_baclava_output
       end
@@ -153,7 +155,11 @@ class TestRun < Test::Unit::TestCase
   # Test partial result download
   def test_result_download
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      run.upload_input_file("IN", $file_strs)
+      assert_nothing_raised(T2Server::AttributeNotFoundError) do
+        file = run.upload_file($file_strs)
+        run.input_port("IN").remote_file = file
+      end
+
       run.start
       run.wait
 

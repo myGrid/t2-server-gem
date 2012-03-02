@@ -61,13 +61,14 @@ module T2Server
   # Represents an input to a workflow.
   class InputPort < Port
 
-    # If set, the file which has been used to supply this port's data.
-    attr_reader :file
-
     # If set, the value held by this port. Could be a list (of lists (etc)).
     attr_reader :value
 
     # :stopdoc:
+    # If set, the file which has been used to supply this port's data. The
+    # format of this field is an array: [(:local|:remote), filename]
+    attr_reader :file
+
     # Create a new InputPort.
     def initialize(run, xml)
       super(run, xml)
@@ -80,13 +81,12 @@ module T2Server
     # :call-seq:
     #   value = value
     #
-    # Set the value of this input port. This also sets the port's value on the
-    # server.
+    # Set the value of this input port. This has no effect if the run is
+    # already running or finished.
     def value=(value)
-      if @run.set_input(@name, value)
-        @file = nil
-        @value = value
-      end
+      return unless @run.initialized?
+      @file = nil
+      @value = value
     end
 
     # :call-seq:
@@ -98,16 +98,27 @@ module T2Server
     end
 
     # :call-seq:
+    #   remote_file = filename
+    #
+    # Set the remote file to use for this port's data. The file must already be
+    # on the server. This has no effect if the run is already running or
+    # finished.
+    def remote_file=(filename)
+      return unless @run.initialized?
+      @value = nil
+      @file = [:remote, filename]
+    end
+
+    # :call-seq:
     #   file = filename
     #
-    # Set the file to use for this port's data. This also uploads the data to
-    # the server.
+    # Set the file to use for this port's data. The file will be uploaded to
+    # the server before the run starts. This has no effect if the run is
+    # already running or finished.
     def file=(filename)
-      file = @run.upload_input_file(@name, filename)
-      unless file.nil?
-        @value = nil
-        @file = file
-      end
+      return unless @run.initialized?
+      @value = nil
+      @file = [:local, filename]
     end
 
     # :call-seq:
