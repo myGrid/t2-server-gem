@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -35,30 +35,29 @@ require 't2-server'
 class TestAdmin < Test::Unit::TestCase
 
   def test_admin
-    # server connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      @server = T2Server::Server.new($uri, $conn_params)
+    T2Server::Server.new($uri, $conn_params) do |server|
+
+      # unauthorized
+      assert_raise(T2Server::AuthorizationError) do
+        server.administrator(T2Server::HttpBasic.new("u", "p"))
+      end
+
+      begin
+        server.administrator($creds)
+      rescue T2Server::T2ServerError => e
+        # ignore, just don't run more tests
+        return
+      end
+
+      server.administrator($creds) do |admin|
+        assert_equal(admin["allownew"].name, "allowNew")
+
+        save = admin["allownew"].value
+        admin["allownew"].value = false
+        assert_equal(admin["allownew"].value, "false")
+        admin["allownew"].value = save
+        assert_equal(admin["allownew"].value, save)
+      end
     end
-    assert_not_nil(@server)
-
-    # unauthorized
-    assert_raise(T2Server::AuthorizationError) do
-      @server.administrator(T2Server::HttpBasic.new("u", "p"))
-    end
-
-    begin
-      @admin = @server.administrator($creds)
-    rescue T2Server::T2ServerError => e
-      # ignore, just don't run more tests
-      return
-    end
-
-    assert_equal(@admin["allownew"].name, "allowNew")
-
-    save = @admin["allownew"].value
-    @admin["allownew"].value = false
-    assert_equal(@admin["allownew"].value, "false")
-    @admin["allownew"].value = save
-    assert_equal(@admin["allownew"].value, save)
   end
 end
