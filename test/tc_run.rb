@@ -66,7 +66,7 @@ class TestRun < Test::Unit::TestCase
 
       # exitcode and output
       assert_instance_of(Fixnum, run.exitcode)
-      assert_equal(run.output_port("OUT").values, "Hello, World!")
+      assert_equal(run.output_port("OUT").value, "Hello, World!")
       assert_equal(run.output_port("wrong!"), nil)
 
       # get zip file
@@ -87,7 +87,7 @@ class TestRun < Test::Unit::TestCase
       run.input_port("xpath").value = "//yes"
       run.start
       run.wait
-      assert_equal(run.output_port("nodes").values, ["hello", "world"])
+      assert_equal(run.output_port("nodes").value, ["hello", "world"])
     end
   end
 
@@ -102,7 +102,7 @@ class TestRun < Test::Unit::TestCase
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
-      assert_equal(run.output_port("OUT").values, "Hello, World!")
+      assert_equal(run.output_port("OUT").value, "Hello, World!")
     end
   end
 
@@ -124,8 +124,8 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_ports.keys.sort, ["MANY", "SINGLE"])
-      assert_equal(run.output_port("SINGLE").values, [])
-      assert_equal(run.output_port("MANY").values,
+      assert_equal(run.output_port("SINGLE").value, [])
+      assert_equal(run.output_port("MANY").value,
         [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
       assert_equal(run.output_port("MANY").total_size, 12)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
@@ -163,6 +163,10 @@ class TestRun < Test::Unit::TestCase
       run.start
       run.wait
 
+      # get total data size (without downloading the data)
+      assert_equal(run.output_port("OUT").total_size, 100)
+      assert_equal(run.output_port("OUT").size, 100)
+
       # no data downloaded yet
       assert(run.output_port("OUT").value(:debug).nil?)
 
@@ -193,6 +197,10 @@ class TestRun < Test::Unit::TestCase
       # confirm that no more has actually been downloaded
       assert_equal(run.output_port("OUT").value(:debug),
         "123456789\n223456789\n323456789\n")
+
+      # now get the lot and check its size
+      out = run.output_port("OUT").value
+      assert_equal(out.length, 100)
     end
   end
 

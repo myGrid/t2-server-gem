@@ -123,7 +123,7 @@ begin
           puts "Input '#{input}' set to #{port.value}"
         elsif files.include? input
           port.file = files[input]
-          puts "Input '#{input}' set to use file '#{port.file[1]}'"
+          puts "Input '#{input}' set to use file '#{port.file}'"
         else
           puts "Input '#{input}' has not been set."
           run.delete
@@ -176,9 +176,9 @@ begin
         run.output_ports.each_value do |port|
           print "    #{port.name} (#{port.depth}) -> "
           if options[:output_refs]
-            p port.refs
+            p port.reference
           else
-            p port.values
+            p port.value
           end
         end
       end

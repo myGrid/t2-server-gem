@@ -596,12 +596,12 @@ module T2Server
         if port.file?
           # If we're using a local file upload it first then set the port to
           # use a remote file.
-          if port.file[0] == :local
-            file = upload_file(port.file[1])
+          unless port.remote_file?
+            file = upload_file(port.file)
             port.remote_file = file
           end
 
-          xml_value = xml_text_node(port.file[1])
+          xml_value = xml_text_node(port.file)
           path = "#{@links[:inputs]}/input/#{port.name}"
           @server.set_run_attribute(self, path,
             XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",

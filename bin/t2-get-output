@@ -96,8 +96,8 @@ begin
   ports.each do |p|
     port = run.output_port(p)
     puts "#{port.name}"
-    print "  Values: "
-    p port.values
+    print "  Value: "
+    p port.value
 
     if options[:tsize]
       puts "  Total data size: #{port.total_size}"
