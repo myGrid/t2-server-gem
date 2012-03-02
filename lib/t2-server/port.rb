@@ -74,7 +74,6 @@ module T2Server
 
       @value = nil
       @file = nil
-      @baclava = nil
     end
     # :startdoc:
 
@@ -86,7 +85,6 @@ module T2Server
     def value=(value)
       if @run.set_input(@name, value)
         @file = nil
-        @baclava = false
         @value = value
       end
     end
@@ -108,7 +106,6 @@ module T2Server
       file = @run.upload_input_file(@name, filename)
       unless file.nil?
         @value = nil
-        @baclava = false
         @file = file
       end
     end
@@ -118,17 +115,8 @@ module T2Server
     #
     # Has this port been set via a baclava document?
     def baclava?
-      @baclava
+      @run.baclava_input?
     end
-
-    # :stopdoc:
-    # Set whether this port has been set via a baclava document.
-    def baclava=(toggle)
-      @value = nil
-      @file = nil
-      @baclava = toggle
-    end
-    # :startdoc:
 
     # :call-seq:
     #   set? -> bool

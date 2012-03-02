@@ -108,12 +108,13 @@ class TestRun < Test::Unit::TestCase
   def test_baclava_input
     T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.upload_baclava_input($list_input)
+        run.baclava_input = $list_input
       end
 
       assert_equal(run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
       assert_equal(run.input_port("MANY_IN").depth, 3)
       assert_equal(run.input_port("SINGLE_IN").depth, 1)
+      assert(run.baclava_input?)
       assert(run.input_port("SINGLE_IN").baclava?)
       assert(run.input_port("SINGLE_IN").set?)
 

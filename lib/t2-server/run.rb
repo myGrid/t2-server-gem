@@ -445,10 +445,10 @@ module T2Server
     end
 
     # :call-seq:
-    #   upload_baclava_input(filename) -> bool
+    #   baclava_input=(filename) -> bool
     #
-    # Upload a baclava file to be used for the workflow inputs.
-    def upload_baclava_input(filename)
+    # Use a baclava file for the workflow inputs.
+    def baclava_input=(filename)
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
@@ -456,20 +456,22 @@ module T2Server
       result = @server.set_run_attribute(@identifier, @links[:baclava], rename,
         "text/plain", @credentials)
 
-      if result
-        # set all input ports' baclava flags
-        input_ports.each_value { |port| port.baclava = true }
-        @baclava_in = true
-      end
+      @baclava_in = true if result
 
       result        
     end
 
     # :stopdoc:
+    def upload_baclava_input(filename)
+      warn "[DEPRECATION] 'upload_baclava_input' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
+    end
+
     def upload_baclava_file(filename)
       warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#upload_baclava_input' instead."
-      upload_baclava_input(filename)
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
     end
     # :startdoc:
 
@@ -494,6 +496,14 @@ module T2Server
       self.request_baclava_output
     end
     # :startdoc:
+
+    # :call-seq:
+    #   baclava_input? -> bool
+    #
+    # Have the inputs to this run been set by a baclava document?
+    def baclava_input?
+      @baclava_in
+    end
 
     # :call-seq:
     #   baclava_output? -> bool
