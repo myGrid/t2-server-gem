@@ -66,6 +66,9 @@ conn_params, creds = register_options("Usage: t2-get-output [options] server-add
     "output.") do
     options[:tsize] = true
   end
+  opt.on("-T", "--types", "Return the mime types of singleton ports.") do
+    options[:types] = true
+  end
 end
 
 # get run id and server address from the arguments
@@ -102,6 +105,11 @@ begin
     else
       print "  Value: "
       p port.value
+    end
+
+    if options[:types]
+      print "   Type: "
+      p port.type
     end
 
     if options[:tsize]
