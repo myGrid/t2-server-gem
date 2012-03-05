@@ -53,7 +53,7 @@ conn_params, creds = register_options("Usage: t2-get-output [options] server-add
     "are specified then list all the output ports.") do |val|
     ports << val.chomp
   end
-  opt.on("-E", "--exitcode", "Return the exitcode of the run.") do
+  opt.on("-x", "--exitcode", "Return the exitcode of the run.") do
     options[:exitcode] = true
   end
   opt.on("-e", "--stderr", 'Return the "standard error" output of the run.') do
