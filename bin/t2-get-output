@@ -96,8 +96,13 @@ begin
   ports.each do |p|
     port = run.output_port(p)
     puts "#{port.name}"
-    print "  Value: "
-    p port.value
+    if options[:refs]
+      print "  Reference: "
+      p port.reference
+    else
+      print "  Value: "
+      p port.value
+    end
 
     if options[:tsize]
       puts "  Total data size: #{port.total_size}"
