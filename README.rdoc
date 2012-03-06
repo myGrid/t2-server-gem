@@ -2,7 +2,7 @@
 
 Authors::     Robert Haines
 Contact::     mailto:rhaines@manchester.ac.uk
-URL::         http://taverna.sourceforge.net/
+URL::         http://www.taverna.org.uk/
 Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
 Copyright::   (c) 2010-2012 The University of Manchester, UK
 
@@ -20,17 +20,17 @@ Then simply install as you would any other gem:
   [sudo] gem install t2-server
 
 In case of problems with the above the gem is available for download here:
-http://rubygems.org/gems/t2-server
+https://rubygems.org/gems/t2-server
 
 You can also download the source code from here:
-http://github.com/myGrid/t2-server-gem
+https://github.com/myGrid/t2-server-gem
 
 == Usage
 
 There are two entry points for the T2Server API:
-* T2Server::Run - Use this for running single jobs on a server.
-* T2Server::Server - Use this if you are providing a web interface to one or
-  more Taverna 2 Server instances.
+* <tt>T2Server::Run</tt> - Use this for running single jobs on a server.
+* <tt>T2Server::Server</tt> - Use this if you are providing a web interface to
+  one or more Taverna 2 Server instances.
 
 In both cases the gem should be initialized by requiring the top level ruby
 file:
@@ -48,6 +48,7 @@ gem is installed:
 * t2-server-info
 * t2-delete-runs
 * t2-get-output
+* t2-server-admin
 Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
 switch will show how to use them, e.g.:
   t2-run-workflow --help
