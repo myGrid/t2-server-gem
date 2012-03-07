@@ -294,7 +294,7 @@ module T2Server
       when 'value'
         return PortValue.new(self, xml_node_attribute(node, 'href'), false,
           xml_node_attribute(node, 'contentType'),
-          xml_node_attribute(node, 'byteLength').to_i)
+          xml_node_attribute(node, 'contentByteLength').to_i)
       when 'error'
         @error = true
         return PortValue.new(self, xml_node_attribute(node, 'href'), true)
