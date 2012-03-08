@@ -36,7 +36,9 @@ require 'rake/tasklib'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
-require 'lib/t2-server'
+# we need to add lib to the path because we're not installed yet!
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), "lib")
+require 't2-server'
 
 task :default => [:test]
   
