@@ -989,24 +989,21 @@ module T2Server
     end
 
     def _get_input_port_info
-      return {} if @server.version < 2
-        ports = {}
-        port_desc = @server.get_run_attribute(@identifier, @links[:inputexp],
-          "application/xml", @credentials)
+      ports = {}
+      port_desc = @server.get_run_attribute(@identifier, @links[:inputexp],
+        "application/xml", @credentials)
 
-        doc = xml_document(port_desc)
+      doc = xml_document(port_desc)
 
-        xpath_find(doc, XPaths[:port_in]).each do |inp|
-          port = InputPort.new(self, inp)
-          ports[port.name] = port
-        end
+      xpath_find(doc, XPaths[:port_in]).each do |inp|
+        port = InputPort.new(self, inp)
+        ports[port.name] = port
+      end
 
       ports
     end
 
     def _get_output_port_info
-      return {} if @server.version < 2
-
       ports = {}
       port_desc = @server.get_run_attribute(@identifier, @links[:output],
         "application/xml", @credentials)
@@ -1037,9 +1034,7 @@ module T2Server
       doc = xml_document(inputs)
 
       links[:baclava] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
-      if @server.version > 1
-        links[:inputexp] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
-      end
+      links[:inputexp] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"
@@ -1048,7 +1043,7 @@ module T2Server
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
 
       # security properties - only available to the owner of a run
-      if @server.version > 1 && owner?
+      if owner?
         securectx = @server.get_run_attribute(@identifier, links[:securectx],
           "application/xml", @credentials)
         doc = xml_document(securectx)

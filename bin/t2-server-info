@@ -65,7 +65,7 @@ begin
         :description=>false)
     end
   end
-rescue T2Server::T2ServerError => e
+rescue RuntimeError => e
   puts e
   exit 1
 end

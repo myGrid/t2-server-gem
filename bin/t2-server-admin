@@ -122,7 +122,7 @@ rescue T2Server::AccessForbiddenError => e
   puts "You are not authorized to access the administrator interface of " +
     "this server\n(#{uri})."
   exit 1
-rescue T2Server::T2ServerError => e
+rescue RuntimeError => e
   puts e
   exit 1
 end

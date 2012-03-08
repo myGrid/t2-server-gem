@@ -64,7 +64,7 @@ uri, creds = parse_address(address, creds)
 # connect...
 begin
   server = T2Server::Server.new(uri, conn_params)
-rescue T2Server::T2ServerError => e
+rescue RuntimeError => e
   puts e
   exit 1
 end

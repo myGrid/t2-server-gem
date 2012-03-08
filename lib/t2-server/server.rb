@@ -417,7 +417,8 @@ module T2Server
     def get_version(doc)
       version = xpath_attr(doc, XPaths[:server], "serverVersion")
       if version == nil
-        return 1.0
+        raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
+          "are no longer supported.")
       else
         return version.to_f
       end
@@ -427,15 +428,11 @@ module T2Server
       links = {}
       links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href")).path
 
-      if @version > 1.0
-        links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
-        doc = xml_document(get_attribute(links[:policy], "application/xml"))
+      links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
+      doc = xml_document(get_attribute(links[:policy], "application/xml"))
 
-        links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
-        links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
-      else
-        links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstn], "href")).path
-      end
+      links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
+      links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
 
       links[:runlimit]      = URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
       links[:permworkflows] = URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path

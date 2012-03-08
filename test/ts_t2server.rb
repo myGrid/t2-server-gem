@@ -90,12 +90,12 @@ if address != ""
     $conn_params = T2Server::InsecureSSLConnectionParameters.new
   end
 
-  require 'tc_server'
+  # We only support version 2.3 server and onwards now...
+  begin
+    # This will drop out before further tests are run
+    T2Server::Server.new($uri, $conn_params)
 
-  # get the server version to determine which test cases to run
-  if T2Server::Server.new($uri, $conn_params).version == 1
-    require 'tc_run_v1'
-  else
+    require 'tc_server'
     require 'tc_run'
     require 'tc_admin'
     require 'tc_secure'
@@ -104,5 +104,7 @@ if address != ""
     if $creds1
       require 'tc_perms'
     end
+  rescue RuntimeError => e
+    puts "!!!\nNo tests on the remote server could be run.\n#{e.message}\n!!!"
   end
 end
