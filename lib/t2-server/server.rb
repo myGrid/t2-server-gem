@@ -93,7 +93,7 @@ module T2Server
       @links = get_description(server_description)
       @links[:admin] = "#{uri.path}/admin"
 
-      # initialise run list
+      # initialize run object cache
       @runs = {}
         
       yield(self) if block_given?
@@ -129,7 +129,11 @@ module T2Server
     def create_run(workflow, credentials = nil)
       id = initialize_run(workflow, credentials)
       run = Run.create(self, "", credentials, id)
-      @runs[id] = run
+
+      # cache newly created run object - this must be done per user
+      user = credentials.nil? ? :all : credentials.username
+      @runs[user] = {} unless @runs[user]
+      @runs[user][id] = run
 
       yield(run) if block_given?
       run
@@ -141,6 +145,10 @@ module T2Server
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its identifier instead.
     def initialize_run(workflow, credentials = nil)
+      # set up the run object cache - this must be done per user
+      user = credentials.nil? ? :all : credentials.username
+      @runs[user] = {} unless @runs[user]
+
       @connection.POST_run("#{@links[:runs]}",
         XML::Fragments::WORKFLOW % workflow, credentials)
     end
@@ -190,8 +198,10 @@ module T2Server
         run = run.identifier
       end
       
-      if @connection.DELETE("#{@links[:runs]}/#{run}", credentials)
-        @runs.delete(run)
+      if delete_attribute("#{@links[:runs]}/#{run}", credentials)
+        # delete cached run object - this must be done per user
+        user = credentials.nil? ? :all : credentials.username
+        @runs[user].delete(run)
         true
       end
     end
@@ -275,6 +285,22 @@ module T2Server
       upload_file(run, filename, location, rename, credentials)
     end
 
+    def create_run_attribute(run, path, value, type, credentials = nil)
+      # get the identifier from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.identifier
+      end
+
+      create_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
+        credentials)
+      rescue AttributeNotFoundError => e
+      if get_runs(credentials).has_key? run
+        raise e
+      else
+        raise RunNotFoundError.new(run)
+      end
+    end
+
     def get_run_attribute(run, path, type, credentials = nil)
       # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
@@ -298,6 +324,21 @@ module T2Server
 
       set_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
         credentials)
+    rescue AttributeNotFoundError => e
+      if get_runs(credentials).has_key? run
+        raise e
+      else
+        raise RunNotFoundError.new(run)
+      end
+    end
+
+    def delete_run_attribute(run, path, credentials = nil)
+      # get the identifier from the run if that is what is passed in
+      if run.instance_of? Run
+        run = run.identifier
+      end
+
+      delete_attribute("#{@links[:runs]}/#{run}/#{path}", credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -338,13 +379,17 @@ module T2Server
     # :startdoc:
 
     private
+    def create_attribute(path, value, type, credentials = nil)
+      @connection.POST(path, value, type, credentials)
+    end
+
     def get_attribute(path, type, *rest)
       credentials = nil
       range = nil
 
       rest.each do |param|
         case param
-        when Credentials
+        when HttpCredentials
           credentials = param
         when Range
           range = param
@@ -363,6 +408,10 @@ module T2Server
 
     def set_attribute(path, value, type, credentials = nil)
       @connection.PUT(path, value, type, credentials)
+    end
+
+    def delete_attribute(path, credentials = nil)
+      @connection.DELETE(path, credentials)
     end
 
     def get_version(doc)
@@ -405,19 +454,23 @@ module T2Server
         ids << xml_node_attribute(run, "href").split('/')[-1]
       end
 
+      # cache run objects - this must be done per user
+      user = credentials.nil? ? :all : credentials.username
+      @runs[user] = {} unless @runs[user]
+
       # add new runs
       ids.each do |id|
-        if !@runs.has_key? id
-          @runs[id] = Run.create(self, "", credentials, id)
+        if !@runs[user].has_key? id
+          @runs[user][id] = Run.create(self, "", credentials, id)
         end
       end
 
       # clear out the expired runs
-      if @runs.length > ids.length
-        @runs.delete_if {|key, val| !ids.member? key}
+      if @runs[user].length > ids.length
+        @runs[user].delete_if {|key, val| !ids.member? key}
       end
 
-      @runs
+      @runs[user]
     end
   end  
 end

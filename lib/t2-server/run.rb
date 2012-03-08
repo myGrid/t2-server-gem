@@ -31,6 +31,7 @@
 # Author: Robert Haines
 
 require 'rubygems'
+require 'base64'
 require 'time'
 
 module T2Server
@@ -56,9 +57,13 @@ module T2Server
     # The server instance that this run is hosted on.
     attr_reader :server
 
+    # The owner (username) of this run
+    attr_reader :owner
+
     # :stopdoc:
     XPaths = {
       # Run XPath queries
+      :run_desc   => XML::Methods.xpath_compile("/nsr:runDescription"),
       :dir        => XML::Methods.xpath_compile("//nss:dir"),
       :file       => XML::Methods.xpath_compile("//nss:file"),
       :expiry     => XML::Methods.xpath_compile("//nsr:expiry"),
@@ -77,7 +82,18 @@ module T2Server
 
       # Port descriptions XPath queries
       :port_in    => XML::Methods.xpath_compile("//port:input"),
-      :port_out   => XML::Methods.xpath_compile("//port:output")
+      :port_out   => XML::Methods.xpath_compile("//port:output"),
+
+      # Run security XPath queries
+      :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
+      :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
+      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
+      :sec_perm   => XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
+      :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
+      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
+      :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
+      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI"),
+      :sec_trust  => XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -93,8 +109,10 @@ module T2Server
       
       @credentials = credentials
       
-      @links = get_attributes(@server.get_run_attribute(@identifier, "",
+      run_desc = xml_document(@server.get_run_attribute(@identifier, "",
         "application/xml", @credentials))
+      @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
+      @links = get_attributes(run_desc)
       #@links.each {|key, val| puts "#{key}: #{val}"}
       
       # initialize ports lists to nil as an empty list means no inputs/outputs
@@ -130,7 +148,7 @@ module T2Server
           id = param
         when ConnectionParameters
           conn_params = param
-        when Credentials
+        when HttpCredentials
           credentials = param
         end
       end
@@ -575,6 +593,265 @@ module T2Server
         "text/plain", @credentials))
     end
 
+    # :call-seq:
+    #   owner? -> bool
+    #
+    # Are the credentials being used to access this run those of the owner?
+    # The owner of the run can give other users certain access rights to their
+    # runs but only the owner can change these rights - or even see what they
+    # are. Sometimes it is useful to know if the user accessing the run is
+    # actually the owner of it or not.
+    def owner?
+      @credentials.username == @owner
+    end
+
+    # :call-seq:
+    #   grant_permission(username, permission) -> username
+    #
+    # Grant the user the stated permission. A permission can be one of
+    # <tt>:none</tt>, <tt>:read</tt>, <tt>:update</tt> or <tt>:destroy</tt>.
+    # Only the owner of a run may grant permissions on it. +nil+ is returned
+    # if a user other than the owner uses this method.
+    def grant_permission(username, permission)
+      return unless owner?
+
+      value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
+      @server.create_run_attribute(@identifier, @links[:sec_perms], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   permissions -> hash
+    #
+    # Return a hash (username => permission) of all the permissions set for
+    # this run. Only the owner of a run may query its permissions. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def permissions
+      return unless owner?
+
+      perms = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_perms], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_perm]).each do |p|
+        user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
+        perm = xml_node_content(xpath_first(p, XPaths[:sec_uperm])).to_sym
+        perms[user] = perm
+      end
+
+      perms
+    end
+
+    # :call-seq:
+    #   permission(username) -> permission
+    #
+    # Return the permission granted to the supplied username, if any. Only the
+    # owner of a run may query its permissions. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def permission(username)
+      return unless owner?
+
+      permissions[username]
+    end
+
+    # :call-seq:
+    #   revoke_permission(username) -> bool
+    #
+    # Revoke whatever permissions that have been granted to the user. Only the
+    # owner of a run may revoke permissions on it. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def revoke_permission(username)
+      return unless owner?
+
+      path = "#{@links[:sec_perms]}/#{username}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   add_password_credential(service_uri, username, password) -> String
+    #
+    # Provide a username and password credential for the secure service at the
+    # specified URI. The id of the credential on the server is returned. Only
+    # the owner of a run may supply credentials for it. +nil+ is returned if a
+    # user other than the owner uses this method.
+    def add_password_credential(uri, username, password)
+      return unless owner?
+
+      # Is this a new credential, or an update?
+      id = credential(uri)
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      if id.nil?
+        @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+          "application/xml", @credentials)
+      else
+        path = "#{@links[:sec_creds]}/#{id}"
+        @server.set_run_attribute(@identifier, path, value, "application/xml",
+          @credentials)
+      end
+    end
+
+    # :call-seq:
+    #   add_keypair_credential(service_uri, filename, password,
+    #     alias = "Imported Certificate", type = :pkcs12) -> String
+    #
+    # Provide a client certificate credential for the secure service at the
+    # specified URI. You will need to provide the password to unlock the
+    # private key. You will also need to provide the 'alias' or 'friendlyName'
+    # of the key you wish to use if it differs from the default. The id of the
+    # credential on the server is returned. Only the owner of a run may supply
+    # credentials for it. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def add_keypair_credential(uri, filename, password,
+                               name = "Imported Certificate", type = :pkcs12)
+      return unless owner?
+
+      type = type.to_s.upcase
+      contents = Base64.encode64(IO.read(filename))
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::KEYPAIR_CRED % [uri, name, contents,
+        type, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   credentials -> Hash
+    #
+    # Return a hash (service_uri => identifier) of all the credentials provided
+    # for this run. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credentials
+      return unless owner?
+
+      creds = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_creds], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_cred]).each do |c|
+        uri = xml_node_content(xpath_first(c, XPaths[:sec_suri]))
+        id = xml_node_attribute(c, "href").split('/')[-1]
+        creds[uri] = id
+      end
+
+      creds
+    end
+
+    # :call-seq:
+    #   credential(service_uri) -> String
+    #
+    # Return the identifier of the credential set for the supplied service, if
+    # any. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credential(uri)
+      return unless owner?
+
+      credentials[uri]
+    end
+
+    # :call-seq:
+    #   delete_credential(service_uri) -> bool
+    #
+    # Delete the credential that has been provided for the specified service.
+    # Only the owner of a run may delete its credentials. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def delete_credential(uri)
+      return unless owner?
+
+      path = "#{@links[:sec_creds]}/#{credentials[uri]}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_credentials -> bool
+    #
+    # Delete all credentials associated with this workflow run. Only the owner
+    # of a run may delete its credentials. +nil+ is returned if a user other
+    # than the owner uses this method.
+    def delete_all_credentials
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_creds],
+        @credentials)
+    end
+
+    # :call-seq:
+    #   add_trust(filename, type = :x509) -> String
+    #
+    # Add a trusted identity (server public key) to verify peers when using
+    # https connections to Web Services. The id of the trust on the server is
+    # returned. Only the owner of a run may add a trust. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def add_trust(filename, type = :x509)
+      return unless owner?
+
+      type = type.to_s.upcase
+
+      contents = Base64.encode64(IO.read(filename))
+
+      value = XML::Fragments::TRUST % [contents, type]
+      @server.create_run_attribute(@identifier, @links[:sec_trusts], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   trusts -> Array
+    #
+    # Return a list of all the ids of trusts that have been registered for this
+    # run. At present there is no way to differentiate between trusts without
+    # noting the id returned when originally uploaded. Only the owner of a run
+    # may query its trusts. +nil+ is returned if a user other than the owner
+    # uses this method.
+    def trusts
+      return unless owner?
+
+      t_ids = []
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_trusts], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_trust]). each do |t|
+        t_ids << xml_node_attribute(t, "href").split('/')[-1]
+      end
+
+      t_ids
+    end
+
+    # :call-seq:
+    #   delete_trust(id) -> bool
+    #
+    # Delete the trust with the provided id. Only the owner of a run may
+    # delete its trusts. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def delete_trust(id)
+      return unless owner?
+
+      path = "#{@links[:sec_trusts]}/#{id}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_trusts -> bool
+    #
+    # Delete all trusted identities associated with this workflow run. Only
+    # the owner of a run may delete its trusts. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def delete_all_trusts
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_trusts],
+        @credentials)
+    end
+
     # :stopdoc:
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
@@ -614,6 +891,22 @@ module T2Server
             @credentials)
         end
       end
+    end
+
+    # Check that the uri passed in is suitable for credential use:
+    #  * rserve uris must not have a path.
+    #  * http(s) uris must have at least "/" as their path.
+    def _check_cred_uri(uri)
+      u = URI(uri)
+
+      case u.scheme
+      when "rserve"
+        u.path = ""
+      when /https?/
+        u.path = "/" if u.path == ""
+      end
+
+      u.to_s
     end
 
     # List a directory in the run's workspace on the server. If dir is left
@@ -729,12 +1022,10 @@ module T2Server
       ports
     end
 
-    def get_attributes(desc)
+    def get_attributes(doc)
       # first parse out the basic stuff
       links = {}
 
-      doc = xml_document(desc)
-      
       [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
         :wdir, :inputs, :output, :securectx, :listeners].each do |key|
           links[key] = xpath_attr(doc, XPaths[key], "href").split('/')[-1]
@@ -756,6 +1047,18 @@ module T2Server
       links[:stderr]   = "#{links[:io]}/properties/stderr"
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
       
+      # security properties - only available to the owner of a run
+      if @server.version > 1 && owner?
+        securectx = @server.get_run_attribute(@identifier, links[:securectx],
+          "application/xml", @credentials)
+        doc = xml_document(securectx)
+
+        [:sec_creds, :sec_perms, :sec_trusts].each do |key|
+          links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
+            "href").split('/')[-1]
+        end
+      end
+
       links
     end
 
