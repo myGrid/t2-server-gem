@@ -50,8 +50,9 @@ class TestRun < Test::Unit::TestCase
 
       # set input, start, check state and wait
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.set_input("IN", "Hello, World!")
+        run.input_port("IN").value = "Hello, World!"
       end
+      assert_equal(run.input_port("IN").value, "Hello, World!")
 
       # test correct/incorrect status codes
       assert_equal(run.status, :initialized)
@@ -65,7 +66,7 @@ class TestRun < Test::Unit::TestCase
 
       # exitcode and output
       assert_instance_of(Fixnum, run.exitcode)
-      assert_equal(run.output_port("OUT").values, "Hello, World!")
+      assert_equal(run.output_port("OUT").value, "Hello, World!")
       assert_equal(run.output_port("wrong!"), nil)
 
       # get zip file
@@ -81,11 +82,12 @@ class TestRun < Test::Unit::TestCase
   # Test run with xml input
   def test_run_xml_input
     T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params) do |run|
-      run.set_input("xml","<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>")
-      run.set_input("xpath","//yes")
+      run.input_port("xml").value =
+        "<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>"
+      run.input_port("xpath").value = "//yes"
       run.start
       run.wait
-      assert_equal(run.output_port("nodes").values, ["hello", "world"])
+      assert_equal(run.output_port("nodes").value, ["hello", "world"])
     end
   end
 
@@ -94,13 +96,13 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.upload_input_file("IN", $file_input)
+        run.input_port("IN").file = $file_input
       end
 
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
-      assert_equal(run.output_port("OUT").values, "Hello, World!")
+      assert_equal(run.output_port("OUT").value, "Hello, World!")
     end
   end
 
@@ -108,12 +110,13 @@ class TestRun < Test::Unit::TestCase
   def test_baclava_input
     T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.upload_baclava_input($list_input)
+        run.baclava_input = $list_input
       end
 
       assert_equal(run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
       assert_equal(run.input_port("MANY_IN").depth, 3)
       assert_equal(run.input_port("SINGLE_IN").depth, 1)
+      assert(run.baclava_input?)
       assert(run.input_port("SINGLE_IN").baclava?)
       assert(run.input_port("SINGLE_IN").set?)
 
@@ -121,8 +124,8 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_ports.keys.sort, ["MANY", "SINGLE"])
-      assert_equal(run.output_port("SINGLE").values, [])
-      assert_equal(run.output_port("MANY").values,
+      assert_equal(run.output_port("SINGLE").value, [])
+      assert_equal(run.output_port("MANY").value,
         [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
       assert_equal(run.output_port("MANY").total_size, 12)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
@@ -133,7 +136,7 @@ class TestRun < Test::Unit::TestCase
   # Test run with baclava output
   def test_baclava_output
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      run.set_input("IN", "Some input...")
+      run.input_port("IN").value = "Some input..."
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.request_baclava_output
       end
@@ -152,9 +155,17 @@ class TestRun < Test::Unit::TestCase
   # Test partial result download
   def test_result_download
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      run.upload_input_file("IN", $file_strs)
+      assert_nothing_raised(T2Server::AttributeNotFoundError) do
+        file = run.upload_file($file_strs)
+        run.input_port("IN").remote_file = file
+      end
+
       run.start
       run.wait
+
+      # get total data size (without downloading the data)
+      assert_equal(run.output_port("OUT").total_size, 100)
+      assert_equal(run.output_port("OUT").size, 100)
 
       # no data downloaded yet
       assert(run.output_port("OUT").value(:debug).nil?)
@@ -186,6 +197,10 @@ class TestRun < Test::Unit::TestCase
       # confirm that no more has actually been downloaded
       assert_equal(run.output_port("OUT").value(:debug),
         "123456789\n223456789\n323456789\n")
+
+      # now get the lot and check its size
+      out = run.output_port("OUT").value
+      assert_equal(out.length, 100)
     end
   end
 

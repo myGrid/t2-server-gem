@@ -169,42 +169,24 @@ module T2Server
       warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
       @links[:inputs]
     end
-    # :startdoc:
 
-    # :call-seq:
-    #   set_input(input, value) -> bool
-    #
-    # Set the workflow input port _input_ to _value_.
-    #
-    # Raises RunStateError if the run is not in the :initialized state.
     def set_input(input, value)
-      state = status
-      raise RunStateError.new(state, :initialized) if state != :initialized
+      warn "[DEPRECATION] 'Run#set_input' is deprecated and will be removed " +
+        "in 1.0. Input ports are set directly instead. The most direct " +
+        "replacement for this method is: 'Run#input_port(input).value = value'"
 
-      xml_value = xml_text_node(value)
-      path = "#{@links[:inputs]}/input/#{input}"
-      @server.set_run_attribute(self, path,
-        XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
-        @credentials)
+      input_port(input).value = value
     end
 
-    # :call-seq:
-    #   set_input_file(input, filename) -> bool
-    #
-    # Set the workflow input port _input_ to use the file at _filename_ as its
-    # input data.
-    #
-    # Raises RunStateError if the run is not in the :initialized state.
     def set_input_file(input, filename)
-      state = status
-      raise RunStateError.new(state, :initialized) if state != :initialized
+      warn "[DEPRECATION] 'Run#set_input_file' is deprecated and will be " +
+        "removed in 1.0. Input ports are set directly instead. The most " +
+        "direct replacement for this method is: " +
+        "'Run#input_port(input).remote_file = filename'"
 
-      xml_value = xml_text_node(filename)
-      path = "#{@links[:inputs]}/input/#{input}"
-      @server.set_run_attribute(self, path,
-        XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
-        @credentials)
+      input_port(input).remote_file = filename
     end
+    # :startdoc:
 
     # :call-seq:
     #   input_ports -> Hash
@@ -327,6 +309,9 @@ module T2Server
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
+      # set all the inputs
+      _set_all_inputs unless baclava_input?
+
       @server.set_run_attribute(@identifier, @links[:status],
         state_to_text(:running), "text/plain", @credentials)
     end
@@ -423,32 +408,22 @@ module T2Server
       @server.upload_file(@identifier, filename, location, rename, @credentials)
     end
 
-    # :call-seq:
-    #   upload_input_file(input, filename, params={}) -> string
-    #
-    # Upload a file, with name _filename_, to the server and set it as the
-    # input data for input port _input_. Possible values that can be passed
-    # in via _params_ are:
-    # * :dir - The directory to upload to. If this is not left blank the
-    #   corresponding directory will need to have been created by Run#mkdir.
-    # * :rename - Save the file on the server with a different name.
-    #
-    # The name of the file on the server is returned or nil on failure.
-    #
-    # Raises RunStateError if the run is not in the :initialized state.
+    # :stopdoc:
     def upload_input_file(input, filename, params={})
-      state = status
-      raise RunStateError.new(state, :initialized) if state != :initialized
+      warn "[DEPRECATION] 'Run#upload_input_file' is deprecated and will be " +
+        "removed in 1.0. Input ports are set directly instead. The most " +
+        "direct replacement for this method is: " +
+        "'Run#input_port(input).file = filename'"
 
-      file = upload_file(filename, params)
-      set_input_file(input, file) ? file : nil
+      input_port(input).file = filename
     end
+    # :startdoc:
 
     # :call-seq:
-    #   upload_baclava_input(filename) -> bool
+    #   baclava_input=(filename) -> bool
     #
-    # Upload a baclava file to be used for the workflow inputs.
-    def upload_baclava_input(filename)
+    # Use a baclava file for the workflow inputs.
+    def baclava_input=(filename)
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
@@ -456,20 +431,22 @@ module T2Server
       result = @server.set_run_attribute(@identifier, @links[:baclava], rename,
         "text/plain", @credentials)
 
-      if result
-        # set all input ports' baclava flags
-        input_ports.each_value { |port| port.baclava = true }
-        @baclava_in = true
-      end
+      @baclava_in = true if result
 
       result        
     end
 
     # :stopdoc:
+    def upload_baclava_input(filename)
+      warn "[DEPRECATION] 'upload_baclava_input' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
+    end
+
     def upload_baclava_file(filename)
       warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#upload_baclava_input' instead."
-      upload_baclava_input(filename)
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
     end
     # :startdoc:
 
@@ -494,6 +471,14 @@ module T2Server
       self.request_baclava_output
     end
     # :startdoc:
+
+    # :call-seq:
+    #   baclava_input? -> bool
+    #
+    # Have the inputs to this run been set by a baclava document?
+    def baclava_input?
+      @baclava_in
+    end
 
     # :call-seq:
     #   baclava_output? -> bool
@@ -601,6 +586,35 @@ module T2Server
     # :startdoc:
 
     private
+
+    # Set all the inputs on the server. The inputs must have been set prior to
+    # this call using the InputPort API.
+    def _set_all_inputs
+      input_ports.each_value do |port|
+        next unless port.set?
+
+        if port.file?
+          # If we're using a local file upload it first then set the port to
+          # use a remote file.
+          unless port.remote_file?
+            file = upload_file(port.file)
+            port.remote_file = file
+          end
+
+          xml_value = xml_text_node(port.file)
+          path = "#{@links[:inputs]}/input/#{port.name}"
+          @server.set_run_attribute(self, path,
+            XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
+            @credentials)
+        else
+          xml_value = xml_text_node(port.value)
+          path = "#{@links[:inputs]}/input/#{port.name}"
+          @server.set_run_attribute(self, path,
+            XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
+            @credentials)
+        end
+      end
+    end
 
     # List a directory in the run's workspace on the server. If dir is left
     # blank then / is listed. As there is no concept of changing into a

@@ -113,7 +113,7 @@ begin
     # set inputs
     in_ports = run.input_ports
     if inputs.has_key?(:baclava)
-      run.upload_baclava_input(inputs[:baclava])
+      run.baclava_input = inputs[:baclava]
       puts "Uploaded baclava input file"
     else
       in_ports.each_value do |port|
@@ -176,9 +176,9 @@ begin
         run.output_ports.each_value do |port|
           print "    #{port.name} (#{port.depth}) -> "
           if options[:output_refs]
-            p port.refs
+            p port.reference
           else
-            p port.values
+            p port.value
           end
         end
       end

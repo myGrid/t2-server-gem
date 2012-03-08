@@ -208,26 +208,30 @@ module T2Server
     # :stopdoc:
     def set_run_input(run, input, value, credentials = nil)
       warn "[DEPRECATION] 'Server#set_run_input' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#set_input' instead."
+        "removed in 1.0. Input ports are set directly instead. The most " +
+        "direct replacement for this method is: " +
+        "'Run#input_port(input).value = value'"
 
       # get the run from the identifier if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
       end
 
-      run.set_input(input, value)
+      run.input_port(input).value = value
     end
 
     def set_run_input_file(run, input, filename, credentials = nil)
       warn "[DEPRECATION] 'Server#set_run_input_file' is deprecated and " +
-        "will be removed in 1.0. Please use 'Run#set_input_file' instead."
+        "will be removed in 1.0. Input ports are set directly instead. The " +
+        "most direct replacement for this method is: " +
+        "'Run#input_port(input).remote_file = filename'"
 
       # get the run from the identifier if that is what is passed in
       if not run.instance_of? Run
         run = run(run, credentials)
       end
 
-      run.set_input_file(input, filename)
+      run.input_port(input).remote_file = filename
     end
 
     def create_dir(run, root, dir, credentials = nil)
@@ -266,7 +270,7 @@ module T2Server
     def upload_run_file(run, filename, location, rename, credentials = nil)
       warn "[DEPRECATION] 'Server#upload_run_file' is deprecated and will " +
         "be removed in 1.0. Please use 'Run#upload_file' or " +
-        "'Run#upload_input_file' instead."
+        "'Run#input_port(input).file = filename' instead."
 
       upload_file(run, filename, location, rename, credentials)
     end

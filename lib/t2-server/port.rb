@@ -74,43 +74,64 @@ module T2Server
 
       @value = nil
       @file = nil
-      @baclava = nil
+      @remote_file = false
     end
     # :startdoc:
 
     # :call-seq:
     #   value = value
     #
-    # Set the value of this input port. This also sets the port's value on the
-    # server.
+    # Set the value of this input port. This has no effect if the run is
+    # already running or finished.
     def value=(value)
-      if @run.set_input(@name, value)
-        @file = nil
-        @baclava = false
-        @value = value
-      end
+      return unless @run.initialized?
+      @file = nil
+      @remote_file = false
+      @value = value
     end
 
     # :call-seq:
     #   file? -> bool
     #
-    # Is this port's data being supplied by a file?
+    # Is this port's data being supplied by a file? The file could be local or
+    # remote (already on the server) for this to return true.
     def file?
       !@file.nil?
     end
 
     # :call-seq:
+    #   remote_file? -> bool
+    #
+    # Is this port's data being supplied by a remote (one that is already on
+    # the server) file?
+    def remote_file?
+      file? && @remote_file
+    end
+
+    # :call-seq:
+    #   remote_file = filename
+    #
+    # Set the remote file to use for this port's data. The file must already be
+    # on the server. This has no effect if the run is already running or
+    # finished.
+    def remote_file=(filename)
+      return unless @run.initialized?
+      @value = nil
+      @file = filename
+      @remote_file = true
+    end
+
+    # :call-seq:
     #   file = filename
     #
-    # Set the file to use for this port's data. This also uploads the data to
-    # the server.
+    # Set the file to use for this port's data. The file will be uploaded to
+    # the server before the run starts. This has no effect if the run is
+    # already running or finished.
     def file=(filename)
-      file = @run.upload_input_file(@name, filename)
-      unless file.nil?
-        @value = nil
-        @baclava = false
-        @file = file
-      end
+      return unless @run.initialized?
+      @value = nil
+      @file = filename
+      @remote_file = false
     end
 
     # :call-seq:
@@ -118,17 +139,8 @@ module T2Server
     #
     # Has this port been set via a baclava document?
     def baclava?
-      @baclava
+      @run.baclava_input?
     end
-
-    # :stopdoc:
-    # Set whether this port has been set via a baclava document.
-    def baclava=(toggle)
-      @value = nil
-      @file = nil
-      @baclava = toggle
-    end
-    # :startdoc:
 
     # :call-seq:
     #   set? -> bool
@@ -156,7 +168,7 @@ module T2Server
       @refs = nil
       @types = nil
       @sizes = nil
-      @errors = nil
+      @total_size = nil
     end
     # :startdoc:
 
@@ -175,90 +187,85 @@ module T2Server
     # It can only be used for ports of depth >= 1. For singleton ports, use
     # OutputPort#value instead.
     #
-    # Example usage - To get part of a value from a output port with depth 3:
+    # Example usage - To get part of a value from an output port with depth 3:
     # port[1][0][1].value(10...100)
     def [](i)
+      return @structure if depth == 0
       @structure[i]
     end
 
     # :call-seq:
     #   value -> obj
     #   value(range) -> obj
+    #   value -> Array
     #
-    # Get the singleton value (or part of it) from this output port. Only for
-    # use on ports of depth 0. 
+    # For singleton outputs get the value (or part of it). For list outputs
+    # get all the values in an Array structure that mirrors the structure of
+    # the output port. To get part of a value from a list use
+    # 'port[].value(range)'.
     def value(range = nil)
-      if range.nil?
-        @structure.value
+      if depth == 0
+        if range.nil?
+          @structure.value
+        else
+          @structure.value(range)
+        end
       else
-        @structure.value(range)
+        @values = strip(:value) if @values.nil?
+        @values
       end
     end
 
     # :call-seq:
-    #   values -> array
-    #   values -> obj
-    #
-    # Get just the data values of this output port. Note that this call will
-    # cause all the data to be downloaded if it has not already been retrieved.
-    #
-    # For a singleton output a single value is returned. For lists an array of
-    # values is returned.
-    def values
-      @values = strip(:value) if @values.nil?
-      @values
-    end
-
-    # :call-seq:
-    #   refs -> array
-    #   refs -> uri
+    #   reference -> String
+    #   reference -> Array
     #
     # Get URI references to the data values of this output port as strings.
     #
     # For a singleton output a single uri is returned. For lists an array of
-    # uris is returned.
-    def refs
-      @refs = strip(:ref) if @refs.nil?
+    # uris is returned. For an individual reference from a list use
+    # 'port[].reference'.
+    def reference
+      @refs = strip(:reference) if @refs.nil?
       @refs
     end
 
     # :call-seq:
-    #   types -> array
-    #   types -> type
+    #   type -> String
+    #   type -> Array
     #
-    # Get the mime types of the data values in this output port.
+    # Get the mime type of the data value in this output port.
     #
     # For a singleton output a single type is returned. For lists an array of
-    # types is returned.
-    def types
+    # types is returned. For an individual type from a list use 'port[].type'.
+    def type
       @types = strip(:type) if @types.nil?
       @types
     end
 
     # :call-seq:
-    #   sizes -> array
-    #   sizes -> int
+    #   size -> int
+    #   size -> Array
     #
-    # Get the data sizes of the data values in this output port.
+    # Get the data size of the data value in this output port.
     #
-    # For a singleton output a single int is returned. For lists an array of
-    # ints is returned.
-    def sizes
+    # For a singleton output a single size is returned. For lists an array of
+    # sizes is returned. For an individual size from a list use 'port[].size'.
+    def size
       @sizes = strip(:size) if @sizes.nil?
       @sizes
     end
 
     # :call-seq:
-    #   errors -> array
-    #   errors -> bool
+    #   error -> String
     #
-    # Get the boolean error status of the data values in this output port.
+    # Get the error message (if there is one) of this output port.
     #
-    # For a singleton output a single bool is returned. For lists an array of
-    # bools is returned.
-    def errors
-      @errors = strip(:error?) if @errors.nil?
-      @errors
+    # This method is only for use on outputs of depth 0. For other depths use
+    # 'port[].error'
+    def error
+      return nil unless depth == 0
+      @structure.error
     end
 
     # :call-seq:
@@ -266,11 +273,12 @@ module T2Server
     #
     # Return the total data size of all the data in this output port.
     def total_size
+      return @total_size if @total_size
       if @structure.instance_of? Array
         return 0 if @structure.empty?
-        sizes.flatten.inject { |sum, i| sum + i }
+        @total_size = strip(:size).flatten.inject { |sum, i| sum + i }
       else
-        sizes
+        @total_size = size
       end
     end
 
@@ -323,7 +331,7 @@ module T2Server
   class PortValue
 
     # The URI reference of this port value as a String.
-    attr_reader :ref
+    attr_reader :reference
 
     # The mime type of this port value as a String.
     attr_reader :type
@@ -334,7 +342,7 @@ module T2Server
     # :stopdoc:
     def initialize(port, ref, error, type = "", size = 0)
       @port = port
-      @ref = ref
+      @reference = ref
       @type = type
       @size = size
       @value = nil
@@ -342,7 +350,7 @@ module T2Server
       @error = nil
 
       if error
-        @error = @port.download(@ref)
+        @error = @port.download(@reference)
         @type = "error"
       end
     end
@@ -379,7 +387,7 @@ module T2Server
         # we either have some data, at one end of range or either side of it,
         # or none. @vgot can be nil here.
         # In both cases we download what we need.
-        new_data = @port.download(@ref, need[0])
+        new_data = @port.download(@reference, need[0])
         if @vgot.nil?
           # this is the only data we have, return it all.
           @vgot = range
@@ -401,8 +409,8 @@ module T2Server
         # we definitely have some data and it is in the middle of the
         # range requested. @vgot cannot be nil here.
         @vgot = range
-        @value = @port.download(@ref, need[0]) + @value +
-          @port.download(@ref, need[1])
+        @value = @port.download(@reference, need[0]) + @value +
+          @port.download(@reference, need[1])
       end
     end
 
