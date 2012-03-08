@@ -67,9 +67,10 @@ class TestPermissions < Test::Unit::TestCase
 
       assert_raise(T2Server::AccessForbiddenError) do
         run1.input_port("IN").value = "Hello, World!"
+        run1.start
       end
 
-      run.set_input("IN", "Hello, World!")
+      run.input_port("IN").value = "Hello, World!"
       run.start
       run.wait
 
