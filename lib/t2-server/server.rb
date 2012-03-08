@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -95,7 +95,7 @@ module T2Server
 
       # initialize run object cache
       @runs = {}
-        
+
       yield(self) if block_given?
     end
 
@@ -197,7 +197,7 @@ module T2Server
       if run.instance_of? Run
         run = run.identifier
       end
-      
+
       if delete_attribute("#{@links[:runs]}/#{run}", credentials)
         # delete cached run object - this must be done per user
         user = credentials.nil? ? :all : credentials.username
@@ -430,13 +430,13 @@ module T2Server
       if @version > 1.0
         links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
         doc = xml_document(get_attribute(links[:policy], "application/xml"))
-        
+
         links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
         links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
       else
         links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstn], "href")).path
       end
-      
+
       links[:runlimit]      = URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
       links[:permworkflows] = URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
 
@@ -472,5 +472,5 @@ module T2Server
 
       @runs[user]
     end
-  end  
+  end
 end

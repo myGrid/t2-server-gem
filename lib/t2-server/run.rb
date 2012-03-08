@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -106,15 +106,15 @@ module T2Server
       @workflow = ""
       @baclava_in = false
       @baclava_out = false
-      
+
       @credentials = credentials
-      
+
       run_desc = xml_document(@server.get_run_attribute(@identifier, "",
         "application/xml", @credentials))
       @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
       @links = get_attributes(run_desc)
       #@links.each {|key, val| puts "#{key}: #{val}"}
-      
+
       # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
       @output_ports = nil
@@ -156,11 +156,11 @@ module T2Server
       if server.class != Server
         server = Server.new(server, conn_params)
       end
-      
+
       if id.nil?
         id = server.initialize_run(workflow, credentials)
       end
-      
+
       run = new(server, id, credentials)
       yield(run) if block_given?
       run
@@ -173,7 +173,7 @@ module T2Server
       @identifier
     end
     # :startdoc:
-    
+
     # :call-seq:
     #   delete
     #
@@ -451,7 +451,7 @@ module T2Server
 
       @baclava_in = true if result
 
-      result        
+      result
     end
 
     # :stopdoc:
@@ -477,7 +477,7 @@ module T2Server
       return if @baclava_out
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
-      
+
       @baclava_out = @server.set_run_attribute(@identifier, @links[:output],
         BACLAVA_FILE, "text/plain", @credentials)
     end
@@ -515,7 +515,7 @@ module T2Server
     def baclava_output
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
-      
+
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
       @server.get_run_attribute(@identifier, "#{@links[:wdir]}/#{BACLAVA_FILE}",
         "*/*", @credentials)
@@ -1046,7 +1046,7 @@ module T2Server
       links[:stdout]   = "#{links[:io]}/properties/stdout"
       links[:stderr]   = "#{links[:io]}/properties/stderr"
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
-      
+
       # security properties - only available to the owner of a run
       if @server.version > 1 && owner?
         securectx = @server.get_run_attribute(@identifier, links[:securectx],

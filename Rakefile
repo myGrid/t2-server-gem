@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -41,7 +41,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), "lib")
 require 't2-server'
 
 task :default => [:test]
-  
+
 spec = Gem::Specification.new do |s|
   s.name             = "t2-server"
   s.version          = T2Server::Version::STRING

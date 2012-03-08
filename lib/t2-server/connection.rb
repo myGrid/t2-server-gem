@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -45,7 +45,7 @@ module T2Server
 
     # list of connections we know about
     @@connections = []
-    
+
     # :call-seq:
     #   ConnectionFactory.connect(uri) -> Connection
     #
@@ -74,10 +74,10 @@ module T2Server
         else
           raise URI::InvalidURIError.new
         end
-        
+
         @@connections << conn
       end
-      
+
       conn
     end
   end
@@ -88,7 +88,7 @@ module T2Server
     # The URI of this connection instance.
     attr_reader :uri
 
-    # Open a http connection to the Taverna Server at the uri supplied. 
+    # Open a http connection to the Taverna Server at the uri supplied.
     def initialize(uri, params = nil)
       @uri = uri
       @params = params || DefaultConnectionParameters.new
@@ -348,5 +348,5 @@ module T2Server
         @http.key = OpenSSL::PKey::RSA.new(pem, @params[:client_password])
       end
     end
-  end  
+  end
 end

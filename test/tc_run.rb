@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -213,7 +213,7 @@ class TestRun < Test::Unit::TestCase
       assert(run.output_port("OUT").error?)
     end
   end
-  
+
   def test_errors
     T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
       run.start

@@ -447,7 +447,7 @@ module T2Server
     private
     def fill(got, want)
       return [want] if got.nil?
-      
+
       if got.member? want.min
         if got.member? want.max
           return []
@@ -467,6 +467,6 @@ module T2Server
           end
         end
       end
-    end 
+    end
   end
 end
