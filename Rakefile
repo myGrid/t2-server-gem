@@ -30,11 +30,12 @@
 #
 # Author: Robert Haines
 
+require 'rubygems'
 require 'rake'
 require 'rake/clean'
 require 'rake/tasklib'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/task'
+require 'rubygems/package_task'
 
 # we need to add lib to the path because we're not installed yet!
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), "lib")
@@ -50,7 +51,8 @@ spec = Gem::Specification.new do |s|
   s.homepage         = "http://www.taverna.org.uk/"
   s.platform         = Gem::Platform::RUBY
   s.summary          = "Support for interacting with Taverna 2 Server."
-  s.description      = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
+  s.description      = "This gem provides access to the Taverna 2 Server " +
+                         "REST interface from Ruby."
   candidates         = Dir.glob("{bin,lib,test}/**/*")
   s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
@@ -61,13 +63,14 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
-  s.add_development_dependency('rake', '>=0.8.7')
-  s.add_development_dependency('libxml-ruby', '>=1.1.4')
-  s.add_development_dependency('nokogiri', '>=1.5.0')
-  s.add_runtime_dependency('hirb', '>=0.4.0')
+  s.add_development_dependency('rake', '~> 0.9.2')
+  s.add_development_dependency('libxml-ruby', '>= 1.1.4')
+  s.add_development_dependency('nokogiri', '>= 1.5.0')
+  s.add_development_dependency('rdoc', '>= 3.9.4')
+  s.add_runtime_dependency('hirb', '>= 0.4.0')
 end
 
-Rake::GemPackageTask.new(spec) do |pkg|
+Gem::PackageTask.new(spec) do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
 end
@@ -93,7 +96,7 @@ task :test, :server, :user1, :user2 do |t, args|
   end
 end
 
-Rake::RDocTask.new do |r|
+RDoc::Task.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
     item.include?("t2server.rb") or
@@ -103,7 +106,8 @@ Rake::RDocTask.new do |r|
     item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
-  r.options << "-t Taverna 2 Server Ruby Interface Library version #{T2Server::Version::STRING}"
+  r.options << "-t Taverna 2 Server Ruby Interface Library version " +
+    "#{T2Server::Version::STRING}"
   r.options << "-N"
   r.options << "--tab-width=2"
 end
