@@ -67,6 +67,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('libxml-ruby', '>= 1.1.4')
   s.add_development_dependency('nokogiri', '>= 1.5.0')
   s.add_development_dependency('rdoc', '>= 3.9.4')
+  s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
   s.add_runtime_dependency('hirb', '>= 0.4.0')
 end
 
