@@ -263,18 +263,24 @@ module T2Server
     end
 
     def upload_file(run, filename, location, rename, credentials = nil)
+      contents = IO.read(filename)
+      rename = filename.split('/')[-1] if rename == ""
+
+      if upload_data(run, contents, rename, location, credentials)
+        rename
+      end
+    end
+
+    def upload_data(run, data, remote_name, location, credentials = nil)
       # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
         run = run.identifier
       end
 
-      contents = Base64.encode64(IO.read(filename))
-      rename = filename.split('/')[-1] if rename == ""
+      contents = Base64.encode64(data)
 
-      if @connection.POST_file("#{@links[:runs]}/#{run}/#{location}",
-        XML::Fragments::UPLOAD % [rename, contents], run, credentials)
-        rename
-      end
+      @connection.POST_file("#{@links[:runs]}/#{run}/#{location}",
+        XML::Fragments::UPLOAD % [remote_name, contents], run, credentials)
     end
 
     def upload_run_file(run, filename, location, rename, credentials = nil)
