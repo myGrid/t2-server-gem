@@ -427,6 +427,18 @@ module T2Server
         @credentials)
     end
 
+    # :call-seq:
+    #   upload_data(data, remote_name, remote_directory = "") -> bool
+    #
+    # Upload data to the server and store it in <tt>remote_file</tt>. The
+    # remote directory to put this file in can also be specified, but if it is
+    # it must first have been created by a call to Run#mkdir.
+    def upload_data(data, remote_name, remote_directory = "")
+      location = "#{@links[:wdir]}/#{remote_directory}"
+      @server.upload_data(@identifier, data, remote_name, location,
+        @credentials)
+    end
+
     # :stopdoc:
     def upload_input_file(input, filename, params={})
       warn "[DEPRECATION] 'Run#upload_input_file' is deprecated and will be " +
