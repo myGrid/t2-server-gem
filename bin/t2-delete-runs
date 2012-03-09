@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,16 +32,18 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 't2-server'
 require 't2-server-cli'
 
 include T2Server::CLI
 
 # set up options
 options = {}
-conn_params, creds = register_options("Usage: t2-delete-runs [options] server-address [run-ids...]") do |opt|
-  opt.separator "  Where server-address is the full URI of the server to connect to,"
-  opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the id numbers"
+conn_params, creds = register_options("Usage: t2-delete-runs [options] " +
+    "server-address [run-ids...]") do |opt|
+  opt.separator "  Where server-address is the full URI of the server to " +
+    "connect to,"
+  opt.separator "  e.g.: http://example.com:8080/taverna, run-ids are the " +
+    "id numbers"
   opt.separator "  of the runs you want to delete and [options] can be:"
   opt.on("--all", "Delete all runs on the server") do
     options[:all] = true
@@ -76,7 +78,8 @@ if options[:all]
   rescue T2Server::AuthorizationError => ae
     puts "You are not authorized to delete runs on this server."
   rescue T2Server::T2ServerError => e
-    puts "There was a problem while deleting runs. Some may remain on the server."
+    puts "There was a problem while deleting runs. " +
+      "Some may remain on the server."
   end
 else
   for run in runs

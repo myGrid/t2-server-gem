@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,7 +32,6 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 't2-server'
 require 't2-server-cli'
 
 include T2Server::CLI
@@ -40,7 +39,8 @@ include T2Server::CLI
 # set up options
 options = {}
 ports = []
-conn_params, creds = register_options("Usage: t2-get-output [options] server-address run-id") do |opt|
+conn_params, creds = register_options("Usage: t2-get-output [options] " +
+    "server-address run-id") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna, run-ids"
   opt.separator "  are the id numbers of the runs you want to collect output"

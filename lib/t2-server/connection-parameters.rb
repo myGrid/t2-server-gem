@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -126,8 +126,8 @@ module T2Server
     #
     # _certificate_ should point to a file with the client user's certificate
     # and private key. The key will be unlocked with _password_ if it is
-    # encrypted. If _password_ is not specified, but needed, then the underlying
-    # SSL implementation may ask for it if it can.
+    # encrypted. If _password_ is not specified, but needed, then the
+    # underlying SSL implementation may ask for it if it can.
     def initialize(cert, password = nil)
       super
 

@@ -30,7 +30,6 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
 require 'base64'
 require 'uri'
 
@@ -57,7 +56,8 @@ module T2Server
       :permwkf  => XML::Methods.xpath_compile("//nsr:permittedWorkflows"),
       :permlstn => XML::Methods.xpath_compile("//nsr:permittedListeners"),
       :permlstt => XML::Methods.xpath_compile("//nsr:permittedListenerTypes"),
-      :notify   => XML::Methods.xpath_compile("//nsr:enabledNotificationFabrics")
+      :notify   =>
+        XML::Methods.xpath_compile("//nsr:enabledNotificationFabrics")
     }
     # :startdoc:
 
@@ -431,17 +431,22 @@ module T2Server
       links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
       doc = xml_document(get_attribute(links[:policy], "application/xml"))
 
-      links[:permlisteners] = URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
-      links[:notifications] = URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
+      links[:permlisteners] =
+        URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
+      links[:notifications] =
+        URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
 
-      links[:runlimit]      = URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
-      links[:permworkflows] = URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
+      links[:runlimit]      =
+        URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
+      links[:permworkflows] =
+        URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
 
       links
     end
 
     def get_runs(credentials = nil)
-      run_list = get_attribute("#{@links[:runs]}", "application/xml", credentials)
+      run_list = get_attribute("#{@links[:runs]}", "application/xml",
+        credentials)
 
       doc = xml_document(run_list)
 

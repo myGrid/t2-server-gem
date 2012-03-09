@@ -120,7 +120,8 @@ module T2Server
   class ServerAtCapacityError < T2ServerError
     # Create a new ServerAtCapacityError.
     def initialize
-      super "The server is already running its configured limit of concurrent workflows."
+      super "The server is already running its configured limit of " +
+        "concurrent workflows."
     end
   end
 
@@ -133,7 +134,9 @@ module T2Server
     # attribute.
     def initialize(path)
       @path = path
-      super "Access to #{@path} is forbidden. Either you do not have the required credentials or the server does not allow the requested operation"
+      super "Access to #{@path} is forbidden. Either you do not have the " +
+        "required credentials or the server does not allow the requested " +
+        "operation"
     end
   end
 
@@ -148,7 +151,8 @@ module T2Server
       else
         @username = ""
       end
-      super "The username '#{@username}' is not authorized to connect to this server"
+      super "The username '#{@username}' is not authorized to connect to " +
+        "this server"
     end
   end
 
@@ -160,7 +164,8 @@ module T2Server
     # Create a new RunStateError specifying both the current state and that
     # which is needed to run the operation.
     def initialize(current, need)
-      super "The run is in the wrong state (#{current}); it should be '#{need}' to perform that action"
+      super "The run is in the wrong state (#{current}); it should be " +
+        "'#{need}' to perform that action"
     end
   end
 

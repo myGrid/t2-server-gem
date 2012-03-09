@@ -30,7 +30,6 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
 require 'base64'
 require 'time'
 
@@ -43,8 +42,8 @@ module T2Server
   # * :initialized - The run has been accepted by the server. It may not yet be
   #   ready to run though as its input port may not have been set.
   # * :running - The run is being run by the server.
-  # * :finished - The run has finished running and its outputs are available for
-  #   download.
+  # * :finished - The run has finished running and its outputs are available
+  #   for download.
   class Run
     include XML::Methods
 
@@ -88,12 +87,14 @@ module T2Server
       :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
       :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
       :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
-      :sec_perm   => XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
+      :sec_perm   =>
+       XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
       :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
       :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
       :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
       :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI"),
-      :sec_trust  => XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
+      :sec_trust  =>
+       XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
     }
 
     # The name to be used internally for retrieving results via baclava
@@ -113,7 +114,6 @@ module T2Server
         "application/xml", @credentials))
       @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
       @links = get_attributes(run_desc)
-      #@links.each {|key, val| puts "#{key}: #{val}"}
 
       # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
@@ -279,9 +279,9 @@ module T2Server
     #   expiry=(time) -> bool
     #
     # Set the expiry time of this run to _time_. _time_ should either be a Time
-    # object or something that the Time class can parse. If the value given does
-    # not specify a date then today's date will be assumed. If a time/date in
-    # the past is specified, the expiry time will not be changed.
+    # object or something that the Time class can parse. If the value given
+    # does not specify a date then today's date will be assumed. If a time/date
+    # in the past is specified, the expiry time will not be changed.
     def expiry=(time)
       unless time.instance_of? Time
         time = Time.parse(time)
@@ -423,7 +423,8 @@ module T2Server
       location = params[:dir] || ""
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
-      @server.upload_file(@identifier, filename, location, rename, @credentials)
+      @server.upload_file(@identifier, filename, location, rename,
+        @credentials)
     end
 
     # :stopdoc:
@@ -484,8 +485,8 @@ module T2Server
 
     # :stopdoc:
     def set_baclava_output(name="")
-      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be removed in 1.0. " +
-        "Please use 'Run#request_baclava_output' instead."
+      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#request_baclava_output' instead."
       self.request_baclava_output
     end
     # :startdoc:
@@ -517,14 +518,14 @@ module T2Server
       raise RunStateError.new(state, :finished) if state != :finished
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
-      @server.get_run_attribute(@identifier, "#{@links[:wdir]}/#{BACLAVA_FILE}",
-        "*/*", @credentials)
+      @server.get_run_attribute(@identifier,
+        "#{@links[:wdir]}/#{BACLAVA_FILE}", "*/*", @credentials)
     end
 
     # :stopdoc:
     def get_baclava_output
-      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be removed in 1.0. " +
-              "Please use 'Run#baclava_output' instead."
+      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_output' instead."
       baclava_output
     end
     # :startdoc:
@@ -956,7 +957,8 @@ module T2Server
         lists, items = _ls_ports("out")
         if items.include? output
           if refs
-            return "#{@server.uri}/rest/runs/#{@identifier}/#{@links[:wdir]}/out/#{output}"
+            return "#{@server.uri}/rest/runs/#{@identifier}/" +
+              "#{@links[:wdir]}/out/#{output}"
           else
             return @server.get_run_attribute(@identifier,
               "#{@links[:wdir]}/out/#{output}", "application/octet-stream",
@@ -972,16 +974,19 @@ module T2Server
       result = []
 
       # for each list recurse into it and add the items to the result
-      lists.each {|list| result << _get_output("#{output}/#{list}", refs, false)}
+      lists.each do |list|
+        result << _get_output("#{output}/#{list}", refs, false)
+      end
 
       # for each item, add it to the output list
       items.each do |item|
         if refs
-          result << "#{@server.uri}/rest/runs/#{@identifier}/#{@links[:wdir]}/out/#{output}/#{item}"
+          result << "#{@server.uri}/rest/runs/#{@identifier}/" +
+            "#{@links[:wdir]}/out/#{output}/#{item}"
         else
           result << @server.get_run_attribute(@identifier,
-            "#{@links[:wdir]}/out/#{output}/#{item}", "application/octet-stream",
-            @credentials)
+            "#{@links[:wdir]}/out/#{output}/#{item}",
+            "application/octet-stream", @credentials)
         end
       end
 
@@ -1011,7 +1016,6 @@ module T2Server
       doc = xml_document(port_desc)
 
       xpath_find(doc, XPaths[:port_out]).each do |out|
-        #puts out.to_s
         port = OutputPort.new(self, out)
         ports[port.name] = port
       end
@@ -1033,8 +1037,10 @@ module T2Server
         "application/xml",@credentials)
       doc = xml_document(inputs)
 
-      links[:baclava] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
-      links[:inputexp] = "#{links[:inputs]}/" + xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
+      links[:baclava] = "#{links[:inputs]}/" +
+        xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
+      links[:inputexp] = "#{links[:inputs]}/" +
+        xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"

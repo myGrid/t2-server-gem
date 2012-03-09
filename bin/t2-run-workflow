@@ -32,8 +32,6 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 'time'
-require 't2-server'
 require 't2-server-cli'
 
 include T2Server::CLI
@@ -42,28 +40,33 @@ include T2Server::CLI
 inputs  = {}
 files = {}
 options = {}
-conn_params, creds = register_options("Usage: t2-run-workflow [options] server-address") do |opt|
+conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
+    "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
-  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If this is not " +
-    "specified then the workflow is read from standard input") do |val|
+  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If " +
+    "this is not specified then the workflow is read from standard " +
+    "input") do |val|
       options[:wkf_file] = val.chomp
   end
-  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to VALUE") do |val|
-    input, value = val.chomp.split(':', 2)
-    inputs[input] = value
+  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to " +
+    "VALUE") do |val|
+      input, value = val.chomp.split(':', 2)
+      inputs[input] = value
   end
   opt.on("-f INPUT:FILE", "--input-file=INPUT:FILE",
     "Set input port INPUT to use the contents of FILE as its input") do |val|
       input, filename = val.chomp.split(':', 2)
       files[input] = filename
   end
-  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry  date/time of this run") do |val|
-    options[:expiry] = Time.parse(val.chomp)
+  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this " +
+    "run") do |val|
+      options[:expiry] = Time.parse(val.chomp)
   end
-  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input port values") do |val|
-    inputs[:baclava] = val
+  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input " +
+    "port values") do |val|
+      inputs[:baclava] = val
   end
   opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format." +
     " A filename may be specified or 'out.xml' is used") do |val|

@@ -58,21 +58,26 @@ module T2Server
     end
 
     module Fragments
-      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n  %s\n</t2s:workflow>"
-      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n  %s\n</t2sr:runInput>"
+      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
+                      "  %s\n</t2s:workflow>"
+      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n" +
+                      "  %s\n</t2sr:runInput>"
       RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
       RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
-      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
-      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" t2sr:name=\"%s\" />"
+      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" " +
+                        "t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
+      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" " +
+                        "t2sr:name=\"%s\" />"
 
       PERMISSION    = "<t2sr:userName>%s</t2sr:userName>" +
                       "<t2sr:permission>%s</t2sr:permission>"
-      PERM_UPDATE   = "<t2sr:permissionUpdate xmlns:t2sr=\"#{Namespaces::REST}\">" +
+      PERM_UPDATE   = "<t2sr:permissionUpdate " +
+                      "xmlns:t2sr=\"#{Namespaces::REST}\">" +
                       "#{PERMISSION}</t2sr:permissionUpdate>"
 
       SERVICE_URI   = "<t2s:serviceURI>%s</t2s:serviceURI>"
       CREDENTIAL    = "<t2sr:credential xmlns:t2sr=\"#{Namespaces::REST}\"" +
-                      " xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
+                        " xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
                       "%s\n</t2sr:credential>"
       USERPASS_CRED = "<t2s:userpass>\n" +
                       "  #{SERVICE_URI}\n" +
@@ -88,16 +93,18 @@ module T2Server
                       "  <t2s:unlockPassword>%s</t2s:unlockPassword>\n" +
                       "</t2s:keypair>"
 
-      TRUST         = "<t2s:trustedIdentity xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
+      TRUST         = "<t2s:trustedIdentity " +
+                        "xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
                       "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n" +
                       "  <t2s:fileType>%s</t2s:fileType>\n" +
                       "</t2s:trustedIdentity>"
     end
 
     module Methods
-      # The methods in this namespace are provided by the particular XML library
-      # selected above. The xpath_compile method needs to be declared as a
-      # module method so it can be used as a class method when it is mixed in.
+      # The methods in this namespace are provided by the particular XML
+      # library selected above. The xpath_compile method needs to be declared
+      # as a module method so it can be used as a class method when it is
+      # mixed in.
       module_function :xpath_compile
     end
   end

@@ -32,13 +32,13 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 't2-server'
 require 't2-server-cli'
 require 'hirb'
 
 include T2Server::CLI
 
-conn_params, creds = register_options("Usage: t2-server-info [options] server-address") do |opt|
+conn_params, creds = register_options("Usage: t2-server-info [options] " +
+  "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"

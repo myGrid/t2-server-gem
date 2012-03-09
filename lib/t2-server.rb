@@ -51,7 +51,8 @@ require 't2-server/admin'
 module T2Server
   module Version
     # Version information in a Hash
-    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..", "version.yml"))
+    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..",
+      "version.yml"))
 
     # Version number as a String
     STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')

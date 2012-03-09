@@ -35,16 +35,22 @@ require 'test/unit'
 
 class TestFilePaths < Test::Unit::TestCase
   def test_path_stripping
-    assert_equal("dir/with/child", T2Server::Util.strip_path_slashes("dir/with/child"))
-    assert_equal("dir/with/child", T2Server::Util.strip_path_slashes("/dir/with/child"))
-    assert_equal("dir/with/child", T2Server::Util.strip_path_slashes("dir/with/child/"))
-    assert_equal("dir/with/child", T2Server::Util.strip_path_slashes("/dir/with/child/"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("dir/with/child"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("/dir/with/child"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("dir/with/child/"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("/dir/with/child/"))
 
     # only remove one slash from each end
-    assert_equal("/dir/with/child/", T2Server::Util.strip_path_slashes("//dir/with/child//"))
+    assert_equal("/dir/with/child/",
+      T2Server::Util.strip_path_slashes("//dir/with/child//"))
 
     # leave double slashes in the middle of paths
-    assert_equal("dir/with//child", T2Server::Util.strip_path_slashes("/dir/with//child/"))
+    assert_equal("dir/with//child",
+      T2Server::Util.strip_path_slashes("/dir/with//child/"))
 
     # prove it is not stripping in place
     dir = "/dir/with/child/"
