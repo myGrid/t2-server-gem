@@ -36,9 +36,119 @@ In both cases the gem should be initialized by requiring the top level ruby
 file:
   require 't2-server.rb'
 
-See the rdoc for more information. Please note that anything which does not
-appear in the documentation is not intended to be part of the public API. Use
-of undocumented classes and methods is entirely at your own risk!
+=== Configuring a Server connection
+
+Setting up a connection to a secure server can be quite tricky and a secure
+Taverna Server is no different. To make things slightly easier this library
+provides some short cuts to providing various parameters for different types of
+connection.
+
+Connection configuration settings are passed in to various methods using the
++ConnectionParameters+ class. Parameters that can be set are:
+* <tt>:ca_file</tt>
+* <tt>:ca_path</tt>
+* <tt>:verify_peer</tt>
+* <tt>:client_certificate</tt>
+* <tt>:client_password</tt>
+
+And can be set like this for a standard https connection:
+
+  conn_params = ConnectionParameters.new
+  conn_params[:verify_peer] = true
+  conn_params[:ca_path] = "/etc/ssl/certs"
+
+This will ensure that the identity of the Taverna Server you are connecting to
+will be verified using the set of certificates in <tt>/etc/ssl/certs</tt>.
+
+For convenience a number of standard sets of parameters have been defined. The
+above example is available as +DefaultConnectionParameters+. Others available
+are:
+* +InsecureSSLConnectionParameters+ - to ignore SSL checks.
+* +CustomCASSLConnectionParameters+ - for custom (self-signed) CAs.
+* +ClientAuthSSLConnectionParameters+ - for client certificate authentication.
+
+See the rdoc for more details on these classes.
+
+=== Authenticating to a Taverna Server
+
+Some calls to a server require that a set of user credentials are provided.
+These are simple to set up:
+
+  credentials = T2Server::HttpBasic.new("username", "password")
+
+=== Server API example
+
+The Server constructor can yield the newly created object. Simple supply a URI
+and a set of connection parameters to connect to a server:
+
+  T2Server::Server.new(uri, conn_params) do |server|
+    ...
+  end
+
+Note that credentials are not required by default to simply connect to a
+Taverna Server. Further operations (such as creating and starting runs) may
+require authorization depending on how your server has been set up.
+
+=== Run API example
+
+You can bypass the Server API if you know you are only going to be dealing with
+a couple of runs directly:
+
+  T2Server::Run.create(uri, workflow, credentials, conn_params) do |run|
+    ...
+  end
+
+Setting an input port to a run is very easy:
+
+  run.input_port("port_name").value = 1
+  run.input_port("port_name").value = "Hello!"
+  run.input_port("port_name").value = ["list", "of", "values"]
+
+Or you can use a local file as input:
+
+  run.input_port("port_name").file = filename
+
+Once all the inputs have been set the run can be started:
+
+  run.start
+
+And monitored to see if it has finished:
+
+  run.finished?
+  run.running?
+
+Or just wait until the run has finished:
+
+  run.wait
+
+Then the outputs can be collected:
+
+  result = run.output_port("port_name").value
+
+If you have a lot of output you can grab the whole lot as a zip file:
+
+  zip_data = run.zip_output
+
+Using baclava documents for setting inputs and collecting outputs is also
+supported:
+
+  run.baclava_input = filename
+
+But make sure you request baclava output *before* starting the run:
+
+  run.request_baclava_output
+  run.start
+  run.wait
+  output = run.baclava_output
+
+See the rdoc for more information. Many methods and classes have much more
+functionality than the defaults described above. Please note that anything
+which does not appear in the documentation is not intended to be part of the
+public API. Use of undocumented classes and methods is entirely at your own
+risk! Such things might not have consistent behaviour and might be removed at
+any time.
+
+=== Example scripts
 
 As well as rdoc there are also a couple of example scripts which
 demonstrate good use of the T2Server API. These are available in the
