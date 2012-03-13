@@ -32,6 +32,8 @@
 
 require 'base64'
 require 'time'
+require 'rubygems'
+require 'taverna-baclava'
 
 module T2Server
 
@@ -328,7 +330,7 @@ module T2Server
       raise RunStateError.new(state, :initialized) if state != :initialized
 
       # set all the inputs
-      _set_all_inputs unless baclava_input?
+      _check_and_set_inputs unless baclava_input?
 
       @server.set_run_attribute(@identifier, @links[:status],
         state_to_text(:running), "text/plain", @credentials)
@@ -424,6 +426,18 @@ module T2Server
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
       @server.upload_file(@identifier, filename, location, rename,
+        @credentials)
+    end
+
+    # :call-seq:
+    #   upload_data(data, remote_name, remote_directory = "") -> bool
+    #
+    # Upload data to the server and store it in <tt>remote_file</tt>. The
+    # remote directory to put this file in can also be specified, but if it is
+    # it must first have been created by a call to Run#mkdir.
+    def upload_data(data, remote_name, remote_directory = "")
+      location = "#{@links[:wdir]}/#{remote_directory}"
+      @server.upload_data(@identifier, data, remote_name, location,
         @credentials)
     end
 
@@ -865,6 +879,20 @@ module T2Server
 
     private
 
+    # Check each input to see if it requires a list input and call the
+    # requisite upload method for the entire set of inputs.
+    def _check_and_set_inputs
+      lists = false
+      input_ports.each_value do |port|
+        if port.depth > 0
+          lists = true
+          break
+        end
+      end
+
+      lists ? _fake_lists : _set_all_inputs
+    end
+
     # Set all the inputs on the server. The inputs must have been set prior to
     # this call using the InputPort API.
     def _set_all_inputs
@@ -892,6 +920,33 @@ module T2Server
             @credentials)
         end
       end
+    end
+
+    # Fake being able to handle lists as inputs by converting everything into
+    # one big baclava document and uploading that. This has to be done for all
+    # inputs or none at all. The inputs must have been set prior to this call
+    # using the InputPort API.
+    def _fake_lists
+      data_map = {}
+
+      input_ports.each_value do |port|
+        next unless port.set?
+
+        if port.file?
+          unless port.remote_file?
+            file = File.read(port.file)
+            data_map[port.name] = Taverna::Baclava::Node.new(file)
+          end
+        else
+          data_map[port.name] = Taverna::Baclava::Node.new(port.value)
+        end
+      end
+
+      # Create and upload the baclava data.
+      baclava = Taverna::Baclava::Writer.write(data_map)
+      upload_data(baclava, "in.baclava")
+      @server.set_run_attribute(@identifier, @links[:baclava], "in.baclava",
+        "text/plain", @credentials)
     end
 
     # Check that the uri passed in is suitable for credential use:

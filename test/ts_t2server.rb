@@ -77,6 +77,7 @@ if address != ""
 
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
+  $wkf_l_v    = File.read("test/workflows/list_and_value.t2flow")
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
   $wkf_fail   = File.read("test/workflows/always_fail.t2flow")
   $wkf_errors = File.read("test/workflows/list_with_errors.t2flow")

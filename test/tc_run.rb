@@ -79,6 +79,41 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  # Test run with list inputs
+  def test_run_list_input
+    T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
+      many = [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]]
+      single = [1, 2, 3, 4, 5]
+      single_out = single.map { |v| v.to_s } # Taverna outputs strings!
+
+      run.input_port("SINGLE_IN").value = single
+      run.input_port("MANY_IN").value = many
+      assert_nothing_raised { run.start }
+      assert(run.running?)
+      run.wait
+
+      assert_equal(run.output_port("MANY").value, many)
+      assert_equal(run.output_port("SINGLE").value, single_out)
+    end
+  end
+
+  # Test run with a list and file input
+  def test_run_list_and_file
+    T2Server::Run.create($uri, $wkf_l_v, $creds, $conn_params) do |run|
+      list = ["one", 2, :three]
+      list_out = list.map { |v| v.to_s }
+
+      run.input_port("list_in").value = list
+      run.input_port("singleton_in").file = $file_input
+      assert_nothing_raised { run.start }
+      assert(run.running?)
+      run.wait
+
+      assert_equal(run.output_port("list_out").value, list_out)
+      assert_equal(run.output_port("singleton_out").value, "Hello, World!")
+    end
+  end
+
   # Test run with xml input
   def test_run_xml_input
     T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params) do |run|
