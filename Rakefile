@@ -54,6 +54,7 @@ spec = Gem::Specification.new do |s|
   s.description      = "This gem provides access to the Taverna 2 Server " +
                          "REST interface from Ruby."
   candidates         = Dir.glob("{bin,lib,test}/**/*")
+  candidates         << "version.yml"
   s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
   s.bindir           = "bin"
