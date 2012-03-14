@@ -25,6 +25,21 @@ https://rubygems.org/gems/t2-server
 You can also download the source code from here:
 https://github.com/myGrid/t2-server-gem
 
+== Compatibility with Taverna Server versions
+
+From version 0.9.0 this library is compatible with Taverna Server 2.3 onwards.
+It is not compatible with any earlier version of Taverna Server due to breaking
+changes in its REST interface. We strongly encourage all users to upgrade to
+the current version of Taverna Server, but if that is not possible right now
+then please continue to use version 0.6.1 of this library for the time being.
+
+This version of the library should be compatible with any Ruby code that you
+may have already written against earlier versions but you may see some warnings
+about API deprecations. These are clearly marked [DEPRECATION] and will appear
+on your console output. Anything marked as deprecated will be removed in
+version 1.0.0 so you are advised to update your code at your earliest
+convenience.
+
 == Usage
 
 There are two entry points for the T2Server API:
