@@ -201,7 +201,7 @@ module T2Server
       if delete_attribute("#{@links[:runs]}/#{run}", credentials)
         # delete cached run object - this must be done per user
         user = credentials.nil? ? :all : credentials.username
-        @runs[user].delete(run)
+        @runs[user].delete(run) if @runs[user]
         true
       end
     end
