@@ -35,7 +35,7 @@ require 'rake'
 require 'rake/clean'
 require 'rake/tasklib'
 require 'rdoc/task'
-require 'rubygems/package_task'
+require 'jeweler'
 
 # we need to add lib to the path because we're not installed yet!
 $LOAD_PATH.unshift File.join(File.dirname(__FILE__), "lib")
@@ -43,19 +43,16 @@ require 't2-server'
 
 task :default => [:test]
 
-spec = Gem::Specification.new do |s|
+Jeweler::Tasks.new do |s|
   s.name             = "t2-server"
   s.version          = T2Server::Version::STRING
-  s.author           = "Robert Haines"
-  s.email            = "rhaines@manchester.ac.uk"
+  s.authors          = ["Robert Haines"]
+  s.email            = ["rhaines@manchester.ac.uk"]
   s.homepage         = "http://www.taverna.org.uk/"
   s.platform         = Gem::Platform::RUBY
   s.summary          = "Support for interacting with Taverna 2 Server."
   s.description      = "This gem provides access to the Taverna 2 Server " +
                          "REST interface from Ruby."
-  candidates         = Dir.glob("{bin,lib,test}/**/*")
-  candidates         << "version.yml"
-  s.files            = candidates.delete_if {|item| item.include?("rdoc")}
   s.require_path     = "lib"
   s.bindir           = "bin"
   s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info",
@@ -68,13 +65,9 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('libxml-ruby', '>= 1.1.4')
   s.add_development_dependency('nokogiri', '>= 1.5.0')
   s.add_development_dependency('rdoc', '>= 3.9.4')
+  s.add_development_dependency('jeweler', '~> 1.8.3')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
   s.add_runtime_dependency('hirb', '>= 0.4.0')
-end
-
-Gem::PackageTask.new(spec) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
 end
 
 # This test task does not use the standard Rake::TestTask class as we need to
