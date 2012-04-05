@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,9 +30,10 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
-require 'libxml'
+require 'base64'
 require 'time'
+require 'rubygems'
+require 'taverna-baclava'
 
 module T2Server
 
@@ -40,267 +41,378 @@ module T2Server
   # setup and configuration required.
   #
   # A run can be in one of three states:
-  # * Initialized: The run has been accepted by the server. It may not yet be
+  # * :initialized - The run has been accepted by the server. It may not yet be
   #   ready to run though as its input port may not have been set.
-  # * Running: The run is being run by the server.
-  # * Finished: The run has finished running and its outputs are available for
-  #   download.
+  # * :running - The run is being run by the server.
+  # * :finished - The run has finished running and its outputs are available
+  #   for download.
   class Run
-    include LibXML
+    include XML::Methods
 
     private_class_method :new
 
-    # The identifier of this run on the server. It is currently a UUID
-    # (version 4).
-    attr_reader :uuid
+    # The identifier of this run on the server.
+    attr_reader :identifier
+    alias :id :identifier
+
+    # The server instance that this run is hosted on.
+    attr_reader :server
+
+    # The owner (username) of this run
+    attr_reader :owner
 
     # :stopdoc:
-    STATE = {
-      :initialized => "Initialized",
-      :running     => "Operating",
-      :finished    => "Finished",
-      :stopped     => "Stopped"
+    XPaths = {
+      # Run XPath queries
+      :run_desc   => XML::Methods.xpath_compile("/nsr:runDescription"),
+      :dir        => XML::Methods.xpath_compile("//nss:dir"),
+      :file       => XML::Methods.xpath_compile("//nss:file"),
+      :expiry     => XML::Methods.xpath_compile("//nsr:expiry"),
+      :workflow   => XML::Methods.xpath_compile("//nsr:creationWorkflow"),
+      :status     => XML::Methods.xpath_compile("//nsr:status"),
+      :createtime => XML::Methods.xpath_compile("//nsr:createTime"),
+      :starttime  => XML::Methods.xpath_compile("//nsr:startTime"),
+      :finishtime => XML::Methods.xpath_compile("//nsr:finishTime"),
+      :wdir       => XML::Methods.xpath_compile("//nsr:workingDirectory"),
+      :inputs     => XML::Methods.xpath_compile("//nsr:inputs"),
+      :output     => XML::Methods.xpath_compile("//nsr:output"),
+      :securectx  => XML::Methods.xpath_compile("//nsr:securityContext"),
+      :listeners  => XML::Methods.xpath_compile("//nsr:listeners"),
+      :baclava    => XML::Methods.xpath_compile("//nsr:baclava"),
+      :inputexp   => XML::Methods.xpath_compile("//nsr:expected"),
+
+      # Port descriptions XPath queries
+      :port_in    => XML::Methods.xpath_compile("//port:input"),
+      :port_out   => XML::Methods.xpath_compile("//port:output"),
+
+      # Run security XPath queries
+      :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
+      :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
+      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
+      :sec_perm   =>
+       XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
+      :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
+      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
+      :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
+      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI"),
+      :sec_trust  =>
+       XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
     }
 
+    # The name to be used internally for retrieving results via baclava
+    BACLAVA_FILE = "out.xml"
+
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
-    def initialize(server, uuid)
+    def initialize(server, id, credentials = nil)
       @server = server
-      @uuid = uuid
+      @identifier = id
       @workflow = ""
       @baclava_in = false
-      @baclava_out = ""
-      
-      @links = get_attributes(@server.get_run_attribute(uuid, ""))
-      #@links.each {|key, val| puts "#{key}: #{val}"}
+      @baclava_out = false
+
+      @credentials = credentials
+
+      run_desc = xml_document(@server.get_run_attribute(@identifier, "",
+        "application/xml", @credentials))
+      @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
+      @links = get_attributes(run_desc)
+
+      # initialize ports lists to nil as an empty list means no inputs/outputs
+      @input_ports = nil
+      @output_ports = nil
     end
     # :startdoc:
 
     # :call-seq:
     #   Run.create(server, workflow) -> run
+    #   Run.create(server, workflow, connection_parameters) -> run
+    #   Run.create(server, workflow, user_credentials) -> run
+    #   Run.create(server, workflow, ...) {|run| ...}
     #
-    # Create a new run in the +Initialized+ state. The run will be created on
+    # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
     # created instance of T2Server::Server. The _workflow_ must also be
-    # supplied as a string in t2flow or scufl format.
-    def Run.create(server, workflow, uuid="")
-      if server.class == String
-        server = Server.connect(server)
+    # supplied as a string in t2flow or scufl format. User credentials and
+    # connection parameters can be supplied if required but are both optional.
+    # If _server_ is an instance of T2Server::Server then
+    # _connection_parameters_ will be ignored.
+    #
+    # This method will _yield_ the newly created Run if a block is given.
+    def Run.create(server, workflow, *rest)
+      credentials = nil
+      id = nil
+      conn_params = nil
+
+      rest.each do |param|
+        case param
+        when String
+          id = param
+        when ConnectionParameters
+          conn_params = param
+        when HttpCredentials
+          credentials = param
+        end
       end
-      if uuid == ""
-        new(server, server.initialize_run(workflow))
-      else
-        new(server, uuid)
+
+      if server.class != Server
+        server = Server.new(server, conn_params)
       end
+
+      if id.nil?
+        id = server.initialize_run(workflow, credentials)
+      end
+
+      run = new(server, id, credentials)
+      yield(run) if block_given?
+      run
     end
 
+    # :stopdoc:
+    def uuid
+      warn "[DEPRECATION] 'uuid' is deprecated and will be removed in 1.0. " +
+        "Please use Run#id or Run#identifier instead."
+      @identifier
+    end
+    # :startdoc:
+
     # :call-seq:
-    #   run.delete
+    #   delete
     #
     # Delete this run from the server.
     def delete
-      @server.delete_run uuid
+      @server.delete_run(@identifier, @credentials)
     end
 
-    # :call-seq:
-    #   run.inputs -> string
-    #
-    # Return the path to the input ports of this run on the server.
+    # :stopdoc:
     def inputs
+      warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
       @links[:inputs]
     end
 
-    # :call-seq:
-    #   run.set_input(input, value) -> bool
-    #
-    # Set the workflow input port _input_ to _value_.
-    #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
     def set_input(input, value)
-      state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      warn "[DEPRECATION] 'Run#set_input' is deprecated and will be removed " +
+        "in 1.0. Input ports are set directly instead. The most direct " +
+        "replacement for this method is: 'Run#input_port(input).value = value'"
 
-      @server.set_run_input(self, input, value)
+      input_port(input).value = value
     end
 
-    # :call-seq:
-    #   run.set_input_file(input, filename) -> bool
-    #
-    # Set the workflow input port _input_ to use the file at _filename_ as its
-    # input data.
-    #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
     def set_input_file(input, filename)
-      state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      warn "[DEPRECATION] 'Run#set_input_file' is deprecated and will be " +
+        "removed in 1.0. Input ports are set directly instead. The most " +
+        "direct replacement for this method is: " +
+        "'Run#input_port(input).remote_file = filename'"
 
-      @server.set_run_input_file(self, input, filename)
+      input_port(input).remote_file = filename
+    end
+    # :startdoc:
+
+    # :call-seq:
+    #   input_ports -> Hash
+    #
+    # Return a hash (name, port) of all the input ports this run expects.
+    def input_ports
+      @input_ports = _get_input_port_info if @input_ports.nil?
+
+      @input_ports
     end
 
     # :call-seq:
-    #   run.get_output_ports -> list
+    #   input_port(port) -> Port
     #
-    # Return a list of all the output ports
+    # Get _port_.
+    def input_port(port)
+      input_ports[port]
+    end
+
+    # :call-seq:
+    #   output_ports -> Hash
+    #
+    # Return a hash (name, port) of all the output ports this run has. Until
+    # the run is finished this method will return _nil_.
+    def output_ports
+      if finished? and @output_ports.nil?
+        @output_ports = _get_output_port_info
+      end
+
+      @output_ports
+    end
+
+    # :call-seq:
+    #   output_port(port) -> Port
+    #
+    # Get output port _port_.
+    def output_port(port)
+      output_ports[port] if finished?
+    end
+
+    # :stopdoc:
     def get_output_ports
+      warn "[DEPRECATION] 'get_output_ports' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#output_ports' instead."
       lists, items = _ls_ports("out")
       items + lists
     end
 
-    # :call-seq:
-    #   run.get_output(output, refs=false) -> string or list
-    #
-    # Return the values of the workflow output port _output_. These are
-    # returned as a list of strings or, if the output port represents a
-    # singleton value, then a string returned. By default this method returns
-    # the actual data from the output port but if _refs_ is set to true then
-    # it will instead return URIs to the actual data in the same list format.
-    # See also Run#get_output_refs.
     def get_output(output, refs=false)
+      warn "[DEPRECATION] 'get_output' is deprecated and will be removed " +
+        "in 1.0. Please use 'Run#output_port(port).values' instead."
       _get_output(output, refs)
     end
 
-    # :call-seq:
-    #   run.get_output_refs(output) -> string or list
-    #
-    # Return references (URIs) to the values of the workflow output port
-    # _output_. These are returned as a list of URIs or, if the output port
-    # represents a singleton value, then a single URI is returned. The URIs
-    # are returned as strings.
     def get_output_refs(output)
+      warn "[DEPRECATION] 'get_output_refs' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#output_port(port).data' instead."
       _get_output(output, true)
     end
+    # :startdoc:
 
     # :call-seq:
-    #   run.expiry -> string
+    #   expiry -> string
     #
     # Return the expiry time of this run as an instance of class Time.
     def expiry
-      Time.parse(@server.get_run_attribute(@uuid, @links[:expiry]))
+      Time.parse(@server.get_run_attribute(@identifier, @links[:expiry],
+        "text/plain", @credentials))
     end
 
     # :call-seq:
-    #   run.expiry=(time) -> bool
+    #   expiry=(time) -> bool
     #
-    # Set the expiry time of this run to _time_. The format of _time_ should
-    # be something that the Ruby Time class can parse. If the value given does
-    # not specify a date then today's date will be assumed. If a time/date in
-    # the past is specified, the expiry time will not be changed.
+    # Set the expiry time of this run to _time_. _time_ should either be a Time
+    # object or something that the Time class can parse. If the value given
+    # does not specify a date then today's date will be assumed. If a time/date
+    # in the past is specified, the expiry time will not be changed.
     def expiry=(time)
+      unless time.instance_of? Time
+        time = Time.parse(time)
+      end
+
       # need to massage the xmlschema format slightly as the server cannot
       # parse timezone offsets with a colon (eg +00:00)
-      date_str = Time.parse(time).xmlschema(2)
+      date_str = time.xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
-      @server.set_run_attribute(@uuid, @links[:expiry], date_str)
+      @server.set_run_attribute(@identifier, @links[:expiry], date_str,
+        "text/plain", @credentials)
     end
 
     # :call-seq:
-    #   run.workflow -> string
+    #   workflow -> string
     #
     # Get the workflow that this run represents.
     def workflow
       if @workflow == ""
-        @workflow = @server.get_run_attribute(@uuid, @links[:workflow])
+        @workflow = @server.get_run_attribute(@identifier, @links[:workflow],
+          "application/xml", @credentials)
       end
       @workflow
     end
 
     # :call-seq:
-    #   run.status -> string
+    #   status -> string
     #
-    # Get the status of this run.
+    # Get the status of this run. Status can be one of :initialized,
+    # :running or :finished.
     def status
-      @server.get_run_attribute(@uuid, @links[:status])
+      text_to_state(@server.get_run_attribute(@identifier, @links[:status],
+        "text/plain", @credentials))
     end
 
     # :call-seq:
-    #   run.start
+    #   start
     #
     # Start this run on the server.
     #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Raises RunStateError if the run is not in the :initialized state.
     def start
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @server.set_run_attribute(@uuid, @links[:status], STATE[:running])
+      # set all the inputs
+      _check_and_set_inputs unless baclava_input?
+
+      @server.set_run_attribute(@identifier, @links[:status],
+        state_to_text(:running), "text/plain", @credentials)
     end
 
     # :call-seq:
-    #   run.wait(params={})
+    #   wait(check_interval = 1)
     #
-    # Wait (block) for this run to finish. Possible values that can be passed
-    # in via _params_ are:
-    # * :interval - How often (in seconds) to test for run completion.
-    #   Default +1+.
-    # * :progress - Print a dot (.) each interval to show that something is
-    #   actually happening. Default +false+.
+    # Wait (block) for this run to finish. How often (in seconds) the run is
+    # tested for completion can be specified with check_interval.
     #
-    # Raises RunStateError if the run is not in the +Running+ state.
-    def wait(params={})
+    # Raises RunStateError if the run is still in the :initialised state.
+    def wait(*params)
       state = status
-      raise RunStateError.new(state, STATE[:running]) if state != STATE[:running]
+      raise RunStateError.new(state, :running) if state == :initialized
 
-      interval = params[:interval] || 1
-      progress = params[:progress] || false
-      keepalive = params[:keepalive] || false ### TODO maybe move out of params
-      
+      interval = 1
+      params.each do |param|
+        case param
+        when Hash
+          warn "[DEPRECATION] 'Run#wait(params={})' is deprecated and will " +
+            "be removed in 1.0. Please use Run#wait(check_interval) instead."
+          interval = param[:interval] || 1
+        when Integer
+          interval = param
+        end
+      end
+
       # wait
       until finished?
         sleep(interval)
-        if progress
-          print "."
-          STDOUT.flush
-        end
       end
-      
-      # tidy up output if there is any
-      puts if progress
     end
 
     # :call-seq:
-    #   run.exitcode -> integer
+    #   exitcode -> integer
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
-      @server.get_run_attribute(@uuid, @links[:exitcode]).to_i
+      @server.get_run_attribute(@identifier, @links[:exitcode], "text/plain",
+        @credentials).to_i
     end
 
     # :call-seq:
-    #   run.stdout -> string
+    #   stdout -> string
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
-      @server.get_run_attribute(@uuid, @links[:stdout])
+      @server.get_run_attribute(@identifier, @links[:stdout], "text/plain",
+        @credentials)
     end
 
     # :call-seq:
-    #   run.stderr -> string
+    #   stderr -> string
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
-      @server.get_run_attribute(@uuid, @links[:stderr])
+      @server.get_run_attribute(@identifier, @links[:stderr], "text/plain",
+        @credentials)
     end
 
     # :call-seq:
-    #   run.mkdir(dir) -> bool
+    #   mkdir(dir) -> bool
     #
     # Create a directory in the run's working directory on the server. This
     # could be used to store input data.
     def mkdir(dir)
-      dir.strip_path!
+      dir = Util.strip_path_slashes(dir)
       if dir.include? ?/
         # if a path is given then separate the leaf from the
         # end and add the rest of the path to the wdir link
         leaf = dir.split("/")[-1]
         path = dir[0...-(leaf.length + 1)]
-        @server.make_run_dir(@uuid, "#{@links[:wdir]}/#{path}", leaf)
+        @server.create_dir(@identifier, "#{@links[:wdir]}/#{path}", leaf,
+          @credentials)
       else
-        @server.make_run_dir(@uuid, @links[:wdir], dir)
+        @server.create_dir(@identifier, @links[:wdir], dir, @credentials)
       end
     end
 
     # :call-seq:
-    #   run.upload_file(filename, params={}) -> string
+    #   upload_file(filename, params={}) -> string
     #
     # Upload a file, with name _filename_, to the server. Possible values that
     # can be passed in via _params_ are:
@@ -313,120 +425,545 @@ module T2Server
       location = params[:dir] || ""
       location = "#{@links[:wdir]}/#{location}"
       rename = params[:rename] || ""
-      @server.upload_run_file(@uuid, filename, location, rename)
+      @server.upload_file(@identifier, filename, location, rename,
+        @credentials)
     end
 
     # :call-seq:
-    #   run.upload_input_file(input, filename, params={}) -> string
+    #   upload_data(data, remote_name, remote_directory = "") -> bool
     #
-    # Upload a file, with name _filename_, to the server and set it as the
-    # input data for input port _input_. Possible values that can be passed
-    # in via _params_ are:
-    # * :dir - The directory to upload to. If this is not left blank the
-    #   corresponding directory will need to have been created by Run#mkdir.
-    # * :rename - Save the file on the server with a different name.
-    #
-    # The name of the file on the server is returned.
-    #
-    # Raises RunStateError if the run is not in the +Initialized+ state.
+    # Upload data to the server and store it in <tt>remote_file</tt>. The
+    # remote directory to put this file in can also be specified, but if it is
+    # it must first have been created by a call to Run#mkdir.
+    def upload_data(data, remote_name, remote_directory = "")
+      location = "#{@links[:wdir]}/#{remote_directory}"
+      @server.upload_data(@identifier, data, remote_name, location,
+        @credentials)
+    end
+
+    # :stopdoc:
     def upload_input_file(input, filename, params={})
-      state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      warn "[DEPRECATION] 'Run#upload_input_file' is deprecated and will be " +
+        "removed in 1.0. Input ports are set directly instead. The most " +
+        "direct replacement for this method is: " +
+        "'Run#input_port(input).file = filename'"
 
-      file = upload_file(filename, params)
-      set_input_file(input, file)
+      input_port(input).file = filename
     end
+    # :startdoc:
 
     # :call-seq:
-    #   run.upload_baclava_file(filename) -> bool
+    #   baclava_input=(filename) -> bool
     #
-    # Upload a baclava file to be used for the workflow inputs.
-    def upload_baclava_file(filename)
+    # Use a baclava file for the workflow inputs.
+    def baclava_input=(filename)
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
+      raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @baclava_in = true
       rename = upload_file(filename)
-      @server.set_run_attribute(@uuid, @links[:baclava], rename)
+      result = @server.set_run_attribute(@identifier, @links[:baclava], rename,
+        "text/plain", @credentials)
+
+      @baclava_in = true if result
+
+      result
     end
 
+    # :stopdoc:
+    def upload_baclava_input(filename)
+      warn "[DEPRECATION] 'upload_baclava_input' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
+    end
+
+    def upload_baclava_file(filename)
+      warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_input=' instead."
+      self.baclava_input = filename
+    end
+    # :startdoc:
+
     # :call-seq:
-    #   run.set_baclava_output(name="out.xml") -> bool
+    #   request_baclava_output -> bool
     #
-    # Set the server to save the outputs of this run in baclava format. The
-    # filename can be specified with the _name_ parameter otherwise a default
-    # of 'out.xml' is used. This must be done before the run is started.
-    def set_baclava_output(name="out.xml")
+    # Set the server to save the outputs of this run in baclava format. This
+    # must be done before the run is started.
+    def request_baclava_output
+      return if @baclava_out
       state = status
-      raise RunStateError.new(state, STATE[:initialized]) if state != STATE[:initialized]
-      
-      @baclava_out = name.strip_path
-      @server.set_run_attribute(@uuid, @links[:output], @baclava_out)
+      raise RunStateError.new(state, :initialized) if state != :initialized
+
+      @baclava_out = @server.set_run_attribute(@identifier, @links[:output],
+        BACLAVA_FILE, "text/plain", @credentials)
+    end
+
+    # :stopdoc:
+    def set_baclava_output(name="")
+      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#request_baclava_output' instead."
+      self.request_baclava_output
+    end
+    # :startdoc:
+
+    # :call-seq:
+    #   baclava_input? -> bool
+    #
+    # Have the inputs to this run been set by a baclava document?
+    def baclava_input?
+      @baclava_in
     end
 
     # :call-seq:
-    #   run.get_baclava_output -> string
+    #   baclava_output? -> bool
+    #
+    # Has this run been set to return results in baclava format?
+    def baclava_output?
+      @baclava_out
+    end
+
+    # :call-seq:
+    #   baclava_output -> string
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
     # before starting the run.
-    def get_baclava_output
+    def baclava_output
       state = status
-      raise RunStateError.new(state, STATE[:finished]) if state != STATE[:finished]
-      
-      raise AttributeNotFoundError.new("#{@links[:wdir]}/#{@baclava_out}") if @baclava_out == ""
-      @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{@baclava_out}")
+      raise RunStateError.new(state, :finished) if state != :finished
+
+      raise AccessForbiddenError.new("baclava output") if !@baclava_out
+      @server.get_run_attribute(@identifier,
+        "#{@links[:wdir]}/#{BACLAVA_FILE}", "*/*", @credentials)
+    end
+
+    # :stopdoc:
+    def get_baclava_output
+      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#baclava_output' instead."
+      baclava_output
+    end
+    # :startdoc:
+
+    # :call-seq:
+    #   zip_output -> binary blob
+    #
+    # Get the working directory of this run directly from the server in zip
+    # format.
+    def zip_output
+      state = status
+      raise RunStateError.new(state, :finished) if state != :finished
+
+      @server.get_run_attribute(@identifier, "#{@links[:wdir]}/out",
+        "application/zip", @credentials)
     end
 
     # :call-seq:
-    #   run.initialized? -> bool
+    #   initialized? -> bool
     #
-    # Is this run in the +Initialized+ state?
+    # Is this run in the :initialized state?
     def initialized?
-      status == STATE[:initialized]
+      status == :initialized
     end
 
     # :call-seq:
-    #   run.running? -> bool
+    #   running? -> bool
     #
-    # Is this run in the +Running+ state?
+    # Is this run in the :running state?
     def running?
-      status == STATE[:running]
+      status == :running
     end
 
     # :call-seq:
-    #   run.finished? -> bool
+    #   finished? -> bool
     #
-    # Is this run in the +Finished+ state?
+    # Is this run in the :finished state?
     def finished?
-      status == STATE[:finished]
+      status == :finished
     end
 
     # :call-seq:
-    #   run.create_time -> string
+    #   create_time -> string
     #
     # Get the creation time of this run as an instance of class Time.
     def create_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:createtime]))
+      Time.parse(@server.get_run_attribute(@identifier, @links[:createtime],
+        "text/plain", @credentials))
     end
 
     # :call-seq:
-    #   run.start_time -> string
+    #   start_time -> string
     #
     # Get the start time of this run as an instance of class Time.
     def start_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:starttime]))
+      Time.parse(@server.get_run_attribute(@identifier, @links[:starttime],
+        "text/plain", @credentials))
     end
 
     # :call-seq:
-    #   run.finish_time -> string
+    #   finish_time -> string
     #
     # Get the finish time of this run as an instance of class Time.
     def finish_time
-      Time.parse(@server.get_run_attribute(@uuid, @links[:finishtime]))
+      Time.parse(@server.get_run_attribute(@identifier, @links[:finishtime],
+        "text/plain", @credentials))
     end
 
+    # :call-seq:
+    #   owner? -> bool
+    #
+    # Are the credentials being used to access this run those of the owner?
+    # The owner of the run can give other users certain access rights to their
+    # runs but only the owner can change these rights - or even see what they
+    # are. Sometimes it is useful to know if the user accessing the run is
+    # actually the owner of it or not.
+    def owner?
+      @credentials.username == @owner
+    end
+
+    # :call-seq:
+    #   grant_permission(username, permission) -> username
+    #
+    # Grant the user the stated permission. A permission can be one of
+    # <tt>:none</tt>, <tt>:read</tt>, <tt>:update</tt> or <tt>:destroy</tt>.
+    # Only the owner of a run may grant permissions on it. +nil+ is returned
+    # if a user other than the owner uses this method.
+    def grant_permission(username, permission)
+      return unless owner?
+
+      value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
+      @server.create_run_attribute(@identifier, @links[:sec_perms], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   permissions -> hash
+    #
+    # Return a hash (username => permission) of all the permissions set for
+    # this run. Only the owner of a run may query its permissions. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def permissions
+      return unless owner?
+
+      perms = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_perms], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_perm]).each do |p|
+        user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
+        perm = xml_node_content(xpath_first(p, XPaths[:sec_uperm])).to_sym
+        perms[user] = perm
+      end
+
+      perms
+    end
+
+    # :call-seq:
+    #   permission(username) -> permission
+    #
+    # Return the permission granted to the supplied username, if any. Only the
+    # owner of a run may query its permissions. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def permission(username)
+      return unless owner?
+
+      permissions[username]
+    end
+
+    # :call-seq:
+    #   revoke_permission(username) -> bool
+    #
+    # Revoke whatever permissions that have been granted to the user. Only the
+    # owner of a run may revoke permissions on it. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def revoke_permission(username)
+      return unless owner?
+
+      path = "#{@links[:sec_perms]}/#{username}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   add_password_credential(service_uri, username, password) -> String
+    #
+    # Provide a username and password credential for the secure service at the
+    # specified URI. The id of the credential on the server is returned. Only
+    # the owner of a run may supply credentials for it. +nil+ is returned if a
+    # user other than the owner uses this method.
+    def add_password_credential(uri, username, password)
+      return unless owner?
+
+      # Is this a new credential, or an update?
+      id = credential(uri)
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      if id.nil?
+        @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+          "application/xml", @credentials)
+      else
+        path = "#{@links[:sec_creds]}/#{id}"
+        @server.set_run_attribute(@identifier, path, value, "application/xml",
+          @credentials)
+      end
+    end
+
+    # :call-seq:
+    #   add_keypair_credential(service_uri, filename, password,
+    #     alias = "Imported Certificate", type = :pkcs12) -> String
+    #
+    # Provide a client certificate credential for the secure service at the
+    # specified URI. You will need to provide the password to unlock the
+    # private key. You will also need to provide the 'alias' or 'friendlyName'
+    # of the key you wish to use if it differs from the default. The id of the
+    # credential on the server is returned. Only the owner of a run may supply
+    # credentials for it. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def add_keypair_credential(uri, filename, password,
+                               name = "Imported Certificate", type = :pkcs12)
+      return unless owner?
+
+      type = type.to_s.upcase
+      contents = Base64.encode64(IO.read(filename))
+
+      # basic uri checks
+      uri = _check_cred_uri(uri)
+
+      cred = XML::Fragments::KEYPAIR_CRED % [uri, name, contents,
+        type, password]
+      value = XML::Fragments::CREDENTIAL % cred
+
+      @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   credentials -> Hash
+    #
+    # Return a hash (service_uri => identifier) of all the credentials provided
+    # for this run. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credentials
+      return unless owner?
+
+      creds = {}
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_creds], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_cred]).each do |c|
+        uri = xml_node_content(xpath_first(c, XPaths[:sec_suri]))
+        id = xml_node_attribute(c, "href").split('/')[-1]
+        creds[uri] = id
+      end
+
+      creds
+    end
+
+    # :call-seq:
+    #   credential(service_uri) -> String
+    #
+    # Return the identifier of the credential set for the supplied service, if
+    # any. Only the owner of a run may query its credentials. +nil+ is
+    # returned if a user other than the owner uses this method.
+    def credential(uri)
+      return unless owner?
+
+      credentials[uri]
+    end
+
+    # :call-seq:
+    #   delete_credential(service_uri) -> bool
+    #
+    # Delete the credential that has been provided for the specified service.
+    # Only the owner of a run may delete its credentials. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def delete_credential(uri)
+      return unless owner?
+
+      path = "#{@links[:sec_creds]}/#{credentials[uri]}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_credentials -> bool
+    #
+    # Delete all credentials associated with this workflow run. Only the owner
+    # of a run may delete its credentials. +nil+ is returned if a user other
+    # than the owner uses this method.
+    def delete_all_credentials
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_creds],
+        @credentials)
+    end
+
+    # :call-seq:
+    #   add_trust(filename, type = :x509) -> String
+    #
+    # Add a trusted identity (server public key) to verify peers when using
+    # https connections to Web Services. The id of the trust on the server is
+    # returned. Only the owner of a run may add a trust. +nil+ is returned if
+    # a user other than the owner uses this method.
+    def add_trust(filename, type = :x509)
+      return unless owner?
+
+      type = type.to_s.upcase
+
+      contents = Base64.encode64(IO.read(filename))
+
+      value = XML::Fragments::TRUST % [contents, type]
+      @server.create_run_attribute(@identifier, @links[:sec_trusts], value,
+        "application/xml", @credentials)
+    end
+
+    # :call-seq:
+    #   trusts -> Array
+    #
+    # Return a list of all the ids of trusts that have been registered for this
+    # run. At present there is no way to differentiate between trusts without
+    # noting the id returned when originally uploaded. Only the owner of a run
+    # may query its trusts. +nil+ is returned if a user other than the owner
+    # uses this method.
+    def trusts
+      return unless owner?
+
+      t_ids = []
+      doc = xml_document(@server.get_run_attribute(@identifier,
+        @links[:sec_trusts], "application/xml", @credentials))
+
+      xpath_find(doc, XPaths[:sec_trust]). each do |t|
+        t_ids << xml_node_attribute(t, "href").split('/')[-1]
+      end
+
+      t_ids
+    end
+
+    # :call-seq:
+    #   delete_trust(id) -> bool
+    #
+    # Delete the trust with the provided id. Only the owner of a run may
+    # delete its trusts. +nil+ is returned if a user other than the owner uses
+    # this method.
+    def delete_trust(id)
+      return unless owner?
+
+      path = "#{@links[:sec_trusts]}/#{id}"
+      @server.delete_run_attribute(@identifier, path, @credentials)
+    end
+
+    # :call-seq:
+    #   delete_all_trusts -> bool
+    #
+    # Delete all trusted identities associated with this workflow run. Only
+    # the owner of a run may delete its trusts. +nil+ is returned if a user
+    # other than the owner uses this method.
+    def delete_all_trusts
+      return unless owner?
+
+      @server.delete_run_attribute(@identifier, @links[:sec_trusts],
+        @credentials)
+    end
+
+    # :stopdoc:
+    # Outputs are represented as a directory structure with the eventual list
+    # items (leaves) as files. This method (not part of the public API)
+    # downloads a file from the run's working directory.
+    def download_output_data(path, range = nil)
+      @server.download_run_file(@identifier, "#{@links[:wdir]}/out/#{path}",
+        range, @credentials)
+    end
+    # :startdoc:
+
     private
+
+    # Check each input to see if it requires a list input and call the
+    # requisite upload method for the entire set of inputs.
+    def _check_and_set_inputs
+      lists = false
+      input_ports.each_value do |port|
+        if port.depth > 0
+          lists = true
+          break
+        end
+      end
+
+      lists ? _fake_lists : _set_all_inputs
+    end
+
+    # Set all the inputs on the server. The inputs must have been set prior to
+    # this call using the InputPort API.
+    def _set_all_inputs
+      input_ports.each_value do |port|
+        next unless port.set?
+
+        if port.file?
+          # If we're using a local file upload it first then set the port to
+          # use a remote file.
+          unless port.remote_file?
+            file = upload_file(port.file)
+            port.remote_file = file
+          end
+
+          xml_value = xml_text_node(port.file)
+          path = "#{@links[:inputs]}/input/#{port.name}"
+          @server.set_run_attribute(self, path,
+            XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
+            @credentials)
+        else
+          xml_value = xml_text_node(port.value)
+          path = "#{@links[:inputs]}/input/#{port.name}"
+          @server.set_run_attribute(self, path,
+            XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
+            @credentials)
+        end
+      end
+    end
+
+    # Fake being able to handle lists as inputs by converting everything into
+    # one big baclava document and uploading that. This has to be done for all
+    # inputs or none at all. The inputs must have been set prior to this call
+    # using the InputPort API.
+    def _fake_lists
+      data_map = {}
+
+      input_ports.each_value do |port|
+        next unless port.set?
+
+        if port.file?
+          unless port.remote_file?
+            file = File.read(port.file)
+            data_map[port.name] = Taverna::Baclava::Node.new(file)
+          end
+        else
+          data_map[port.name] = Taverna::Baclava::Node.new(port.value)
+        end
+      end
+
+      # Create and upload the baclava data.
+      baclava = Taverna::Baclava::Writer.write(data_map)
+      upload_data(baclava, "in.baclava")
+      @server.set_run_attribute(@identifier, @links[:baclava], "in.baclava",
+        "text/plain", @credentials)
+    end
+
+    # Check that the uri passed in is suitable for credential use:
+    #  * rserve uris must not have a path.
+    #  * http(s) uris must have at least "/" as their path.
+    def _check_cred_uri(uri)
+      u = URI(uri)
+
+      case u.scheme
+      when "rserve"
+        u.path = ""
+      when /https?/
+        u.path = "/" if u.path == ""
+      end
+
+      u.to_s
+    end
 
     # List a directory in the run's workspace on the server. If dir is left
     # blank then / is listed. As there is no concept of changing into a
@@ -434,39 +971,32 @@ module T2Server
     # should be full paths starting at "root". The contents of a directory are
     # returned as a list of two lists, "lists" and "values" respectively.
     def _ls_ports(dir="", top=true)
-      dir.strip_path!
-      dir_list = @server.get_run_attribute(@uuid, "#{@links[:wdir]}/#{dir}")
+      dir = Util.strip_path_slashes(dir)
+      dir_list = @server.get_run_attribute(@identifier,
+        "#{@links[:wdir]}/#{dir}", "*/*", @credentials)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
       lists = []
       values = []
 
-      begin
-        doc = XML::Document.string(dir_list)
+      doc = xml_document(dir_list)
 
-        doc.find(XPaths::DIR, Namespaces::MAP).each do |e|
-          if top
-            lists << e.content.split('/')[-1]
-          else
-            index = (e.attributes['name'].to_i - 1)
-            lists[index] = e.content.split('/')[-1]
-          end
+      xpath_find(doc, XPaths[:dir]).each do |e|
+        if top
+          lists << xml_node_content(e).split('/')[-1]
+        else
+          index = (xml_node_attribute(e, 'name').to_i - 1)
+          lists[index] = xml_node_content(e).split('/')[-1]
         end
+      end
 
-        doc.find(XPaths::FILE, Namespaces::MAP).each do |e|
-          if top
-            values << e.content.split('/')[-1]
-          else
-            index = (e.attributes['name'].to_i - 1)
-            values[index] = e.content.split('/')[-1]
-          end
-        end
-      rescue XML::Error => xmle
-        # We expect to get a DOCUMENT_EMPTY error in some cases. All others
-        # should be re-raised.
-        if xmle.code != XML::Error::DOCUMENT_EMPTY
-          raise xmle
+      xpath_find(doc, XPaths[:file]).each do |e|
+        if top
+          values << xml_node_content(e).split('/')[-1]
+        else
+          index = (xml_node_attribute(e, 'name').to_i - 1)
+          values[index] = xml_node_content(e).split('/')[-1]
         end
       end
 
@@ -474,7 +1004,7 @@ module T2Server
     end
 
     def _get_output(output, refs=false, top=true)
-      output.strip_path!
+      output = Util.strip_path_slashes(output)
 
       # if at the top level we need to check if the port represents a list
       # or a singleton value
@@ -482,9 +1012,12 @@ module T2Server
         lists, items = _ls_ports("out")
         if items.include? output
           if refs
-            return "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}"
+            return "#{@server.uri}/rest/runs/#{@identifier}/" +
+              "#{@links[:wdir]}/out/#{output}"
           else
-            return @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}")
+            return @server.get_run_attribute(@identifier,
+              "#{@links[:wdir]}/out/#{output}", "application/octet-stream",
+              @credentials)
           end
         end
       end
@@ -496,55 +1029,117 @@ module T2Server
       result = []
 
       # for each list recurse into it and add the items to the result
-      lists.each {|list| result << _get_output("#{output}/#{list}", refs, false)}
+      lists.each do |list|
+        result << _get_output("#{output}/#{list}", refs, false)
+      end
 
       # for each item, add it to the output list
       items.each do |item|
         if refs
-          result << "#{@server.uri}/rest/runs/#{@uuid}/#{@links[:wdir]}/out/#{output}/#{item}"
+          result << "#{@server.uri}/rest/runs/#{@identifier}/" +
+            "#{@links[:wdir]}/out/#{output}/#{item}"
         else
-          result << @server.get_run_attribute(@uuid, "#{@links[:wdir]}/out/#{output}/#{item}")
+          result << @server.get_run_attribute(@identifier,
+            "#{@links[:wdir]}/out/#{output}/#{item}",
+            "application/octet-stream", @credentials)
         end
       end
 
       result
     end
 
-    def get_attributes(desc)
+    def _get_input_port_info
+      ports = {}
+      port_desc = @server.get_run_attribute(@identifier, @links[:inputexp],
+        "application/xml", @credentials)
+
+      doc = xml_document(port_desc)
+
+      xpath_find(doc, XPaths[:port_in]).each do |inp|
+        port = InputPort.new(self, inp)
+        ports[port.name] = port
+      end
+
+      ports
+    end
+
+    def _get_output_port_info
+      ports = {}
+      port_desc = @server.get_run_attribute(@identifier, @links[:output],
+        "application/xml", @credentials)
+
+      doc = xml_document(port_desc)
+
+      xpath_find(doc, XPaths[:port_out]).each do |out|
+        port = OutputPort.new(self, out)
+        ports[port.name] = port
+      end
+
+      ports
+    end
+
+    def get_attributes(doc)
       # first parse out the basic stuff
-      links = parse_description(desc)
-      
+      links = {}
+
+      [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
+        :wdir, :inputs, :output, :securectx, :listeners].each do |key|
+          links[key] = xpath_attr(doc, XPaths[key], "href").split('/')[-1]
+      end
+
       # get inputs
-      inputs = @server.get_run_attribute(@uuid, links[:inputs])
-      doc = XML::Document.string(inputs)
-      nsmap = Namespaces::MAP
-      links[:baclava] = "#{links[:inputs]}/" + doc.find_first(XPaths::BACLAVA, nsmap).attributes["href"].split('/')[-1]
+      inputs = @server.get_run_attribute(@identifier, links[:inputs],
+        "application/xml",@credentials)
+      doc = xml_document(inputs)
+
+      links[:baclava] = "#{links[:inputs]}/" +
+        xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
+      links[:inputexp] = "#{links[:inputs]}/" +
+        xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
 
       # set io properties
       links[:io]       = "#{links[:listeners]}/io"
       links[:stdout]   = "#{links[:io]}/properties/stdout"
       links[:stderr]   = "#{links[:io]}/properties/stderr"
       links[:exitcode] = "#{links[:io]}/properties/exitcode"
-      
+
+      # security properties - only available to the owner of a run
+      if owner?
+        securectx = @server.get_run_attribute(@identifier, links[:securectx],
+          "application/xml", @credentials)
+        doc = xml_document(securectx)
+
+        [:sec_creds, :sec_perms, :sec_trusts].each do |key|
+          links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
+            "href").split('/')[-1]
+        end
+      end
+
       links
     end
 
-    def parse_description(desc)
-      doc = XML::Document.string(desc)
-      nsmap = Namespaces::MAP
-      {
-        :expiry     => doc.find_first(XPaths::EXPIRY, nsmap).attributes["href"].split('/')[-1],
-        :workflow   => doc.find_first(XPaths::WORKFLOW, nsmap).attributes["href"].split('/')[-1],
-        :status     => doc.find_first(XPaths::STATUS, nsmap).attributes["href"].split('/')[-1],
-        :createtime => doc.find_first(XPaths::CREATETIME, nsmap).attributes["href"].split('/')[-1],
-        :starttime  => doc.find_first(XPaths::STARTTIME, nsmap).attributes["href"].split('/')[-1],
-        :finishtime => doc.find_first(XPaths::FINISHTIME, nsmap).attributes["href"].split('/')[-1],
-        :wdir       => doc.find_first(XPaths::WDIR, nsmap).attributes["href"].split('/')[-1],
-        :inputs     => doc.find_first(XPaths::INPUTS, nsmap).attributes["href"].split('/')[-1],
-        :output     => doc.find_first(XPaths::OUTPUT, nsmap).attributes["href"].split('/')[-1],
-        :securectx  => doc.find_first(XPaths::SECURECTX, nsmap).attributes["href"].split('/')[-1],
-        :listeners  => doc.find_first(XPaths::LISTENERS, nsmap).attributes["href"].split('/')[-1]
-      }
+    # :stopdoc:
+    STATE2TEXT = {
+      :initialized => "Initialized",
+      :running     => "Operating",
+      :finished    => "Finished",
+      :stopped     => "Stopped"
+    }
+
+    TEXT2STATE = {
+      "Initialized" => :initialized,
+      "Operating"   => :running,
+      "Finished"    => :finished,
+      "Stopped"     => :stopped
+    }
+    # :startdoc:
+
+    def state_to_text(state)
+      STATE2TEXT[state.to_sym]
+    end
+
+    def text_to_state(text)
+      TEXT2STATE[text]
     end
   end
 end

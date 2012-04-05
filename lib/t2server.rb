@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -32,4 +32,7 @@
 
 # This is simply here to provide backwards compatibility. Old versions had an
 # inconsistancy between the gem name and the file to require to use it.
+warn "[DEPRECATION] Code should no longer require 't2server'. Please use " +
+  "require 't2-server' as this is consistent with the gem name. In version " +
+  "1.0 require 't2server' will cease to work."
 require 't2-server'

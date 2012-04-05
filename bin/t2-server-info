@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -15,7 +15,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -32,53 +32,40 @@
 # Author: Robert Haines
 
 require 'rubygems'
-require 't2-server'
-require 'optparse'
+require 't2-server-cli'
 require 'hirb'
 
-opts = OptionParser.new do |opt|
-  opt.banner = "Usage: t2-server-info [options] server-address"
-  opt.separator ""
+include T2Server::CLI
+
+conn_params, creds = register_options("Usage: t2-server-info [options] " +
+  "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
-  opt.on_tail("-h", "-?", "--help", "Show this message") do
-    puts opt
-    exit
-  end
-  opt.on_tail("-v", "--version", "Show the version") do
-    puts "Taverna 2 Server Ruby Gem version: #{T2Server::GEM_VERSION}"
-    puts "Taverna 2 Server REST API version: #{T2Server::API_VERSION}"
-    exit
-  end
 end
 
-# parse options
-opts.parse!
-
-# read and check server address
-uri = ARGV.shift
-if uri == nil
-  puts opts
-  exit 1
-end
+# read and check server address and credentials
+uri, creds = parse_address(ARGV.shift, creds)
 
 # connect to server and output information
 begin
-  server = T2Server::Server.connect(uri)
-  print "     Server: #{uri}\n"
-  print "  Run limit: #{server.run_limit}\n"
-  runs = server.runs
-  print "No. of runs: #{runs.length}\n"
-  if runs.length > 0
-    puts (Hirb::Helpers::ObjectTable.render runs,
-      :fields=>[:uuid, :status, :expiry],
-      :headers=>{:uuid=>'Run ID', :status=>'Status', :expiry=>'Expiry time (local)'},
-      :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
-      :max_fields=>{:expiry=>19},
-      :description=>false)
+  T2Server::Server.new(uri, conn_params) do |server|
+    print "     Server: #{server.uri}\n"
+    print "    Version: #{server.version}\n"
+    print "  Run limit: #{server.run_limit(creds)}\n"
+    runs = server.runs(creds)
+    print "No. of runs: #{runs.length}\n"
+    if runs.length > 0
+      puts (Hirb::Helpers::ObjectTable.render runs,
+        :fields=>[:identifier, :status, :expiry],
+        :headers=>{:identifier=>'Run ID', :status=>'Status',
+          :expiry=>'Expiry time (local)'},
+        :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
+        :max_fields=>{:expiry=>19},
+        :description=>false)
+    end
   end
-rescue T2Server::T2ServerError => e
+rescue RuntimeError => e
   puts e
   exit 1
 end

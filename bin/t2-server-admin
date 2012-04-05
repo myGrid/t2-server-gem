@@ -1,0 +1,128 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2010-2012 The University of Manchester, UK.
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+#  * Neither the names of The University of Manchester nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Robert Haines
+
+require 'rubygems'
+require 't2-server-cli'
+require 'hirb'
+
+include T2Server::CLI
+
+set = {}
+options = {}
+conn_params, creds = register_options("Usage: t2-server-admin [options] " +
+  "server-address [resource(s)]") do |opt|
+  opt.separator "  Where server-address is the full URI of the server to"
+  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
+  opt.separator "  and [options] can be:"
+  opt.on("-l", "--list", "List all administrative resources.") do
+    options[:list] = true
+  end
+  opt.on("-a", "--all",
+    "List all administrative resources and their current values.") do
+      options[:all] = true
+  end
+  opt.on("-s RESOURCE:VALUE", "--set=RESOURCE:VALUE",
+    "Set admin resource RESOURCE to VALUE.") do |val|
+      resource, value = val.chomp.split(':', 2)
+      set[resource.downcase] = value
+  end
+end
+
+# get runs and server address from the arguments
+resources = []
+address = ""
+for arg in ARGV
+  argc = arg.chomp
+  if argc.match(/https?:\/\//).nil?
+    resources << argc
+  else
+    address = argc
+  end
+end
+
+# read and check server address and credentials
+uri, creds = parse_address(address, creds)
+
+# pretty printer for resource access mode
+def access(write)
+  write ? "read/write" : "read only"
+end
+
+begin
+  server = T2Server::Server.new(uri, conn_params)
+
+  server.administrator(creds) do |admin|
+    # list and exit?
+    if options[:list]
+      puts (Hirb::Helpers::ObjectTable.render admin.resources.values,
+              :fields=>[:name, :writable?],
+              :headers=>{:name => 'Resource name', :writable? => 'Access'},
+              :filters=>{:writable? => :access},
+              :description=>false)
+      exit 0
+    end
+
+    # enumerate all resources?
+    resources = admin.resources.keys if options[:all]
+
+    # list given resources and their values
+    resources.each do |resource|
+      begin
+        res = admin[resource]
+        result = res.value
+        puts "#{res.name}\t#{result}"
+      rescue => e
+        puts "#{res.name}\tERROR! - #{e}"
+      end
+    end
+
+    # set resources as requested
+    admin.resources.each do |name, resource|
+      if set.include? name and resource.writable?
+        begin
+          resource.value = set[name]
+          puts "Resource #{resource.name} set to '#{set[name]}'"
+        rescue => e
+          puts "Failed to set resource #{resource.name} - #{e}"
+        end
+      end
+    end
+  end
+rescue T2Server::AccessForbiddenError => e
+  puts "You are not authorized to access the administrator interface of " +
+    "this server\n(#{uri})."
+  exit 1
+rescue RuntimeError => e
+  puts e
+  exit 1
+end

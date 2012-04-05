@@ -1,12 +1,10 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
 Authors::     Robert Haines
-Gem Version:: 0.6.1
-API Version:: 2.2a1
 Contact::     mailto:rhaines@manchester.ac.uk
-URL::         http://taverna.sourceforge.net/
+URL::         http://www.taverna.org.uk/
 Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
-Copyright::   (c) 2010, 2011 The University of Manchester, UK
+Copyright::   (c) 2010-2012 The University of Manchester, UK
 
 
 == Synopsis
@@ -22,23 +20,150 @@ Then simply install as you would any other gem:
   [sudo] gem install t2-server
 
 In case of problems with the above the gem is available for download here:
-http://rubygems.org/gems/t2-server
+https://rubygems.org/gems/t2-server
 
 You can also download the source code from here:
-http://github.com/myGrid/t2-server-gem
+https://github.com/myGrid/t2-server-gem
+
+== Compatibility with Taverna Server versions
+
+From version 0.9.0 this library is compatible with Taverna Server 2.3 onwards.
+It is not compatible with any earlier version of Taverna Server due to breaking
+changes in its REST interface. We strongly encourage all users to upgrade to
+the current version of Taverna Server, but if that is not possible right now
+then please continue to use version 0.6.1 of this library for the time being.
+
+This version of the library should be compatible with any Ruby code that you
+may have already written against earlier versions but you may see some warnings
+about API deprecations. These are clearly marked [DEPRECATION] and will appear
+on your console output. Anything marked as deprecated will be removed in
+version 1.0.0 so you are advised to update your code at your earliest
+convenience.
 
 == Usage
 
 There are two entry points for the T2Server API:
-* T2Server::Run - Use this for running single jobs on a server.
-* T2Server::Server - Use this if you are providing a web interface to one or
-  more Taverna 2 Server instances.
+* <tt>T2Server::Run</tt> - Use this for running single jobs on a server.
+* <tt>T2Server::Server</tt> - Use this if you are providing a web interface to
+  one or more Taverna 2 Server instances.
 
 In both cases the gem should be initialized by requiring the top level ruby
 file:
   require 't2-server.rb'
 
-See the rdoc for more information.
+=== Configuring a Server connection
+
+Setting up a connection to a secure server can be quite tricky and a secure
+Taverna Server is no different. To make things slightly easier this library
+provides some short cuts to providing various parameters for different types of
+connection.
+
+Connection configuration settings are passed in to various methods using the
++ConnectionParameters+ class. Parameters that can be set are:
+* <tt>:ca_file</tt>
+* <tt>:ca_path</tt>
+* <tt>:verify_peer</tt>
+* <tt>:client_certificate</tt>
+* <tt>:client_password</tt>
+
+And can be set like this for a standard https connection:
+
+  conn_params = ConnectionParameters.new
+  conn_params[:verify_peer] = true
+  conn_params[:ca_path] = "/etc/ssl/certs"
+
+This will ensure that the identity of the Taverna Server you are connecting to
+will be verified using the set of certificates in <tt>/etc/ssl/certs</tt>.
+
+For convenience a number of standard sets of parameters have been defined. The
+above example is available as +DefaultConnectionParameters+. Others available
+are:
+* +InsecureSSLConnectionParameters+ - to ignore SSL checks.
+* +CustomCASSLConnectionParameters+ - for custom (self-signed) CAs.
+* +ClientAuthSSLConnectionParameters+ - for client certificate authentication.
+
+See the rdoc for more details on these classes.
+
+=== Authenticating to a Taverna Server
+
+Some calls to a server require that a set of user credentials are provided.
+These are simple to set up:
+
+  credentials = T2Server::HttpBasic.new("username", "password")
+
+=== Server API example
+
+The Server constructor can yield the newly created object. Simple supply a URI
+and a set of connection parameters to connect to a server:
+
+  T2Server::Server.new(uri, conn_params) do |server|
+    ...
+  end
+
+Note that credentials are not required by default to simply connect to a
+Taverna Server. Further operations (such as creating and starting runs) may
+require authorization depending on how your server has been set up.
+
+=== Run API example
+
+You can bypass the Server API if you know you are only going to be dealing with
+a couple of runs directly:
+
+  T2Server::Run.create(uri, workflow, credentials, conn_params) do |run|
+    ...
+  end
+
+Setting an input port to a run is very easy:
+
+  run.input_port("port_name").value = 1
+  run.input_port("port_name").value = "Hello!"
+  run.input_port("port_name").value = ["list", "of", "values"]
+
+Or you can use a local file as input:
+
+  run.input_port("port_name").file = filename
+
+Once all the inputs have been set the run can be started:
+
+  run.start
+
+And monitored to see if it has finished:
+
+  run.finished?
+  run.running?
+
+Or just wait until the run has finished:
+
+  run.wait
+
+Then the outputs can be collected:
+
+  result = run.output_port("port_name").value
+
+If you have a lot of output you can grab the whole lot as a zip file:
+
+  zip_data = run.zip_output
+
+Using baclava documents for setting inputs and collecting outputs is also
+supported:
+
+  run.baclava_input = filename
+
+But make sure you request baclava output *before* starting the run:
+
+  run.request_baclava_output
+  run.start
+  run.wait
+  output = run.baclava_output
+
+See the rdoc for more information. Many methods and classes have much more
+functionality than the defaults described above. Please note that anything
+which does not appear in the documentation is not intended to be part of the
+public API. Use of undocumented classes and methods is entirely at your own
+risk! Such things might not have consistent behaviour and might be removed at
+any time.
+
+=== Example scripts
 
 As well as rdoc there are also a couple of example scripts which
 demonstrate good use of the T2Server API. These are available in the
@@ -47,9 +172,119 @@ gem is installed:
 * t2-run-workflow
 * t2-server-info
 * t2-delete-runs
+* t2-get-output
+* t2-server-admin
 Running any of these scripts with a <tt>-h</tt> or <tt>--help</tt>
 switch will show how to use them, e.g.:
   t2-run-workflow --help
+
+== Interacting with secure Web Services
+
+This library can be used to run workflows that contain secure
+services. Such services may be secured in a number of ways depending
+on how the credentials are passed and whether they are REST, SOAP or Rshell
+services.
+
+Running workflows that contain secure services requires that you pass
+your credentials to Taverna Server so that it can authenticate itself
+as you on your behalf.
+
+<b>It is essential that you trust the Taverna Server that you are
+using!</b>
+
+<b>Ideally, you should only pass sensitive information, such as
+passwords, via https so that you can be sure that it is not being read
+in transit.</b>
+
+=== Username and password credentials
+==== REST
+
+REST services are commonly secured via HTTP Basic or HTTP Digest
+authentication and Taverna treats these two schemes in the same
+way. Simply pass in your username and password with the *host* name of
+the server on which the service is running:
+
+ run.add_password_credential("https://example.com:8443/", "username", "password")
+
+The above example shows a https server running on port 8443. If the
+service is on port 80 for http or port 443 for https then you don't
+need to specify the port.
+
+If there are services on the same host that require different credentials then
+you will need to specify the realm for which each set of credentials applies.
+This is done by adding the name of the realm to the end of the host name with
+a # separating them:
+
+ run.add_password_credential("https://example.com:8443/#realm", "username", "password")
+
+==== SOAP
+
+SOAP services are commonly secured via WS-Security. Simply pass in the
+WSDL address of the service with your username and password:
+
+ run.add_password_credential("https://example.com:8443/services/MyService?wsdl", "username", "password")
+
+==== R Servers (via Rshells)
+
+You can authenticate to R Servers in almost exactly the same as for
+REST services - only the protocol scheme is different. So instead of
+http or https it is rserve:
+
+ run.add_password_credential("rserve://example.com:6311", "username", "password")
+
+=== Keypair (certificate-based) credentials
+
+Some https servers authenticate clients using certificates. If you
+have services that require this type of authentication you can upload
+a keypair:
+
+ run.add_keypair_credential("https://example.com:8443/", "certificate.p12", "password")
+
+=== Trusts (peer verification)
+
+If the services in your workflows are on a https server then Taverna
+requires that it can verify that the server is the one you expect it
+to be. This is done by peer verification. In most cases this happens
+automatically and transparently but if the remote server has a
+non-standard or "self-signed" certificate then you will need to
+provide Taverna with the corresponding public key for verification to
+take place:
+
+ run.add_trust("public-key.pem")
+
+== Interacting with other Taverna Server users
+
+Taverna Server is a multi-user system and as such insulates users from one
+another as much as possible. Each run that a user creates can only be accessed
+by that user by default. If you want to give another user permission to
+perform certain actions on a run then you can do so:
+
+ run.grant_permission("username", :permission)
+
+Available permissions are:
+* <tt>:none</tt> - No permissions.
+* <tt>:read</tt> - Read the state of the run and get its outputs.
+* <tt>:update</tt> - Set the state of the run (e.g. start it).
+* <tt>:destroy</tt> - Delete the run.
+
+Permissions are accumulative so giving a user the <tt>:destroy</tt> permission
+also allows that user to read and set the run's state. Note that there is no
+way for any user other than the owner of a run to perform any security related
+actions on it. This means that only the owner may grant, query and revoke
+permissions and only the owner may add, query and delete trusts and
+credentials.
+
+You can revoke a user's permission:
+
+ run.revoke_permission("username")
+
+You can get a list of the permissions you have granted for a run:
+
+ run.permissions
+
+And also see what permission you have granted a particular user:
+
+ run.permission("username")
 
 == Support
 

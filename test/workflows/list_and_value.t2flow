@@ -1,0 +1,12 @@
+<workflow xmlns="http://taverna.sf.net/2008/xml/t2flow" version="1" producedBy="taverna-2.3.0"><dataflow id="2d5f4961-acc0-43c4-989d-c0249e9695a6" role="top"><name>Workflow3</name><inputPorts><port><name>singleton_in</name><depth>0</depth><granularDepth>0</granularDepth><annotations /></port><port><name>list_in</name><depth>1</depth><granularDepth>1</granularDepth><annotations /></port></inputPorts><outputPorts><port><name>list_out</name><annotations /></port><port><name>singleton_out</name><annotations /></port></outputPorts><processors /><conditions /><datalinks><datalink><sink type="dataflow"><port>list_out</port></sink><source type="dataflow"><port>list_in</port></source></datalink><datalink><sink type="dataflow"><port>singleton_out</port></sink><source type="dataflow"><port>singleton_in</port></source></datalink></datalinks><annotations><annotation_chain_2_2 encoding="xstream"><net.sf.taverna.t2.annotation.AnnotationChainImpl xmlns="">
+  <annotationAssertions>
+    <net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+      <annotationBean class="net.sf.taverna.t2.annotation.annotationbeans.IdentificationAssertion">
+        <identification>2d5f4961-acc0-43c4-989d-c0249e9695a6</identification>
+      </annotationBean>
+      <date>2012-03-13 17:05:40.688 GMT</date>
+      <creators />
+      <curationEventList />
+    </net.sf.taverna.t2.annotation.AnnotationAssertionImpl>
+  </annotationAssertions>
+</net.sf.taverna.t2.annotation.AnnotationChainImpl></annotation_chain_2_2></annotations></dataflow></workflow>

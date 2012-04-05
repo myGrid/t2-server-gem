@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,40 +30,44 @@
 #
 # Author: Robert Haines
 
+require 'rubygems'
 require 'rake'
 require 'rake/clean'
 require 'rake/tasklib'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/task'
+require 'jeweler'
+
+# we need to add lib to the path because we're not installed yet!
+$LOAD_PATH.unshift File.join(File.dirname(__FILE__), "lib")
+require 't2-server'
 
 task :default => [:test]
 
-spec = Gem::Specification.new do |s|
+Jeweler::Tasks.new do |s|
   s.name             = "t2-server"
-  s.version          = "0.6.1"
-  s.author           = "Robert Haines"
-  s.email            = "rhaines@manchester.ac.uk"
+  s.version          = T2Server::Version::STRING
+  s.authors          = ["Robert Haines"]
+  s.email            = ["rhaines@manchester.ac.uk"]
   s.homepage         = "http://www.taverna.org.uk/"
   s.platform         = Gem::Platform::RUBY
   s.summary          = "Support for interacting with Taverna 2 Server."
-  s.description      = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
-  candidates         = Dir.glob("{bin,lib,test}/**/*")
-  s.files            = candidates.delete_if {|item| item.include?("rdoc")}
+  s.description      = "This gem provides access to the Taverna 2 Server " +
+                         "REST interface from Ruby."
   s.require_path     = "lib"
   s.bindir           = "bin"
-  s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info"]
+  s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info",
+                          "t2-get-output", "t2-server-admin"]
   s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
-  s.add_development_dependency('rake', '>=0.8.7')
-  s.add_runtime_dependency('libxml-ruby', '>=1.1.4')
-  s.add_runtime_dependency('hirb', '>=0.4.0')
-end
-
-Rake::GemPackageTask.new(spec) do |pkg|
-  pkg.need_zip = true
-  pkg.need_tar = true
+  s.add_development_dependency('rake', '~> 0.9.2')
+  s.add_development_dependency('libxml-ruby', '>= 1.1.4')
+  s.add_development_dependency('nokogiri', '>= 1.5.0')
+  s.add_development_dependency('rdoc', '>= 3.9.4')
+  s.add_development_dependency('jeweler', '~> 1.8.3')
+  s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
+  s.add_runtime_dependency('hirb', '>= 0.4.0')
 end
 
 # This test task does not use the standard Rake::TestTask class as we need to
@@ -76,23 +80,29 @@ end
 #    t.test_files = FileList['test/ts_t2server.rb']
 #    t.verbose = true
 #  end
-task :test, :server do |t, args|
-  args.with_defaults(:server => "")
+task :test, :server, :user1, :user2 do |t, args|
+  args.with_defaults(:server => "", :user1 => "", :user2 => "")
   RakeFileUtils.verbose(true) do
     server_arg = ""
-    server_arg = " -- #{args[:server]}" if args[:server] != ""
+    if args[:server] != ""
+      server_arg = " -- #{args[:server]} #{args[:user1]} #{args[:user2]}"
+    end
     ruby "-I\"lib:test\" -S testrb test/ts_t2server.rb" + server_arg
   end
 end
 
-Rake::RDocTask.new do |r|
+RDoc::Task.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
     item.include?("t2server.rb") or
-    item.include?("xml.rb")
+    item.include?("/xml/") or
+    item.include?("connection.rb") or
+    item.include?("credentials.rb") or
+    item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
-  r.options << "-t Taverna 2 Server Ruby Interface Library"
+  r.options << "-t Taverna 2 Server Ruby Interface Library version " +
+    "#{T2Server::Version::STRING}"
   r.options << "-N"
   r.options << "--tab-width=2"
 end

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010, 2011 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,38 +32,15 @@
 
 require 't2-server'
 
-class TestServer < Test::Unit::TestCase
+class TestParams < Test::Unit::TestCase
 
-  def test_server_connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Server.new($uri, $conn_params)
-    end
-  end
+  def test_params
+    params = T2Server::ConnectionParameters.new
 
-  def test_run_creation_deletion
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
-        server.delete_run(run, $creds)
-      end
-    end
-  end
+    params[:verify_peer] = true
+    assert_not_nil(params[:verify_peer])
 
-  # Need to do these together so testing the limit is cleaned up!
-  def test_server_limits_delete_all
-    T2Server::Server.new($uri, $conn_params) do |server|
-      limit = server.run_limit($creds)
-      assert_instance_of(Fixnum, limit)
-      assert_raise(T2Server::ServerAtCapacityError) do
-        # add 1 just in case there are no runs at this point
-        (limit + 1).times do
-          server.create_run($wkf_pass, $creds)
-        end
-      end
-
-      assert_nothing_raised(T2Server::T2ServerError) do
-        server.delete_all_runs($creds)
-      end
-    end
+    params[:not_a_chance] = true
+    assert_nil(params[:not_a_chance])
   end
 end

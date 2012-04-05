@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -85,8 +85,8 @@ module T2Server
     # response. The response to be passed in is that which was returned by a
     # call to Net::HTTP#request.
     def initialize(response)
-      body = "\n#{response.body}" if response.body
-      super "Unexpected server response: #{response.code}\n#{response.error!}#{body}"
+      body = response.body ? "\n#{response.body}" : ""
+      super "Unexpected server response: #{response.code}\n#{body}"
     end
   end
 
@@ -94,12 +94,12 @@ module T2Server
   # expectation is that the run exists then it could have been destroyed by
   # a timeout or another user.
   class RunNotFoundError < T2ServerError
-    attr_reader :uuid
+    attr_reader :identifier
 
-    # Create a new RunNotFoundError with the specified UUID.
-    def initialize(uuid)
-      @uuid = uuid
-      super "Could not find run #{@uuid}"
+    # Create a new RunNotFoundError with the specified identifier.
+    def initialize(id)
+      @identifier = id
+      super "Could not find run #{@identifier}"
     end
   end
 
@@ -118,13 +118,10 @@ module T2Server
 
   # The server is at capacity and cannot accept anymore runs at this time.
   class ServerAtCapacityError < T2ServerError
-    attr_reader :limit
-
-    # Create a new ServerAtCapacityError with the specified limit for
-    # information.
-    def initialize(limit)
-      @limit = limit
-      super "The server is already running its configured limit of concurrent workflows (#{@limit})"
+    # Create a new ServerAtCapacityError.
+    def initialize
+      super "The server is already running its configured limit of " +
+        "concurrent workflows."
     end
   end
 
@@ -137,7 +134,9 @@ module T2Server
     # attribute.
     def initialize(path)
       @path = path
-      super "Access to #{@path} is forbidden. Either you do not have the required credentials or the server does not allow the requested operation"
+      super "Access to #{@path} is forbidden. Either you do not have the " +
+        "required credentials or the server does not allow the requested " +
+        "operation"
     end
   end
 
@@ -146,9 +145,14 @@ module T2Server
     attr_reader :username
 
     # Create a new AuthorizationError with the rejected username
-    def initialize(username)
-      @username = username
-      super "The username '#{@username}' is not authorized to connect to this server"
+    def initialize(credentials)
+      if credentials != nil
+        @username = credentials.username
+      else
+        @username = ""
+      end
+      super "The username '#{@username}' is not authorized to connect to " +
+        "this server"
     end
   end
 
@@ -160,7 +164,24 @@ module T2Server
     # Create a new RunStateError specifying both the current state and that
     # which is needed to run the operation.
     def initialize(current, need)
-      super "The run is in the wrong state (#{current}); it should be '#{need}' to perform that action"
+      super "The run is in the wrong state (#{current}); it should be " +
+        "'#{need}' to perform that action"
+    end
+  end
+
+  # Raised if the server wishes to redirect the connection. This typically
+  # happens if a client tries to connect to a https server vis a http uri.
+  class ConnectionRedirectError < T2ServerError
+
+    # The redirected connection
+    attr_reader :redirect
+
+    # Create a new ConnectionRedirectError with the new, redirected,
+    # connection supplied.
+    def initialize(connection)
+      @redirect = connection
+
+      super "The server returned an unhandled redirect to '#{@redirect}'."
     end
   end
 end

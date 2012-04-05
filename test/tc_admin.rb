@@ -32,37 +32,31 @@
 
 require 't2-server'
 
-class TestServer < Test::Unit::TestCase
+class TestAdmin < Test::Unit::TestCase
 
-  def test_server_connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Server.new($uri, $conn_params)
-    end
-  end
-
-  def test_run_creation_deletion
+  def test_admin
     T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
-        server.delete_run(run, $creds)
-      end
-    end
-  end
 
-  # Need to do these together so testing the limit is cleaned up!
-  def test_server_limits_delete_all
-    T2Server::Server.new($uri, $conn_params) do |server|
-      limit = server.run_limit($creds)
-      assert_instance_of(Fixnum, limit)
-      assert_raise(T2Server::ServerAtCapacityError) do
-        # add 1 just in case there are no runs at this point
-        (limit + 1).times do
-          server.create_run($wkf_pass, $creds)
-        end
+      # unauthorized
+      assert_raise(T2Server::AuthorizationError) do
+        server.administrator(T2Server::HttpBasic.new("u", "p"))
       end
 
-      assert_nothing_raised(T2Server::T2ServerError) do
-        server.delete_all_runs($creds)
+      begin
+        server.administrator($creds)
+      rescue T2Server::T2ServerError => e
+        # ignore, just don't run more tests
+        return
+      end
+
+      server.administrator($creds) do |admin|
+        assert_equal(admin["allownew"].name, "allowNew")
+
+        save = admin["allownew"].value
+        admin["allownew"].value = false
+        assert_equal(admin["allownew"].value, "false")
+        admin["allownew"].value = save
+        assert_equal(admin["allownew"].value, save)
       end
     end
   end

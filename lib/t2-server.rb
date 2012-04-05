@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -30,10 +30,17 @@
 #
 # Author: Robert Haines
 
-require 't2-server/xml'
+require 'yaml'
+require 't2-server/util'
+require 't2-server/xml/xml'
 require 't2-server/exceptions'
+require 't2-server/credentials'
+require 't2-server/connection'
+require 't2-server/connection-parameters'
+require 't2-server/port'
 require 't2-server/server'
 require 't2-server/run'
+require 't2-server/admin'
 
 # This is a Ruby library to interface with the Taverna 2 Server REST API.
 #
@@ -42,30 +49,12 @@ require 't2-server/run'
 # * T2Server::Server - Use this if you are providing a web interface to a
 #   Taverna 2 Server instance.
 module T2Server
-  # The version of this library
-  GEM_VERSION = "0.6.1"
-  # The version of the Taverna 2 Server API that this library can interface with
-  API_VERSION = "2.2a1"
-end
+  module Version
+    # Version information in a Hash
+    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..",
+      "version.yml"))
 
-# Add methods to the String class to operate on file paths.
-class String
-  # :call-seq:
-  #   str.strip_path -> string
-  #
-  # Returns a new String with one leading and one trailing slash
-  # removed from the ends of _str_ (if present).
-  def strip_path
-    self.gsub(/^\//, "").chomp("/")
-  end
-
-  # :call-seq:
-  #   str.strip_path! -> str or nil
-  #
-  # Modifies _str_ in place as described for String#strip_path,
-  # returning _str_, or returning +nil+ if no modifications were made. 
-  def strip_path!
-    g = self.gsub!(/^\//, "")
-    self.chomp!("/") || g
+    # Version number as a String
+    STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')
   end
 end

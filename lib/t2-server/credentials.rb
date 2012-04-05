@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010, 2011 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,40 +30,55 @@
 #
 # Author: Robert Haines
 
-require 't2-server'
+module T2Server
 
-class TestServer < Test::Unit::TestCase
+  # This class serves as a base class for concrete HTTP credential systems.
+  class HttpCredentials
+    # The username held by these credentials.
+    attr_reader :username
 
-  def test_server_connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Server.new($uri, $conn_params)
+    # Create a set of credentials with the supplied username and password.
+    def initialize(username, password)
+      @username = username
+      @password = password
+    end
+
+    # :call-seq:
+    #   to_s
+    #
+    # Return the username held by these credentials.
+    def to_s
+      @username
+    end
+
+    # Used within #inspect, below to help override the built in version.
+    @@to_s = Kernel.instance_method(:to_s)
+
+    # :call-seq:
+    #   inspect
+    #
+    # Override the Kernel#inspect method so that the password is not exposed
+    # when it is called.
+    def inspect
+      @@to_s.bind(self).call.sub!(/>\z/) {" Username:#{self}>"}
     end
   end
 
-  def test_run_creation_deletion
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
-        server.delete_run(run, $creds)
-      end
+  # A class representing HTTP Basic credentials.
+  class HttpBasic < HttpCredentials
+
+    # Create a set of credentials with the supplied username and password.
+    def initialize(username, password)
+      super(username, password)
     end
-  end
 
-  # Need to do these together so testing the limit is cleaned up!
-  def test_server_limits_delete_all
-    T2Server::Server.new($uri, $conn_params) do |server|
-      limit = server.run_limit($creds)
-      assert_instance_of(Fixnum, limit)
-      assert_raise(T2Server::ServerAtCapacityError) do
-        # add 1 just in case there are no runs at this point
-        (limit + 1).times do
-          server.create_run($wkf_pass, $creds)
-        end
-      end
-
-      assert_nothing_raised(T2Server::T2ServerError) do
-        server.delete_all_runs($creds)
-      end
+    # :call-seq:
+    #   authenticate(request)
+    #
+    # Authenticate the supplied HTTP request with the credentials held within
+    # this class.
+    def authenticate(request)
+      request.basic_auth @username, @password
     end
   end
 end

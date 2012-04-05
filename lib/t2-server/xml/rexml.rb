@@ -30,39 +30,55 @@
 #
 # Author: Robert Haines
 
-require 't2-server'
+require 'rexml/document'
+require 'rexml/text'
 
-class TestServer < Test::Unit::TestCase
+module T2Server
+  module XML
 
-  def test_server_connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Server.new($uri, $conn_params)
-    end
-  end
-
-  def test_run_creation_deletion
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
-        server.delete_run(run, $creds)
-      end
-    end
-  end
-
-  # Need to do these together so testing the limit is cleaned up!
-  def test_server_limits_delete_all
-    T2Server::Server.new($uri, $conn_params) do |server|
-      limit = server.run_limit($creds)
-      assert_instance_of(Fixnum, limit)
-      assert_raise(T2Server::ServerAtCapacityError) do
-        # add 1 just in case there are no runs at this point
-        (limit + 1).times do
-          server.create_run($wkf_pass, $creds)
-        end
+    module Methods
+      def xml_document(string)
+        REXML::Document.new(string)
       end
 
-      assert_nothing_raised(T2Server::T2ServerError) do
-        server.delete_all_runs($creds)
+      def xml_text_node(text)
+        REXML::Text.new(text).to_s
+      end
+
+      def xml_first_child(node)
+        node.first
+      end
+
+      def xml_children(doc, &block)
+        doc.each { |node| yield node }
+      end
+
+      def xml_node_name(node)
+        node.name
+      end
+
+      def xml_node_content(node)
+        node.text
+      end
+
+      def xml_node_attribute(node, attribute)
+        node.attributes[attribute]
+      end
+
+      def xpath_compile(xpath)
+        xpath
+      end
+
+      def xpath_find(doc, expr)
+        REXML::XPath.each(doc, expr, Namespaces::MAP)
+      end
+
+      def xpath_first(doc, expr)
+        REXML::XPath.first(doc, expr, Namespaces::MAP)
+      end
+
+      def xpath_attr(doc, expr, attribute)
+        REXML::XPath.first(doc, expr, Namespaces::MAP).attributes[attribute]
       end
     end
   end

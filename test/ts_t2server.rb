@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -33,10 +33,23 @@
 require 'test/unit'
 require 't2-server'
 
-# check for a server address passed through on the command line
-if ARGV.size != 0:
-  $address = ARGV[0]
-  puts "Using server at #{$address}"
+# Check for a server address and user credentials passed through on the
+# command line.
+if ARGV.size != 0
+  address = ARGV[0]
+
+  unless ARGV[1].nil?
+    user1, pass1 = ARGV[1].split(":")
+    user1 = nil if pass1.nil?
+  end
+
+  unless ARGV[2].nil?
+    user2, pass2 = ARGV[2].split(":")
+    user2 = nil if pass2.nil?
+  end
+
+  puts "Using server at: #{address}"
+  puts "   With user(s): #{user1} #{user2}" if user1
 else
   # get a server address to test - 30 second timeout
   print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
@@ -45,22 +58,54 @@ else
     "runs will be deleted!\n(leave blank to skip tests): "
   $stdout.flush
   if select([$stdin], [], [], 30)
-    $address = $stdin.gets.chomp
+    address = $stdin.gets.chomp
   else
     puts "\nSkipping tests that require a Taverna 2 Server instance..."
-    $address = ""
+    address = ""
   end
 end
 
 # the testcases to run
-require 'tc_paths'
-if $address != ""
+require 'tc_util'
+require 'tc_params'
+if address != ""
+  $uri, $creds = T2Server::Util.strip_uri_credentials(address)
+
+  # override creds if passed in on the command line
+  $creds = T2Server::HttpBasic.new(user1, pass1) if user1
+  $creds1 = T2Server::HttpBasic.new(user2, pass2) if user2
+
   $wkf_pass   = File.read("test/workflows/pass_through.t2flow")
   $wkf_lists  = File.read("test/workflows/empty_list.t2flow")
+  $wkf_l_v    = File.read("test/workflows/list_and_value.t2flow")
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
+  $wkf_fail   = File.read("test/workflows/always_fail.t2flow")
+  $wkf_errors = File.read("test/workflows/list_with_errors.t2flow")
   $list_input = "test/workflows/empty_list_input.baclava"
   $file_input = "test/workflows/in.txt"
+  $file_strs  = "test/workflows/strings.txt"
 
-  require 'tc_server'
-  require 'tc_run'
+  if $uri.scheme == "http"
+    $conn_params = T2Server::DefaultConnectionParameters.new
+  else
+    $conn_params = T2Server::InsecureSSLConnectionParameters.new
+  end
+
+  # We only support version 2.3 server and onwards now...
+  begin
+    # This will drop out before further tests are run
+    T2Server::Server.new($uri, $conn_params)
+
+    require 'tc_server'
+    require 'tc_run'
+    require 'tc_admin'
+    require 'tc_secure'
+
+    # if we have two sets of credentials we can run permissions tests
+    if $creds1
+      require 'tc_perms'
+    end
+  rescue RuntimeError => e
+    puts "!!!\nNo tests on the remote server could be run.\n#{e.message}\n!!!"
+  end
 end

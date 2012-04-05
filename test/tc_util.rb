@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 #  * Neither the names of The University of Manchester nor the names of its
 #    contributors may be used to endorse or promote products derived from this
-#    software without specific prior written permission. 
+#    software without specific prior written permission.
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -34,27 +34,41 @@ require 't2-server'
 require 'test/unit'
 
 class TestFilePaths < Test::Unit::TestCase
-  def test_standard
-    assert_equal("dir/with/child", "dir/with/child".strip_path)
-    assert_equal("dir/with/child", "/dir/with/child".strip_path)
-    assert_equal("dir/with/child", "dir/with/child/".strip_path)
-    assert_equal("dir/with/child", "/dir/with/child/".strip_path)
-    
-    # make sure it is not stripping in place
+  def test_path_stripping
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("dir/with/child"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("/dir/with/child"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("dir/with/child/"))
+    assert_equal("dir/with/child",
+      T2Server::Util.strip_path_slashes("/dir/with/child/"))
+
+    # only remove one slash from each end
+    assert_equal("/dir/with/child/",
+      T2Server::Util.strip_path_slashes("//dir/with/child//"))
+
+    # leave double slashes in the middle of paths
+    assert_equal("dir/with//child",
+      T2Server::Util.strip_path_slashes("/dir/with//child/"))
+
+    # prove it is not stripping in place
     dir = "/dir/with/child/"
-    dir.strip_path
+    T2Server::Util.strip_path_slashes(dir)
     assert_equal("/dir/with/child/", dir)
   end
-  
-  def test_inplace
-    assert_nil("dir/with/child".strip_path!)
-    assert_not_nil("/dir/with/child".strip_path!)
-    assert_not_nil("dir/with/child/".strip_path!)
-    assert_not_nil("/dir/with/child/".strip_path!)
-    
-    # make sure it is stripping in place
-    dir = "/dir/with/child/"
-    dir.strip_path!
-    assert_equal("dir/with/child", dir)
+end
+
+class TestUriStripping < Test::Unit::TestCase
+  def test_uri
+    uri = "http://%swww.example.com:8000/path/to/something"
+    username = "username"
+    password = "password"
+    address = uri % "#{username}:#{password}@"
+
+    r_uri, r_creds = T2Server::Util.strip_uri_credentials(address)
+
+    assert_equal(uri % "", r_uri.to_s())
+    assert_equal(username, r_creds.username)
   end
 end
