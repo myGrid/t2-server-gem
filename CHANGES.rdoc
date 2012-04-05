@@ -1,5 +1,53 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.9.0
+
+* t2-run-workflow: Add a switch to set the expiry date/time.
+* Support version 2 of the Server API.
+* Update example scripts to work with the new server API.
+* Retire the T2Server::API_VERSION constant.
+* Add a method to get expected inputs from the server.
+* Make the baclava input/output calls more "ruby-like"
+* Fix the Run#wait method to cope with finished runs.
+* Changes to Run and Server to yield created objects.
+* Add zip output facilities to the Run class.
+* Scripts: Add switches for passing user credentials.
+* t2-run-workflow: Exit if workflow is empty.
+* Top-level documentation updates.
+* Add server administrative interface infrastructure.
+* Fix exception raised within exception code!
+* Fix exception raised within exception code!
+* Allow Run#expiry= to accept Time objects as input.
+* Add a deprecation message when require 't2server' is used.
+* Add connection-parameters classes.
+* Use supplied parameters to configure SSL connections.
+* Connection parameters tests.
+* Add use of connection parameters to the cli scripts.
+* Fix Run#status to return state as symbols rather than text.
+* Enable dynamic selection of XML implementation.
+* Move URI monkeypatch code to new Util module.
+* Move String monkeypatch code to Util module.
+* Remove progress output from Run#wait.
+* Change all references to UUIDs to 'identifier'.
+* Get run ownership from the server for each run.
+* Facilities for granting and revoking permissions on runs.
+* Facilities for providing user/pass credentials for secure services.
+* Add support for uploading trusts for peer verification.
+* Facilities for providing keypair credentials for secure services.
+* Secure workflow and Run permissions test cases.
+* Update Readme with security info.
+* Update the input port API.
+* Update the output port API.
+* t2-get-output: Change -E switch to -x.
+* t2-get-output: Wire up the -r switch.
+* t2-get-output: Add -T switch for returning output types.
+* Remove support for Taverna Server versions < 2.3.
+* Add Server#upload_data.
+* Add Run#upload_data.
+* Fake list inputs with baclava.
+* More detailed documentation in the ReadMe file.
+* Compatibily note added to the ReadMe file.
+
 == Version 0.6.1
 
 * Store server addresses internally as URI objects.
