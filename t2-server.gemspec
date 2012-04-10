@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "t2-server"
-  s.version = "0.9.0"
+  s.version = "0.9.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Robert Haines"]
-  s.date = "2012-03-26"
+  s.date = "2012-04-30"
   s.description = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
   s.email = ["rhaines@manchester.ac.uk"]
   s.executables = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output", "t2-server-admin"]
@@ -44,6 +44,7 @@ Gem::Specification.new do |s|
     "lib/t2-server/xml/rexml.rb",
     "lib/t2-server/xml/xml.rb",
     "lib/t2server.rb",
+    "t2-server.gemspec",
     "test/tc_admin.rb",
     "test/tc_params.rb",
     "test/tc_perms.rb",
