@@ -80,14 +80,14 @@ end
 #    t.test_files = FileList['test/ts_t2server.rb']
 #    t.verbose = true
 #  end
-task :test, :server, :user1, :user2 do |t, args|
+task :test, [:server, :user1, :user2] do |t, args|
   args.with_defaults(:server => "", :user1 => "", :user2 => "")
   RakeFileUtils.verbose(true) do
     server_arg = ""
     if args[:server] != ""
-      server_arg = " -- #{args[:server]} #{args[:user1]} #{args[:user2]}"
+      server_arg = "#{args[:server]} #{args[:user1]} #{args[:user2]}"
     end
-    ruby "-I\"lib:test\" -S testrb test/ts_t2server.rb" + server_arg
+    ruby "-I\"lib:test\" test/ts_t2server.rb " + server_arg
   end
 end
 
