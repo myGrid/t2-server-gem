@@ -4,3 +4,4 @@ html/
 .buildpath
 .project
 .idea
+.rvmrc
