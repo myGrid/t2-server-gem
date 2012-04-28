@@ -31,7 +31,7 @@
 # Author: Robert Haines
 
 require 'uri'
-require 'net/https'
+require 'net/http/persistent'
 
 module T2Server
 
@@ -93,8 +93,8 @@ module T2Server
       @uri = uri
       @params = params || DefaultConnectionParameters.new
 
-      # set up http connection
-      @http = Net::HTTP.new(@uri.host, @uri.port)
+      # set up persistent http connection
+      @http = Net::HTTP::Persistent.new("Taverna_Server_Ruby_Client")
     end
 
     # :call-seq:
@@ -174,7 +174,8 @@ module T2Server
       get = Net::HTTP::Get.new(path)
       get["Accept"] = type
       get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
-      response = submit(get, nil, credentials)
+
+      response = submit(get, path, credentials)
 
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
@@ -203,7 +204,9 @@ module T2Server
     def PUT(path, value, type, credentials)
       put = Net::HTTP::Put.new(path)
       put.content_type = type
-      response = submit(put, value, credentials)
+      put.body = value
+
+      response = submit(put, path, credentials)
 
       case response
       when Net::HTTPOK
@@ -251,7 +254,8 @@ module T2Server
     def DELETE(path, credentials)
       run = path.split("/")[-1]
       delete = Net::HTTP::Delete.new(path)
-      response = submit(delete, nil, credentials)
+
+      response = submit(delete, path, credentials)
 
       case response
       when Net::HTTPNoContent
@@ -275,7 +279,8 @@ module T2Server
     # of the headers returned.
     def OPTIONS(path, credentials)
       options = Net::HTTP::Options.new(path)
-      response = submit(options, nil, credentials)
+
+      response = submit(options, path, credentials)
 
       case response
       when Net::HTTPOK
@@ -293,18 +298,23 @@ module T2Server
     def _POST(path, value, type, credentials)
       post = Net::HTTP::Post.new(path)
       post.content_type = type
-      submit(post, value, credentials)
+      post.body = value
+
+      submit(post, path, credentials)
     end
 
     def path_leaf_from_uri(uri)
       URI.parse(uri).path.split('/')[-1]
     end
 
-    def submit(request, value, credentials)
+    def submit(request, path, credentials)
+      full_uri = @uri.clone
+      full_uri.path = path
+
       credentials.authenticate(request) unless credentials.nil?
 
       begin
-        @http.request(request, value)
+        @http.request(full_uri, request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
@@ -326,15 +336,14 @@ module T2Server
     def initialize(uri, params = nil)
       super(uri, params)
 
-      # Configure connection options using params
-      @http.use_ssl = true
-
       # Peer verification
       if @params[:verify_peer]
         if @params[:ca_file]
           @http.ca_file = @params[:ca_file]
         else
-          @http.ca_path = @params[:ca_path]
+          store = OpenSSL::X509::Store.new
+          store.add_path(@params[:ca_path])
+          @http.cert_store = store
         end
         @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
       else
@@ -344,8 +353,9 @@ module T2Server
       # Client authentication
       if @params[:client_certificate]
         pem = File.read(@params[:client_certificate])
-        @http.cert = OpenSSL::X509::Certificate.new(pem)
-        @http.key = OpenSSL::PKey::RSA.new(pem, @params[:client_password])
+        @http.certificate = OpenSSL::X509::Certificate.new(pem)
+        @http.private_key = OpenSSL::PKey::RSA.new(pem,
+          @params[:client_password])
       end
     end
   end
