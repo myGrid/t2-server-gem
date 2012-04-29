@@ -340,11 +340,20 @@ module T2Server
       if @params[:verify_peer]
         if @params[:ca_file]
           @http.ca_file = @params[:ca_file]
-        else
+        end
+
+        if @params[:ca_path]
           store = OpenSSL::X509::Store.new
-          store.add_path(@params[:ca_path])
+          store.set_default_paths
+          if @params[:ca_path].is_a? Array
+            @params[:ca_path].each { |path| store.add_path(path) }
+          else
+            store.add_path(@params[:ca_path])
+          end
+
           @http.cert_store = store
         end
+
         @http.verify_mode = OpenSSL::SSL::VERIFY_PEER
       else
         @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
