@@ -50,6 +50,9 @@ if ARGV.size != 0
 
   puts "Using server at: #{address}"
   puts "   With user(s): #{user1} #{user2}" if user1
+
+  # Clear the commandline arguments so that we don't confuse runit.
+  ARGV.clear
 else
   # get a server address to test - 30 second timeout
   print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +

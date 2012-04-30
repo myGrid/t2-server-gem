@@ -37,11 +37,17 @@ require 'hirb'
 
 include T2Server::CLI
 
+# set up options
+options = {}
 conn_params, creds = register_options("Usage: t2-server-info [options] " +
   "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
+
+  opt.on("-l", "--list", "List details for the runs on this server.") do
+    options[:list] = true
+  end
 end
 
 # read and check server address and credentials
@@ -55,7 +61,7 @@ begin
     print "  Run limit: #{server.run_limit(creds)}\n"
     runs = server.runs(creds)
     print "No. of runs: #{runs.length}\n"
-    if runs.length > 0
+    if options[:list] && runs.length > 0
       puts (Hirb::Helpers::ObjectTable.render runs,
         :fields=>[:identifier, :status, :expiry],
         :headers=>{:identifier=>'Run ID', :status=>'Status',

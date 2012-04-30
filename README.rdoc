@@ -40,6 +40,17 @@ on your console output. Anything marked as deprecated will be removed in
 version 1.0.0 so you are advised to update your code at your earliest
 convenience.
 
+== Compatibility with Ruby versions
+
+This library is known to work with the following versions of Ruby:
+* 1.8.7 *
+* 1.9.2
+* 1.9.3 *
+* jruby 1.6.4 (in Ruby 1.8 mode)
+
+Those marked with an asterisk (*) are supported and bugs found against them
+will be fixed. Other versions may work but are not supported.
+
 == Usage
 
 There are two entry points for the T2Server API:
@@ -70,10 +81,12 @@ And can be set like this for a standard https connection:
 
   conn_params = ConnectionParameters.new
   conn_params[:verify_peer] = true
-  conn_params[:ca_path] = "/etc/ssl/certs"
 
 This will ensure that the identity of the Taverna Server you are connecting to
 will be verified using the set of certificates in <tt>/etc/ssl/certs</tt>.
+<tt>:ca_path</tt> can also be set to a list of paths if required. You do not
+need to include your platform's default certificate paths as these are included
+automatically.
 
 For convenience a number of standard sets of parameters have been defined. The
 above example is available as +DefaultConnectionParameters+. Others available
