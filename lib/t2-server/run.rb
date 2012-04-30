@@ -58,9 +58,6 @@ module T2Server
     # The server instance that this run is hosted on.
     attr_reader :server
 
-    # The owner (username) of this run
-    attr_reader :owner
-
     # :stopdoc:
     XPaths = {
       # Run XPath queries
@@ -112,10 +109,11 @@ module T2Server
 
       @credentials = credentials
 
-      run_desc = xml_document(@server.get_run_attribute(@identifier, "",
-        "application/xml", @credentials))
-      @owner = xpath_attr(run_desc, XPaths[:run_desc], "owner")
-      @links = get_attributes(run_desc)
+      # The following three fields hold cached data about the run that is only
+      # downloaded the first time it is requested.
+      @run_doc = nil
+      @owner = nil
+      @links = nil
 
       # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
@@ -177,6 +175,17 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
+    #   owner -> String
+    #
+    # Get the username of the owner of this run. The owner is the user who
+    # created the run on the server.
+    def owner
+      @owner = _get_run_owner if @owner.nil?
+
+      @owner
+    end
+
+    # :call-seq:
     #   delete
     #
     # Delete this run from the server.
@@ -187,7 +196,7 @@ module T2Server
     # :stopdoc:
     def inputs
       warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
-      @links[:inputs]
+      links[:inputs]
     end
 
     def set_input(input, value)
@@ -273,7 +282,7 @@ module T2Server
     #
     # Return the expiry time of this run as an instance of class Time.
     def expiry
-      Time.parse(@server.get_run_attribute(@identifier, @links[:expiry],
+      Time.parse(@server.get_run_attribute(@identifier, links[:expiry],
         "text/plain", @credentials))
     end
 
@@ -293,7 +302,7 @@ module T2Server
       # parse timezone offsets with a colon (eg +00:00)
       date_str = time.xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
-      @server.set_run_attribute(@identifier, @links[:expiry], date_str,
+      @server.set_run_attribute(@identifier, links[:expiry], date_str,
         "text/plain", @credentials)
     end
 
@@ -303,7 +312,7 @@ module T2Server
     # Get the workflow that this run represents.
     def workflow
       if @workflow == ""
-        @workflow = @server.get_run_attribute(@identifier, @links[:workflow],
+        @workflow = @server.get_run_attribute(@identifier, links[:workflow],
           "application/xml", @credentials)
       end
       @workflow
@@ -315,7 +324,7 @@ module T2Server
     # Get the status of this run. Status can be one of :initialized,
     # :running or :finished.
     def status
-      text_to_state(@server.get_run_attribute(@identifier, @links[:status],
+      text_to_state(@server.get_run_attribute(@identifier, links[:status],
         "text/plain", @credentials))
     end
 
@@ -332,7 +341,7 @@ module T2Server
       # set all the inputs
       _check_and_set_inputs unless baclava_input?
 
-      @server.set_run_attribute(@identifier, @links[:status],
+      @server.set_run_attribute(@identifier, links[:status],
         state_to_text(:running), "text/plain", @credentials)
     end
 
@@ -370,7 +379,7 @@ module T2Server
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
-      @server.get_run_attribute(@identifier, @links[:exitcode], "text/plain",
+      @server.get_run_attribute(@identifier, links[:exitcode], "text/plain",
         @credentials).to_i
     end
 
@@ -379,7 +388,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
-      @server.get_run_attribute(@identifier, @links[:stdout], "text/plain",
+      @server.get_run_attribute(@identifier, links[:stdout], "text/plain",
         @credentials)
     end
 
@@ -388,7 +397,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
-      @server.get_run_attribute(@identifier, @links[:stderr], "text/plain",
+      @server.get_run_attribute(@identifier, links[:stderr], "text/plain",
         @credentials)
     end
 
@@ -404,10 +413,10 @@ module T2Server
         # end and add the rest of the path to the wdir link
         leaf = dir.split("/")[-1]
         path = dir[0...-(leaf.length + 1)]
-        @server.create_dir(@identifier, "#{@links[:wdir]}/#{path}", leaf,
+        @server.create_dir(@identifier, "#{links[:wdir]}/#{path}", leaf,
           @credentials)
       else
-        @server.create_dir(@identifier, @links[:wdir], dir, @credentials)
+        @server.create_dir(@identifier, links[:wdir], dir, @credentials)
       end
     end
 
@@ -423,7 +432,7 @@ module T2Server
     # The name of the file on the server is returned.
     def upload_file(filename, params={})
       location = params[:dir] || ""
-      location = "#{@links[:wdir]}/#{location}"
+      location = "#{links[:wdir]}/#{location}"
       rename = params[:rename] || ""
       @server.upload_file(@identifier, filename, location, rename,
         @credentials)
@@ -436,7 +445,7 @@ module T2Server
     # remote directory to put this file in can also be specified, but if it is
     # it must first have been created by a call to Run#mkdir.
     def upload_data(data, remote_name, remote_directory = "")
-      location = "#{@links[:wdir]}/#{remote_directory}"
+      location = "#{links[:wdir]}/#{remote_directory}"
       @server.upload_data(@identifier, data, remote_name, location,
         @credentials)
     end
@@ -461,7 +470,7 @@ module T2Server
       raise RunStateError.new(state, :initialized) if state != :initialized
 
       rename = upload_file(filename)
-      result = @server.set_run_attribute(@identifier, @links[:baclava], rename,
+      result = @server.set_run_attribute(@identifier, links[:baclava], rename,
         "text/plain", @credentials)
 
       @baclava_in = true if result
@@ -493,7 +502,7 @@ module T2Server
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @baclava_out = @server.set_run_attribute(@identifier, @links[:output],
+      @baclava_out = @server.set_run_attribute(@identifier, links[:output],
         BACLAVA_FILE, "text/plain", @credentials)
     end
 
@@ -533,7 +542,7 @@ module T2Server
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
       @server.get_run_attribute(@identifier,
-        "#{@links[:wdir]}/#{BACLAVA_FILE}", "*/*", @credentials)
+        "#{links[:wdir]}/#{BACLAVA_FILE}", "*/*", @credentials)
     end
 
     # :stopdoc:
@@ -553,7 +562,7 @@ module T2Server
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
-      @server.get_run_attribute(@identifier, "#{@links[:wdir]}/out",
+      @server.get_run_attribute(@identifier, "#{links[:wdir]}/out",
         "application/zip", @credentials)
     end
 
@@ -586,7 +595,7 @@ module T2Server
     #
     # Get the creation time of this run as an instance of class Time.
     def create_time
-      Time.parse(@server.get_run_attribute(@identifier, @links[:createtime],
+      Time.parse(@server.get_run_attribute(@identifier, links[:createtime],
         "text/plain", @credentials))
     end
 
@@ -595,7 +604,7 @@ module T2Server
     #
     # Get the start time of this run as an instance of class Time.
     def start_time
-      Time.parse(@server.get_run_attribute(@identifier, @links[:starttime],
+      Time.parse(@server.get_run_attribute(@identifier, links[:starttime],
         "text/plain", @credentials))
     end
 
@@ -604,7 +613,7 @@ module T2Server
     #
     # Get the finish time of this run as an instance of class Time.
     def finish_time
-      Time.parse(@server.get_run_attribute(@identifier, @links[:finishtime],
+      Time.parse(@server.get_run_attribute(@identifier, links[:finishtime],
         "text/plain", @credentials))
     end
 
@@ -617,7 +626,7 @@ module T2Server
     # are. Sometimes it is useful to know if the user accessing the run is
     # actually the owner of it or not.
     def owner?
-      @credentials.username == @owner
+      @credentials.username == owner
     end
 
     # :call-seq:
@@ -631,7 +640,7 @@ module T2Server
       return unless owner?
 
       value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
-      @server.create_run_attribute(@identifier, @links[:sec_perms], value,
+      @server.create_run_attribute(@identifier, links[:sec_perms], value,
         "application/xml", @credentials)
     end
 
@@ -646,7 +655,7 @@ module T2Server
 
       perms = {}
       doc = xml_document(@server.get_run_attribute(@identifier,
-        @links[:sec_perms], "application/xml", @credentials))
+        links[:sec_perms], "application/xml", @credentials))
 
       xpath_find(doc, XPaths[:sec_perm]).each do |p|
         user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
@@ -678,7 +687,7 @@ module T2Server
     def revoke_permission(username)
       return unless owner?
 
-      path = "#{@links[:sec_perms]}/#{username}"
+      path = "#{links[:sec_perms]}/#{username}"
       @server.delete_run_attribute(@identifier, path, @credentials)
     end
 
@@ -702,10 +711,10 @@ module T2Server
       value = XML::Fragments::CREDENTIAL % cred
 
       if id.nil?
-        @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+        @server.create_run_attribute(@identifier, links[:sec_creds], value,
           "application/xml", @credentials)
       else
-        path = "#{@links[:sec_creds]}/#{id}"
+        path = "#{links[:sec_creds]}/#{id}"
         @server.set_run_attribute(@identifier, path, value, "application/xml",
           @credentials)
       end
@@ -736,7 +745,7 @@ module T2Server
         type, password]
       value = XML::Fragments::CREDENTIAL % cred
 
-      @server.create_run_attribute(@identifier, @links[:sec_creds], value,
+      @server.create_run_attribute(@identifier, links[:sec_creds], value,
         "application/xml", @credentials)
     end
 
@@ -751,7 +760,7 @@ module T2Server
 
       creds = {}
       doc = xml_document(@server.get_run_attribute(@identifier,
-        @links[:sec_creds], "application/xml", @credentials))
+        links[:sec_creds], "application/xml", @credentials))
 
       xpath_find(doc, XPaths[:sec_cred]).each do |c|
         uri = xml_node_content(xpath_first(c, XPaths[:sec_suri]))
@@ -783,7 +792,7 @@ module T2Server
     def delete_credential(uri)
       return unless owner?
 
-      path = "#{@links[:sec_creds]}/#{credentials[uri]}"
+      path = "#{links[:sec_creds]}/#{credentials[uri]}"
       @server.delete_run_attribute(@identifier, path, @credentials)
     end
 
@@ -796,7 +805,7 @@ module T2Server
     def delete_all_credentials
       return unless owner?
 
-      @server.delete_run_attribute(@identifier, @links[:sec_creds],
+      @server.delete_run_attribute(@identifier, links[:sec_creds],
         @credentials)
     end
 
@@ -815,7 +824,7 @@ module T2Server
       contents = Base64.encode64(IO.read(filename))
 
       value = XML::Fragments::TRUST % [contents, type]
-      @server.create_run_attribute(@identifier, @links[:sec_trusts], value,
+      @server.create_run_attribute(@identifier, links[:sec_trusts], value,
         "application/xml", @credentials)
     end
 
@@ -832,7 +841,7 @@ module T2Server
 
       t_ids = []
       doc = xml_document(@server.get_run_attribute(@identifier,
-        @links[:sec_trusts], "application/xml", @credentials))
+        links[:sec_trusts], "application/xml", @credentials))
 
       xpath_find(doc, XPaths[:sec_trust]). each do |t|
         t_ids << xml_node_attribute(t, "href").split('/')[-1]
@@ -850,7 +859,7 @@ module T2Server
     def delete_trust(id)
       return unless owner?
 
-      path = "#{@links[:sec_trusts]}/#{id}"
+      path = "#{links[:sec_trusts]}/#{id}"
       @server.delete_run_attribute(@identifier, path, @credentials)
     end
 
@@ -863,7 +872,7 @@ module T2Server
     def delete_all_trusts
       return unless owner?
 
-      @server.delete_run_attribute(@identifier, @links[:sec_trusts],
+      @server.delete_run_attribute(@identifier, links[:sec_trusts],
         @credentials)
     end
 
@@ -872,12 +881,18 @@ module T2Server
     # items (leaves) as files. This method (not part of the public API)
     # downloads a file from the run's working directory.
     def download_output_data(path, range = nil)
-      @server.download_run_file(@identifier, "#{@links[:wdir]}/out/#{path}",
+      @server.download_run_file(@identifier, "#{links[:wdir]}/out/#{path}",
         range, @credentials)
     end
     # :startdoc:
 
     private
+
+    def links
+      @links = _get_run_links if @links.nil?
+
+      @links
+    end
 
     # Check each input to see if it requires a list input and call the
     # requisite upload method for the entire set of inputs.
@@ -908,13 +923,13 @@ module T2Server
           end
 
           xml_value = xml_text_node(port.file)
-          path = "#{@links[:inputs]}/input/#{port.name}"
+          path = "#{links[:inputs]}/input/#{port.name}"
           @server.set_run_attribute(self, path,
             XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
             @credentials)
         else
           xml_value = xml_text_node(port.value)
-          path = "#{@links[:inputs]}/input/#{port.name}"
+          path = "#{links[:inputs]}/input/#{port.name}"
           @server.set_run_attribute(self, path,
             XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
             @credentials)
@@ -945,7 +960,7 @@ module T2Server
       # Create and upload the baclava data.
       baclava = Taverna::Baclava::Writer.write(data_map)
       upload_data(baclava, "in.baclava")
-      @server.set_run_attribute(@identifier, @links[:baclava], "in.baclava",
+      @server.set_run_attribute(@identifier, links[:baclava], "in.baclava",
         "text/plain", @credentials)
     end
 
@@ -973,7 +988,7 @@ module T2Server
     def _ls_ports(dir="", top=true)
       dir = Util.strip_path_slashes(dir)
       dir_list = @server.get_run_attribute(@identifier,
-        "#{@links[:wdir]}/#{dir}", "*/*", @credentials)
+        "#{links[:wdir]}/#{dir}", "*/*", @credentials)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
@@ -1013,10 +1028,10 @@ module T2Server
         if items.include? output
           if refs
             return "#{@server.uri}/rest/runs/#{@identifier}/" +
-              "#{@links[:wdir]}/out/#{output}"
+              "#{links[:wdir]}/out/#{output}"
           else
             return @server.get_run_attribute(@identifier,
-              "#{@links[:wdir]}/out/#{output}", "application/octet-stream",
+              "#{links[:wdir]}/out/#{output}", "application/octet-stream",
               @credentials)
           end
         end
@@ -1037,10 +1052,10 @@ module T2Server
       items.each do |item|
         if refs
           result << "#{@server.uri}/rest/runs/#{@identifier}/" +
-            "#{@links[:wdir]}/out/#{output}/#{item}"
+            "#{links[:wdir]}/out/#{output}/#{item}"
         else
           result << @server.get_run_attribute(@identifier,
-            "#{@links[:wdir]}/out/#{output}/#{item}",
+            "#{links[:wdir]}/out/#{output}/#{item}",
             "application/octet-stream", @credentials)
         end
       end
@@ -1050,7 +1065,7 @@ module T2Server
 
     def _get_input_port_info
       ports = {}
-      port_desc = @server.get_run_attribute(@identifier, @links[:inputexp],
+      port_desc = @server.get_run_attribute(@identifier, links[:inputexp],
         "application/xml", @credentials)
 
       doc = xml_document(port_desc)
@@ -1065,7 +1080,7 @@ module T2Server
 
     def _get_output_port_info
       ports = {}
-      port_desc = @server.get_run_attribute(@identifier, @links[:output],
+      port_desc = @server.get_run_attribute(@identifier, links[:output],
         "application/xml", @credentials)
 
       doc = xml_document(port_desc)
@@ -1078,7 +1093,24 @@ module T2Server
       ports
     end
 
-    def get_attributes(doc)
+    def _get_run_description
+      if @run_doc.nil?
+        @run_doc = xml_document(@server.get_run_attribute(@identifier, "",
+          "application/xml", @credentials))
+      end
+
+      @run_doc
+    end
+
+    def _get_run_owner
+      doc = _get_run_description
+
+      xpath_attr(doc, XPaths[:run_desc], "owner")
+    end
+
+    def _get_run_links
+      doc = _get_run_description
+
       # first parse out the basic stuff
       links = {}
 
