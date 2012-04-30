@@ -1,5 +1,13 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.9.1
+
+* Update unit test code for Ruby 1.9 compatibility.
+* Major reductions in the time taken to instantiate a Run object.
+* t2-server-info: Don't list runs by default.
+* Move to persistent HTTP connections.
+* SSL certificate store changes.
+
 == Version 0.9.0
 
 * t2-run-workflow: Add a switch to set the expiry date/time.
