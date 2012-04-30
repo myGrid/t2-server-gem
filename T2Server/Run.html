@@ -4,7 +4,7 @@
 <head>
 <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
 
-<title>class T2Server::Run -  Taverna 2 Server Ruby Interface Library version 0.9.0</title>
+<title>class T2Server::Run -  Taverna 2 Server Ruby Interface Library version 0.9.1</title>
 
 <link type="text/css" media="screen" href="../rdoc.css" rel="stylesheet">
 
@@ -137,6 +137,8 @@
     <li><a href="#method-i-output_port">#output_port</a>
     
     <li><a href="#method-i-output_ports">#output_ports</a>
+    
+    <li><a href="#method-i-owner">#owner</a>
     
     <li><a href="#method-i-owner-3F">#owner?</a>
     
@@ -319,19 +321,6 @@ download.</p>
         </div>
       </div>
       
-      <div id="attribute-i-owner" class="method-detail">
-        <div class="method-heading attribute-method-heading">
-          <span class="method-name">owner</span><span
-            class="attribute-access-type">[R]</span>
-        </div>
-
-        <div class="method-description">
-        
-        <p>The owner (username) of this run</p>
-        
-        </div>
-      </div>
-      
       <div id="attribute-i-server" class="method-detail">
         <div class="method-heading attribute-method-heading">
           <span class="method-name">server</span><span
@@ -407,7 +396,7 @@ href="Run.html">Run</a> if a block is given.</p>
 
           
           <div class="method-source-code" id="create-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 142</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 140</span>
 <span class="ruby-keyword">def</span> <span class="ruby-constant">Run</span>.<span class="ruby-identifier">create</span>(<span class="ruby-identifier">server</span>, <span class="ruby-identifier">workflow</span>, *<span class="ruby-identifier">rest</span>)
   <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>
   <span class="ruby-identifier">id</span> = <span class="ruby-keyword">nil</span>
@@ -486,7 +475,7 @@ method.</p>
 
           
           <div class="method-source-code" id="add_keypair_credential-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 725</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 734</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">add_keypair_credential</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">filename</span>, <span class="ruby-identifier">password</span>,
                            <span class="ruby-identifier">name</span> = <span class="ruby-string">&quot;Imported Certificate&quot;</span>, <span class="ruby-identifier">type</span> = <span class="ruby-value">:pkcs12</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
@@ -501,7 +490,7 @@ method.</p>
     <span class="ruby-identifier">type</span>, <span class="ruby-identifier">password</span>]
   <span class="ruby-identifier">value</span> = <span class="ruby-constant">XML</span><span class="ruby-operator">::</span><span class="ruby-constant">Fragments</span><span class="ruby-operator">::</span><span class="ruby-constant">CREDENTIAL</span> <span class="ruby-operator">%</span> <span class="ruby-identifier">cred</span>
 
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-identifier">value</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-identifier">value</span>,
     <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- add_keypair_credential-source -->
@@ -538,7 +527,7 @@ if a user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="add_password_credential-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 692</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 701</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">add_password_credential</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">username</span>, <span class="ruby-identifier">password</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
@@ -552,10 +541,10 @@ if a user other than the owner uses this method.</p>
   <span class="ruby-identifier">value</span> = <span class="ruby-constant">XML</span><span class="ruby-operator">::</span><span class="ruby-constant">Fragments</span><span class="ruby-operator">::</span><span class="ruby-constant">CREDENTIAL</span> <span class="ruby-operator">%</span> <span class="ruby-identifier">cred</span>
 
   <span class="ruby-keyword">if</span> <span class="ruby-identifier">id</span>.<span class="ruby-identifier">nil?</span>
-    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-identifier">value</span>,
+    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-identifier">value</span>,
       <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>)
   <span class="ruby-keyword">else</span>
-    <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{@links[:sec_creds]}/#{id}&quot;</span>
+    <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{links[:sec_creds]}/#{id}&quot;</span>
     <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">path</span>, <span class="ruby-identifier">value</span>, <span class="ruby-string">&quot;application/xml&quot;</span>,
       <span class="ruby-ivar">@credentials</span>)
   <span class="ruby-keyword">end</span>
@@ -594,7 +583,7 @@ user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="add_trust-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 810</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 819</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">add_trust</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">type</span> = <span class="ruby-value">:x509</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
@@ -603,7 +592,7 @@ user other than the owner uses this method.</p>
   <span class="ruby-identifier">contents</span> = <span class="ruby-constant">Base64</span>.<span class="ruby-identifier">encode64</span>(<span class="ruby-constant">IO</span>.<span class="ruby-identifier">read</span>(<span class="ruby-identifier">filename</span>))
 
   <span class="ruby-identifier">value</span> = <span class="ruby-constant">XML</span><span class="ruby-operator">::</span><span class="ruby-constant">Fragments</span><span class="ruby-operator">::</span><span class="ruby-constant">TRUST</span> <span class="ruby-operator">%</span> [<span class="ruby-identifier">contents</span>, <span class="ruby-identifier">type</span>]
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_trusts</span>], <span class="ruby-identifier">value</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_trusts</span>], <span class="ruby-identifier">value</span>,
     <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- add_trust-source -->
@@ -637,13 +626,13 @@ user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="baclava_input-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 459</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 468</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">baclava_input=</span>(<span class="ruby-identifier">filename</span>)
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:initialized</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">!=</span> <span class="ruby-value">:initialized</span>
 
   <span class="ruby-identifier">rename</span> = <span class="ruby-identifier">upload_file</span>(<span class="ruby-identifier">filename</span>)
-  <span class="ruby-identifier">result</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:baclava</span>], <span class="ruby-identifier">rename</span>,
+  <span class="ruby-identifier">result</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:baclava</span>], <span class="ruby-identifier">rename</span>,
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 
   <span class="ruby-ivar">@baclava_in</span> = <span class="ruby-keyword">true</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">result</span>
@@ -681,7 +670,7 @@ user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="baclava_input-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 512</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 521</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">baclava_input?</span>
   <span class="ruby-ivar">@baclava_in</span>
 <span class="ruby-keyword">end</span></pre>
@@ -718,14 +707,14 @@ starting the run.</p>
 
           
           <div class="method-source-code" id="baclava_output-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 530</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 539</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">baclava_output</span>
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:finished</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">!=</span> <span class="ruby-value">:finished</span>
 
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">AccessForbiddenError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-string">&quot;baclava output&quot;</span>) <span class="ruby-keyword">if</span> <span class="ruby-operator">!</span><span class="ruby-ivar">@baclava_out</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>,
-    <span class="ruby-node">&quot;#{@links[:wdir]}/#{BACLAVA_FILE}&quot;</span>, <span class="ruby-string">&quot;*/*&quot;</span>, <span class="ruby-ivar">@credentials</span>)
+    <span class="ruby-node">&quot;#{links[:wdir]}/#{BACLAVA_FILE}&quot;</span>, <span class="ruby-string">&quot;*/*&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- baclava_output-source -->
           
@@ -758,7 +747,7 @@ starting the run.</p>
 
           
           <div class="method-source-code" id="baclava_output-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 520</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 529</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">baclava_output?</span>
   <span class="ruby-ivar">@baclava_out</span>
 <span class="ruby-keyword">end</span></pre>
@@ -793,9 +782,9 @@ starting the run.</p>
 
           
           <div class="method-source-code" id="create_time-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 588</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 597</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">create_time</span>
-  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:createtime</span>],
+  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:createtime</span>],
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 <span class="ruby-keyword">end</span></pre>
           </div><!-- create_time-source -->
@@ -831,7 +820,7 @@ returned if a user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="credential-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 771</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 780</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">credential</span>(<span class="ruby-identifier">uri</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
@@ -871,13 +860,13 @@ method.</p>
 
           
           <div class="method-source-code" id="credentials-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 749</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 758</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">credentials</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
   <span class="ruby-identifier">creds</span> = {}
   <span class="ruby-identifier">doc</span> = <span class="ruby-identifier">xml_document</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>,
-    <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
+    <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_creds</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 
   <span class="ruby-identifier">xpath_find</span>(<span class="ruby-identifier">doc</span>, <span class="ruby-constant">XPaths</span>[<span class="ruby-value">:sec_cred</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">c</span><span class="ruby-operator">|</span>
     <span class="ruby-identifier">uri</span> = <span class="ruby-identifier">xml_node_content</span>(<span class="ruby-identifier">xpath_first</span>(<span class="ruby-identifier">c</span>, <span class="ruby-constant">XPaths</span>[<span class="ruby-value">:sec_suri</span>]))
@@ -918,7 +907,7 @@ method.</p>
 
           
           <div class="method-source-code" id="delete-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 183</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 192</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -955,11 +944,11 @@ other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="delete_all_credentials-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 796</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 805</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_all_credentials</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_creds</span>],
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_creds</span>],
     <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- delete_all_credentials-source -->
@@ -995,11 +984,11 @@ user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="delete_all_trusts-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 863</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 872</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_all_trusts</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_trusts</span>],
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_trusts</span>],
     <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- delete_all_trusts-source -->
@@ -1035,11 +1024,11 @@ returned if a user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="delete_credential-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 783</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 792</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_credential</span>(<span class="ruby-identifier">uri</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
-  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{@links[:sec_creds]}/#{credentials[uri]}&quot;</span>
+  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{links[:sec_creds]}/#{credentials[uri]}&quot;</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">path</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- delete_credential-source -->
@@ -1075,11 +1064,11 @@ uses this method.</p>
 
           
           <div class="method-source-code" id="delete_trust-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 850</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 859</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_trust</span>(<span class="ruby-identifier">id</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
-  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{@links[:sec_trusts]}/#{id}&quot;</span>
+  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{links[:sec_trusts]}/#{id}&quot;</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">path</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- delete_trust-source -->
@@ -1113,9 +1102,9 @@ uses this method.</p>
 
           
           <div class="method-source-code" id="exitcode-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 372</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 381</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">exitcode</span>
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:exitcode</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:exitcode</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
     <span class="ruby-ivar">@credentials</span>).<span class="ruby-identifier">to_i</span>
 <span class="ruby-keyword">end</span></pre>
           </div><!-- exitcode-source -->
@@ -1149,9 +1138,9 @@ uses this method.</p>
 
           
           <div class="method-source-code" id="expiry-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 275</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 284</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">expiry</span>
-  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:expiry</span>],
+  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:expiry</span>],
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 <span class="ruby-keyword">end</span></pre>
           </div><!-- expiry-source -->
@@ -1188,7 +1177,7 @@ time/date in the past is specified, the expiry time will not be changed.</p>
 
           
           <div class="method-source-code" id="expiry-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 287</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 296</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">expiry=</span>(<span class="ruby-identifier">time</span>)
   <span class="ruby-keyword">unless</span> <span class="ruby-identifier">time</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Time</span>
     <span class="ruby-identifier">time</span> = <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">time</span>)
@@ -1198,7 +1187,7 @@ time/date in the past is specified, the expiry time will not be changed.</p>
   <span class="ruby-comment"># parse timezone offsets with a colon (eg +00:00)</span>
   <span class="ruby-identifier">date_str</span> = <span class="ruby-identifier">time</span>.<span class="ruby-identifier">xmlschema</span>(<span class="ruby-value">2</span>)
   <span class="ruby-identifier">date_str</span> = <span class="ruby-identifier">date_str</span>[<span class="ruby-value">0</span><span class="ruby-operator">..</span><span class="ruby-value">-4</span>] <span class="ruby-operator">+</span> <span class="ruby-identifier">date_str</span>[<span class="ruby-value">-2</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>]
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:expiry</span>], <span class="ruby-identifier">date_str</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:expiry</span>], <span class="ruby-identifier">date_str</span>,
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- expiry-3D-source -->
@@ -1232,9 +1221,9 @@ time/date in the past is specified, the expiry time will not be changed.</p>
 
           
           <div class="method-source-code" id="finish_time-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 606</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 615</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">finish_time</span>
-  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:finishtime</span>],
+  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:finishtime</span>],
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 <span class="ruby-keyword">end</span></pre>
           </div><!-- finish_time-source -->
@@ -1268,7 +1257,7 @@ time/date in the past is specified, the expiry time will not be changed.</p>
 
           
           <div class="method-source-code" id="finished-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 580</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 589</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">finished?</span>
   <span class="ruby-identifier">status</span> <span class="ruby-operator">==</span> <span class="ruby-value">:finished</span>
 <span class="ruby-keyword">end</span></pre>
@@ -1307,12 +1296,12 @@ method.</p>
 
           
           <div class="method-source-code" id="grant_permission-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 630</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 639</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">grant_permission</span>(<span class="ruby-identifier">username</span>, <span class="ruby-identifier">permission</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
   <span class="ruby-identifier">value</span> = <span class="ruby-constant">XML</span><span class="ruby-operator">::</span><span class="ruby-constant">Fragments</span><span class="ruby-operator">::</span><span class="ruby-constant">PERM_UPDATE</span> <span class="ruby-operator">%</span> [<span class="ruby-identifier">username</span>, <span class="ruby-identifier">permission</span>.<span class="ruby-identifier">to_s</span>]
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_perms</span>], <span class="ruby-identifier">value</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_perms</span>], <span class="ruby-identifier">value</span>,
     <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- grant_permission-source -->
@@ -1346,7 +1335,7 @@ method.</p>
 
           
           <div class="method-source-code" id="initialized-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 564</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 573</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">initialized?</span>
   <span class="ruby-identifier">status</span> <span class="ruby-operator">==</span> <span class="ruby-value">:initialized</span>
 <span class="ruby-keyword">end</span></pre>
@@ -1381,7 +1370,7 @@ method.</p>
 
           
           <div class="method-source-code" id="input_port-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 225</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 234</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">input_port</span>(<span class="ruby-identifier">port</span>)
   <span class="ruby-identifier">input_ports</span>[<span class="ruby-identifier">port</span>]
 <span class="ruby-keyword">end</span></pre>
@@ -1416,7 +1405,7 @@ method.</p>
 
           
           <div class="method-source-code" id="input_ports-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 215</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 224</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">input_ports</span>
   <span class="ruby-ivar">@input_ports</span> = <span class="ruby-identifier">_get_input_port_info</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@input_ports</span>.<span class="ruby-identifier">nil?</span>
 
@@ -1454,7 +1443,7 @@ be used to store input data.</p>
 
           
           <div class="method-source-code" id="mkdir-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 400</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 409</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">mkdir</span>(<span class="ruby-identifier">dir</span>)
   <span class="ruby-identifier">dir</span> = <span class="ruby-constant">Util</span>.<span class="ruby-identifier">strip_path_slashes</span>(<span class="ruby-identifier">dir</span>)
   <span class="ruby-keyword">if</span> <span class="ruby-identifier">dir</span>.<span class="ruby-identifier">include?</span> <span class="ruby-value">//</span>
@@ -1462,10 +1451,10 @@ be used to store input data.</p>
     <span class="ruby-comment"># end and add the rest of the path to the wdir link</span>
     <span class="ruby-identifier">leaf</span> = <span class="ruby-identifier">dir</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;/&quot;</span>)[<span class="ruby-value">-1</span>]
     <span class="ruby-identifier">path</span> = <span class="ruby-identifier">dir</span>[<span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-operator">-</span>(<span class="ruby-identifier">leaf</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">+</span> <span class="ruby-value">1</span>)]
-    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_dir</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-node">&quot;#{@links[:wdir]}/#{path}&quot;</span>, <span class="ruby-identifier">leaf</span>,
+    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_dir</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-node">&quot;#{links[:wdir]}/#{path}&quot;</span>, <span class="ruby-identifier">leaf</span>,
       <span class="ruby-ivar">@credentials</span>)
   <span class="ruby-keyword">else</span>
-    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_dir</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:wdir</span>], <span class="ruby-identifier">dir</span>, <span class="ruby-ivar">@credentials</span>)
+    <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">create_dir</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:wdir</span>], <span class="ruby-identifier">dir</span>, <span class="ruby-ivar">@credentials</span>)
   <span class="ruby-keyword">end</span>
 <span class="ruby-keyword">end</span></pre>
           </div><!-- mkdir-source -->
@@ -1499,7 +1488,7 @@ be used to store input data.</p>
 
           
           <div class="method-source-code" id="output_port-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 246</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 255</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">output_port</span>(<span class="ruby-identifier">port</span>)
   <span class="ruby-identifier">output_ports</span>[<span class="ruby-identifier">port</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">finished?</span>
 <span class="ruby-keyword">end</span></pre>
@@ -1535,7 +1524,7 @@ run is finished this method will return <em>nil</em>.</p>
 
           
           <div class="method-source-code" id="output_ports-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 234</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 243</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">output_ports</span>
   <span class="ruby-keyword">if</span> <span class="ruby-identifier">finished?</span> <span class="ruby-keyword">and</span> <span class="ruby-ivar">@output_ports</span>.<span class="ruby-identifier">nil?</span>
     <span class="ruby-ivar">@output_ports</span> = <span class="ruby-identifier">_get_output_port_info</span>
@@ -1551,6 +1540,44 @@ run is finished this method will return <em>nil</em>.</p>
 
         
       </div><!-- output_ports-method -->
+
+    
+      <div id="method-i-owner" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            owner &rarr; String
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get the username of the owner of this run. The owner is the user who
+created the run on the server.</p>
+          
+
+          
+          <div class="method-source-code" id="owner-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 182</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">owner</span>
+  <span class="ruby-ivar">@owner</span> = <span class="ruby-identifier">_get_run_owner</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@owner</span>.<span class="ruby-identifier">nil?</span>
+
+  <span class="ruby-ivar">@owner</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- owner-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- owner-method -->
 
     
       <div id="method-i-owner-3F" class="method-detail ">
@@ -1578,9 +1605,9 @@ the owner of it or not.</p>
 
           
           <div class="method-source-code" id="owner-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 619</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 628</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">owner?</span>
-  <span class="ruby-ivar">@credentials</span>.<span class="ruby-identifier">username</span> <span class="ruby-operator">==</span> <span class="ruby-ivar">@owner</span>
+  <span class="ruby-ivar">@credentials</span>.<span class="ruby-identifier">username</span> <span class="ruby-operator">==</span> <span class="ruby-identifier">owner</span>
 <span class="ruby-keyword">end</span></pre>
           </div><!-- owner-3F-source -->
           
@@ -1615,7 +1642,7 @@ user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="permission-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 666</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 675</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">permission</span>(<span class="ruby-identifier">username</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
@@ -1655,13 +1682,13 @@ method.</p>
 
           
           <div class="method-source-code" id="permissions-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 644</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 653</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">permissions</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
   <span class="ruby-identifier">perms</span> = {}
   <span class="ruby-identifier">doc</span> = <span class="ruby-identifier">xml_document</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>,
-    <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_perms</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
+    <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_perms</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 
   <span class="ruby-identifier">xpath_find</span>(<span class="ruby-identifier">doc</span>, <span class="ruby-constant">XPaths</span>[<span class="ruby-value">:sec_perm</span>]).<span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">p</span><span class="ruby-operator">|</span>
     <span class="ruby-identifier">user</span> = <span class="ruby-identifier">xml_node_content</span>(<span class="ruby-identifier">xpath_first</span>(<span class="ruby-identifier">p</span>, <span class="ruby-constant">XPaths</span>[<span class="ruby-value">:sec_uname</span>]))
@@ -1703,13 +1730,13 @@ be done before the run is started.</p>
 
           
           <div class="method-source-code" id="request_baclava_output-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 491</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 500</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">request_baclava_output</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@baclava_out</span>
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:initialized</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">!=</span> <span class="ruby-value">:initialized</span>
 
-  <span class="ruby-ivar">@baclava_out</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:output</span>],
+  <span class="ruby-ivar">@baclava_out</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:output</span>],
     <span class="ruby-constant">BACLAVA_FILE</span>, <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- request_baclava_output-source -->
@@ -1745,11 +1772,11 @@ if a user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="revoke_permission-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 678</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 687</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">revoke_permission</span>(<span class="ruby-identifier">username</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
-  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{@links[:sec_perms]}/#{username}&quot;</span>
+  <span class="ruby-identifier">path</span> = <span class="ruby-node">&quot;#{links[:sec_perms]}/#{username}&quot;</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">delete_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">path</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- revoke_permission-source -->
@@ -1783,7 +1810,7 @@ if a user other than the owner uses this method.</p>
 
           
           <div class="method-source-code" id="running-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 572</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 581</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">running?</span>
   <span class="ruby-identifier">status</span> <span class="ruby-operator">==</span> <span class="ruby-value">:running</span>
 <span class="ruby-keyword">end</span></pre>
@@ -1821,7 +1848,7 @@ the :initialized state.</p>
 
           
           <div class="method-source-code" id="start-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 328</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 337</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">start</span>
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:initialized</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">!=</span> <span class="ruby-value">:initialized</span>
@@ -1829,7 +1856,7 @@ the :initialized state.</p>
   <span class="ruby-comment"># set all the inputs</span>
   <span class="ruby-identifier">_check_and_set_inputs</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">baclava_input?</span>
 
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:status</span>],
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">set_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:status</span>],
     <span class="ruby-identifier">state_to_text</span>(<span class="ruby-value">:running</span>), <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- start-source -->
@@ -1863,9 +1890,9 @@ the :initialized state.</p>
 
           
           <div class="method-source-code" id="start_time-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 597</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 606</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">start_time</span>
-  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:starttime</span>],
+  <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:starttime</span>],
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 <span class="ruby-keyword">end</span></pre>
           </div><!-- start_time-source -->
@@ -1900,9 +1927,9 @@ the :initialized state.</p>
 
           
           <div class="method-source-code" id="status-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 317</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 326</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">status</span>
-  <span class="ruby-identifier">text_to_state</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:status</span>],
+  <span class="ruby-identifier">text_to_state</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:status</span>],
     <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 <span class="ruby-keyword">end</span></pre>
           </div><!-- status-source -->
@@ -1936,9 +1963,9 @@ the :initialized state.</p>
 
           
           <div class="method-source-code" id="stderr-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 390</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 399</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">stderr</span>
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:stderr</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:stderr</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
     <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- stderr-source -->
@@ -1972,9 +1999,9 @@ the :initialized state.</p>
 
           
           <div class="method-source-code" id="stdout-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 381</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 390</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">stdout</span>
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:stdout</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:stdout</span>], <span class="ruby-string">&quot;text/plain&quot;</span>,
     <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- stdout-source -->
@@ -2012,13 +2039,13 @@ owner uses this method.</p>
 
           
           <div class="method-source-code" id="trusts-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 830</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 839</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">trusts</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">owner?</span>
 
   <span class="ruby-identifier">t_ids</span> = []
   <span class="ruby-identifier">doc</span> = <span class="ruby-identifier">xml_document</span>(<span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>,
-    <span class="ruby-ivar">@links</span>[<span class="ruby-value">:sec_trusts</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
+    <span class="ruby-identifier">links</span>[<span class="ruby-value">:sec_trusts</span>], <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>))
 
   <span class="ruby-identifier">xpath_find</span>(<span class="ruby-identifier">doc</span>, <span class="ruby-constant">XPaths</span>[<span class="ruby-value">:sec_trust</span>]). <span class="ruby-identifier">each</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">t</span><span class="ruby-operator">|</span>
     <span class="ruby-identifier">t_ids</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">xml_node_attribute</span>(<span class="ruby-identifier">t</span>, <span class="ruby-string">&quot;href&quot;</span>).<span class="ruby-identifier">split</span>(<span class="ruby-string">'/'</span>)[<span class="ruby-value">-1</span>]
@@ -2060,9 +2087,9 @@ href="Run.html#method-i-mkdir">#mkdir</a>.</p>
 
           
           <div class="method-source-code" id="upload_data-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 438</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 447</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">upload_data</span>(<span class="ruby-identifier">data</span>, <span class="ruby-identifier">remote_name</span>, <span class="ruby-identifier">remote_directory</span> = <span class="ruby-string">&quot;&quot;</span>)
-  <span class="ruby-identifier">location</span> = <span class="ruby-node">&quot;#{@links[:wdir]}/#{remote_directory}&quot;</span>
+  <span class="ruby-identifier">location</span> = <span class="ruby-node">&quot;#{links[:wdir]}/#{remote_directory}&quot;</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">upload_data</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">data</span>, <span class="ruby-identifier">remote_name</span>, <span class="ruby-identifier">location</span>,
     <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -2107,10 +2134,10 @@ href="Run.html#method-i-mkdir">#mkdir</a>.</p>
 
           
           <div class="method-source-code" id="upload_file-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 424</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 433</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">upload_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">params</span>={})
   <span class="ruby-identifier">location</span> = <span class="ruby-identifier">params</span>[<span class="ruby-value">:dir</span>] <span class="ruby-operator">||</span> <span class="ruby-string">&quot;&quot;</span>
-  <span class="ruby-identifier">location</span> = <span class="ruby-node">&quot;#{@links[:wdir]}/#{location}&quot;</span>
+  <span class="ruby-identifier">location</span> = <span class="ruby-node">&quot;#{links[:wdir]}/#{location}&quot;</span>
   <span class="ruby-identifier">rename</span> = <span class="ruby-identifier">params</span>[<span class="ruby-value">:rename</span>] <span class="ruby-operator">||</span> <span class="ruby-string">&quot;&quot;</span>
   <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">upload_file</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">filename</span>, <span class="ruby-identifier">location</span>, <span class="ruby-identifier">rename</span>,
     <span class="ruby-ivar">@credentials</span>)
@@ -2150,7 +2177,7 @@ in the :initialised state.</p>
 
           
           <div class="method-source-code" id="wait-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 346</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 355</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">wait</span>(*<span class="ruby-identifier">params</span>)
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:running</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">==</span> <span class="ruby-value">:initialized</span>
@@ -2203,10 +2230,10 @@ in the :initialised state.</p>
 
           
           <div class="method-source-code" id="workflow-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 304</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 313</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">workflow</span>
   <span class="ruby-keyword">if</span> <span class="ruby-ivar">@workflow</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;&quot;</span>
-    <span class="ruby-ivar">@workflow</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-ivar">@links</span>[<span class="ruby-value">:workflow</span>],
+    <span class="ruby-ivar">@workflow</span> = <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-identifier">links</span>[<span class="ruby-value">:workflow</span>],
       <span class="ruby-string">&quot;application/xml&quot;</span>, <span class="ruby-ivar">@credentials</span>)
   <span class="ruby-keyword">end</span>
   <span class="ruby-ivar">@workflow</span>
@@ -2243,12 +2270,12 @@ format.</p>
 
           
           <div class="method-source-code" id="zip_output-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 552</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/run.rb, line 561</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">zip_output</span>
   <span class="ruby-identifier">state</span> = <span class="ruby-identifier">status</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">RunStateError</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">state</span>, <span class="ruby-value">:finished</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">state</span> <span class="ruby-operator">!=</span> <span class="ruby-value">:finished</span>
 
-  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-node">&quot;#{@links[:wdir]}/out&quot;</span>,
+  <span class="ruby-ivar">@server</span>.<span class="ruby-identifier">get_run_attribute</span>(<span class="ruby-ivar">@identifier</span>, <span class="ruby-node">&quot;#{links[:wdir]}/out&quot;</span>,
     <span class="ruby-string">&quot;application/zip&quot;</span>, <span class="ruby-ivar">@credentials</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- zip_output-source -->

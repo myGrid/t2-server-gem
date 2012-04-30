@@ -4,7 +4,7 @@
 <head>
 <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
 
-<title> Taverna 2 Server Ruby Interface Library version 0.9.0</title>
+<title> Taverna 2 Server Ruby Interface Library version 0.9.1</title>
 
 <link type="text/css" media="screen" href="./rdoc.css" rel="stylesheet">
 
@@ -179,6 +179,22 @@ will appear on your console output. Anything marked as deprecated will be
 removed in version 1.0.0 so you are advised to update your code at your
 earliest convenience.</p>
 
+<h2 id="label-Compatibility+with+Ruby+versions">Compatibility with Ruby versions</h2>
+
+<p>This library is known to work with the following versions of Ruby:</p>
+<ul><li>
+<p>1.8.7 *</p>
+</li><li>
+<p>1.9.2</p>
+</li><li>
+<p>1.9.3 *</p>
+</li><li>
+<p>jruby 1.6.4 (in Ruby 1.8 mode)</p>
+</li></ul>
+
+<p>Those marked with an asterisk (*) are supported and bugs found against them
+will be fixed. Other versions may work but are not supported.</p>
+
 <h2 id="label-Usage">Usage</h2>
 
 <p>There are two entry points for the <a href="T2Server.html">T2Server</a>
@@ -221,12 +237,13 @@ are:</p>
 <p>And can be set like this for a standard https connection:</p>
 
 <pre>conn_params = ConnectionParameters.new
-conn_params[:verify_peer] = true
-conn_params[:ca_path] = &quot;/etc/ssl/certs&quot;</pre>
+conn_params[:verify_peer] = true</pre>
 
 <p>This will ensure that the identity of the Taverna Server you are connecting
 to will be verified using the set of certificates in
-<code>/etc/ssl/certs</code>.</p>
+<code>/etc/ssl/certs</code>. <code>:ca_path</code> can also be set to a
+list of paths if required. You do not need to include your platform’s
+default certificate paths as these are included automatically.</p>
 
 <p>For convenience a number of standard sets of parameters have been defined.
 The above example is available as <code>DefaultConnectionParameters</code>.
