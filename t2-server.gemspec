@@ -31,10 +31,10 @@ Gem::Specification.new do |s|
     "lib/t2-server-cli.rb",
     "lib/t2-server.rb",
     "lib/t2-server/admin.rb",
-    "lib/t2-server/connection-parameters.rb",
-    "lib/t2-server/connection.rb",
-    "lib/t2-server/credentials.rb",
     "lib/t2-server/exceptions.rb",
+    "lib/t2-server/net/connection.rb",
+    "lib/t2-server/net/credentials.rb",
+    "lib/t2-server/net/parameters.rb",
     "lib/t2-server/port.rb",
     "lib/t2-server/run.rb",
     "lib/t2-server/server.rb",
@@ -76,7 +76,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://www.taverna.org.uk/"
   s.rdoc_options = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.10"
+  s.rubygems_version = "1.8.21"
   s.summary = "Support for interacting with Taverna 2 Server."
   s.test_files = ["test/ts_t2server.rb"]
 
@@ -89,6 +89,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<nokogiri>, [">= 1.5.0"])
       s.add_development_dependency(%q<rdoc>, [">= 3.9.4"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.3"])
+      s.add_runtime_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_runtime_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
       s.add_runtime_dependency(%q<hirb>, [">= 0.4.0"])
     else
@@ -97,6 +98,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<nokogiri>, [">= 1.5.0"])
       s.add_dependency(%q<rdoc>, [">= 3.9.4"])
       s.add_dependency(%q<jeweler>, ["~> 1.8.3"])
+      s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
       s.add_dependency(%q<hirb>, [">= 0.4.0"])
     end
@@ -106,6 +108,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<nokogiri>, [">= 1.5.0"])
     s.add_dependency(%q<rdoc>, [">= 3.9.4"])
     s.add_dependency(%q<jeweler>, ["~> 1.8.3"])
+    s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
     s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
     s.add_dependency(%q<hirb>, [">= 0.4.0"])
   end

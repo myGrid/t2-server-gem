@@ -82,7 +82,6 @@ module T2Server
     def initialize
       super
       self[:verify_peer] = true
-      self[:ca_path] = "/etc/ssl/certs" # need to get good defaults for Win/OSX
     end
   end
 

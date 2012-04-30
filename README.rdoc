@@ -81,10 +81,12 @@ And can be set like this for a standard https connection:
 
   conn_params = ConnectionParameters.new
   conn_params[:verify_peer] = true
-  conn_params[:ca_path] = "/etc/ssl/certs"
 
 This will ensure that the identity of the Taverna Server you are connecting to
 will be verified using the set of certificates in <tt>/etc/ssl/certs</tt>.
+<tt>:ca_path</tt> can also be set to a list of paths if required. You do not
+need to include your platform's default certificate paths as these are included
+automatically.
 
 For convenience a number of standard sets of parameters have been defined. The
 above example is available as +DefaultConnectionParameters+. Others available
