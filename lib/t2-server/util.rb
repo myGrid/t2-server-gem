@@ -31,6 +31,9 @@
 # Author: Robert Haines
 
 module T2Server
+
+  # This module contains various utility methods that the library uses
+  # internally.
   module Util
 
     # :call-seq:

@@ -66,6 +66,8 @@ module T2Server
   # way. This could be due to the server not accepting the connection, the
   # connection being dropped unexpectedly or a timeout of some sort.
   class ConnectionError < T2ServerError
+
+    # The internal cause of this connection error.
     attr_reader :cause
 
     # Create a new ConnectionError with the specified cause. The cause to be
@@ -94,6 +96,8 @@ module T2Server
   # expectation is that the run exists then it could have been destroyed by
   # a timeout or another user.
   class RunNotFoundError < T2ServerError
+
+    # The identifier of the run that was not found on the server.
     attr_reader :identifier
 
     # Create a new RunNotFoundError with the specified identifier.
@@ -106,6 +110,8 @@ module T2Server
   # Indicates that the attribute that the user is trying to read/change does
   # not exist. The attribute could be a server or run attribute.
   class AttributeNotFoundError < T2ServerError
+
+    # The path of the attribute that was not found on the server.
     attr_reader :path
 
     # Create a new AttributeNotFoundError with the path to the erroneous
@@ -128,6 +134,8 @@ module T2Server
   # Access to the entity (run or attribute) is denied. The credentials
   # supplied are not sufficient or the server does not allow the operation.
   class AccessForbiddenError < T2ServerError
+
+    # The path of the attribute that the user is forbidden to access.
     attr_reader :path
 
     # Create a new AccessForbiddenError with the path to the restricted
@@ -142,6 +150,8 @@ module T2Server
 
   # Access to the server is denied to this username
   class AuthorizationError < T2ServerError
+
+    # The username that has failed authorization.
     attr_reader :username
 
     # Create a new AuthorizationError with the rejected username
