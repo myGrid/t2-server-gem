@@ -40,10 +40,12 @@ module T2Server
   class Server
     include XML::Methods
 
-    # The version of the remote Taverna Server instance.
-    attr_reader :version
-
     # :stopdoc:
+    # Internal references to the main rest and admin top-level resource
+    # endpoints.
+    REST_ENDPOINT = "rest/"
+    ADMIN_ENDPOINT = "admin"
+
     XPaths = {
       # Server top-level XPath queries
       :server   => XML::Methods.xpath_compile("//nsr:serverDescription"),
@@ -85,13 +87,12 @@ module T2Server
       # setup connection
       @connection = ConnectionFactory.connect(uri, params)
 
-      # add a slash to the end of this address to work around this bug:
-      # http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113
-      server_description = xml_document(get_attribute("#{uri.path}/rest/",
-        "application/xml"))
-      @version = get_version(server_description)
-      @links = get_description(server_description)
-      @links[:admin] = "#{uri.path}/admin"
+      # The following four fields hold cached data about the server that is
+      # only downloaded the first time it is requested.
+      @server_doc = nil
+      @version = nil
+      @version_components = nil
+      @links = nil
 
       # initialize run object cache
       @runs = {}
@@ -149,13 +150,34 @@ module T2Server
       user = credentials.nil? ? :all : credentials.username
       @runs[user] = {} unless @runs[user]
 
-      @connection.POST_run("#{@links[:runs]}",
+      @connection.POST_run("#{links[:runs]}",
         XML::Fragments::WORKFLOW % workflow, credentials)
     end
 
+    # :call-seq:
+    #   version -> String
+    #
+    # The version string of the remote Taverna Server.
+    def version
+      if @version.nil?
+        @version = _get_version
+      end
+
+      @version
+    end
+
+    # :call-seq:
+    #   version_components -> Array
+    #
+    # An array of the major, minor and patch version components of the remote
+    # Taverna Server.
     def version_components
-      comps = @version.split(".")
-      comps.map { |v| v.to_i }
+      if @version_components.nil?
+        comps = version.split(".")
+        @version_components = comps.map { |v| v.to_i }
+      end
+
+      @version_components
     end
 
     # :call-seq:
@@ -173,7 +195,7 @@ module T2Server
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
     # against this maximum.
     def run_limit(credentials = nil)
-      get_attribute(@links[:runlimit], "text/plain", credentials).to_i
+      get_attribute(links[:runlimit], "text/plain", credentials).to_i
     end
 
     # :call-seq:
@@ -203,7 +225,7 @@ module T2Server
         run = run.identifier
       end
 
-      if delete_attribute("#{@links[:runs]}/#{run}", credentials)
+      if delete_attribute("#{links[:runs]}/#{run}", credentials)
         # delete cached run object - this must be done per user
         user = credentials.nil? ? :all : credentials.username
         @runs[user].delete(run) if @runs[user]
@@ -256,7 +278,7 @@ module T2Server
       end
 
       raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
-      @connection.POST_dir("#{@links[:runs]}/#{run}/#{root}",
+      @connection.POST_dir("#{links[:runs]}/#{run}/#{root}",
         XML::Fragments::MKDIR % dir, run, dir, credentials)
     end
 
@@ -284,7 +306,7 @@ module T2Server
 
       contents = Base64.encode64(data)
 
-      @connection.POST_file("#{@links[:runs]}/#{run}/#{location}",
+      @connection.POST_file("#{links[:runs]}/#{run}/#{location}",
         XML::Fragments::UPLOAD % [remote_name, contents], run, credentials)
     end
 
@@ -302,7 +324,7 @@ module T2Server
         run = run.identifier
       end
 
-      create_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
+      create_attribute("#{links[:runs]}/#{run}/#{path}", value, type,
         credentials)
       rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
@@ -318,7 +340,7 @@ module T2Server
         run = run.identifier
       end
 
-      get_attribute("#{@links[:runs]}/#{run}/#{path}", type, credentials)
+      get_attribute("#{links[:runs]}/#{run}/#{path}", type, credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -333,7 +355,7 @@ module T2Server
         run = run.identifier
       end
 
-      set_attribute("#{@links[:runs]}/#{run}/#{path}", value, type,
+      set_attribute("#{links[:runs]}/#{run}/#{path}", value, type,
         credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
@@ -349,7 +371,7 @@ module T2Server
         run = run.identifier
       end
 
-      delete_attribute("#{@links[:runs]}/#{run}/#{path}", credentials)
+      delete_attribute("#{links[:runs]}/#{run}/#{path}", credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -364,7 +386,7 @@ module T2Server
         run = run.identifier
       end
 
-      get_attribute("#{@links[:runs]}/#{run}/#{path}",
+      get_attribute("#{links[:runs]}/#{run}/#{path}",
         "application/octet-stream", range, credentials)
     rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
@@ -375,21 +397,28 @@ module T2Server
     end
 
     def get_admin_attribute(path, credentials = nil)
-      get_attribute("#{@links[:admin]}/#{path}", "*/*", credentials)
+      get_attribute("#{links[:admin]}/#{path}", "*/*", credentials)
     end
 
     def set_admin_attribute(path, value, credentials = nil)
-      set_attribute("#{@links[:admin]}/#{path}", value, "text/plain",
+      set_attribute("#{links[:admin]}/#{path}", value, "text/plain",
         credentials)
     end
 
     def admin_resource_writable?(path, credentials = nil)
-      headers = @connection.OPTIONS("#{@links[:admin]}/#{path}", credentials)
+      headers = @connection.OPTIONS("#{links[:admin]}/#{path}", credentials)
       headers["allow"][0].split(",").include? "PUT"
     end
     # :startdoc:
 
     private
+
+    def links
+      @links = _get_server_links if @links.nil?
+
+      @links
+    end
+
     def create_attribute(path, value, type, credentials = nil)
       @connection.POST(path, value, type, credentials)
     end
@@ -425,7 +454,17 @@ module T2Server
       @connection.DELETE(path, credentials)
     end
 
-    def get_version(doc)
+    def _get_server_description
+      if @server_doc.nil?
+        @server_doc = xml_document(get_attribute("#{uri.path}/#{REST_ENDPOINT}",
+          "application/xml"))
+      end
+
+      @server_doc
+    end
+
+    def _get_version
+      doc = _get_server_description
       version = xpath_attr(doc, XPaths[:server], "serverVersion")
       if version == nil
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
@@ -445,7 +484,8 @@ module T2Server
       end
     end
 
-    def get_description(doc)
+    def _get_server_links
+      doc = _get_server_description
       links = {}
       links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href")).path
 
@@ -462,11 +502,13 @@ module T2Server
       links[:permworkflows] =
         URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
 
+      links[:admin] = "#{uri.path}/#{ADMIN_ENDPOINT}"
+
       links
     end
 
     def get_runs(credentials = nil)
-      run_list = get_attribute("#{@links[:runs]}", "application/xml",
+      run_list = get_attribute("#{links[:runs]}", "application/xml",
         credentials)
 
       doc = xml_document(run_list)
