@@ -150,8 +150,8 @@ module T2Server
       user = credentials.nil? ? :all : credentials.username
       @runs[user] = {} unless @runs[user]
 
-      @connection.POST_run("#{links[:runs]}",
-        XML::Fragments::WORKFLOW % workflow, credentials)
+      @connection.POST(links[:runs], workflow,
+        "application/vnd.taverna.t2flow+xml", credentials)
     end
 
     # :call-seq:
@@ -195,7 +195,7 @@ module T2Server
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
     # against this maximum.
     def run_limit(credentials = nil)
-      get_attribute(links[:runlimit], "text/plain", credentials).to_i
+      read(links[:runlimit], "text/plain", credentials).to_i
     end
 
     # :call-seq:
@@ -225,7 +225,8 @@ module T2Server
         run = run.identifier
       end
 
-      if delete_attribute("#{links[:runs]}/#{run}", credentials)
+      run_uri = Util.append_to_uri_path(links[:runs], run)
+      if delete(run_uri, credentials)
         # delete cached run object - this must be done per user
         user = credentials.nil? ? :all : credentials.username
         @runs[user].delete(run) if @runs[user]
@@ -271,15 +272,9 @@ module T2Server
       run.input_port(input).remote_file = filename
     end
 
-    def create_dir(run, root, dir, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      raise AccessForbiddenError.new("subdirectories (#{dir})") if dir.include? ?/
-      @connection.POST_dir("#{links[:runs]}/#{run}/#{root}",
-        XML::Fragments::MKDIR % dir, run, dir, credentials)
+    def mkdir(uri, dir, credentials = nil)
+      @connection.POST(uri, XML::Fragments::MKDIR % dir, "application/xml",
+        credentials)
     end
 
     def make_run_dir(run, root, dir, credentials = nil)
@@ -289,25 +284,19 @@ module T2Server
       create_dir(run, root, dir, credentials)
     end
 
-    def upload_file(run, filename, location, rename, credentials = nil)
+    def upload_file(filename, uri, remote_name, credentials = nil)
       contents = IO.read(filename)
-      rename = filename.split('/')[-1] if rename == ""
+      remote_name = filename.split('/')[-1] if remote_name == ""
 
-      if upload_data(run, contents, rename, location, credentials)
-        rename
-      end
+      upload_data(contents, remote_name, uri, credentials)
     end
 
-    def upload_data(run, data, remote_name, location, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
+    def upload_data(data, remote_name, uri, credentials = nil)
       contents = Base64.encode64(data)
 
-      @connection.POST_file("#{links[:runs]}/#{run}/#{location}",
-        XML::Fragments::UPLOAD % [remote_name, contents], run, credentials)
+      @connection.POST(uri,
+        XML::Fragments::UPLOAD % [remote_name, contents], "application/xml",
+        credentials)
     end
 
     def upload_run_file(run, filename, location, rename, credentials = nil)
@@ -324,8 +313,8 @@ module T2Server
         run = run.identifier
       end
 
-      create_attribute("#{links[:runs]}/#{run}/#{path}", value, type,
-        credentials)
+      path_uri = Util.append_to_uri_path(links[:runs], "#{run}/#{path}")
+      create_attribute(path_uri, value, type, credentials)
       rescue AttributeNotFoundError => e
       if get_runs(credentials).has_key? run
         raise e
@@ -334,96 +323,27 @@ module T2Server
       end
     end
 
-    def get_run_attribute(run, path, type, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      get_attribute("#{links[:runs]}/#{run}/#{path}", type, credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run
-        raise e
-      else
-        raise RunNotFoundError.new(run)
-      end
-    end
-
-    def set_run_attribute(run, path, value, type, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      set_attribute("#{links[:runs]}/#{run}/#{path}", value, type,
-        credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run
-        raise e
-      else
-        raise RunNotFoundError.new(run)
-      end
-    end
-
-    def delete_run_attribute(run, path, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      delete_attribute("#{links[:runs]}/#{run}/#{path}", credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run
-        raise e
-      else
-        raise RunNotFoundError.new(run)
-      end
-    end
-
-    def download_run_file(run, path, range, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      get_attribute("#{links[:runs]}/#{run}/#{path}",
-        "application/octet-stream", range, credentials)
-    rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run
-        raise e
-      else
-        raise RunNotFoundError.new(run)
-      end
-    end
-
     def get_admin_attribute(path, credentials = nil)
-      get_attribute("#{links[:admin]}/#{path}", "*/*", credentials)
+      admin_uri = Util.append_to_uri_path(links[:admin], path)
+      read(admin_uri, "*/*", credentials)
     end
 
     def set_admin_attribute(path, value, credentials = nil)
-      set_attribute("#{links[:admin]}/#{path}", value, "text/plain",
-        credentials)
+      admin_uri = Util.append_to_uri_path(links[:admin], path)
+      set_attribute(admin_uri, value, "text/plain", credentials)
     end
 
     def admin_resource_writable?(path, credentials = nil)
-      headers = @connection.OPTIONS("#{links[:admin]}/#{path}", credentials)
+      admin_uri = Util.append_to_uri_path(links[:admin], path)
+      headers = @connection.OPTIONS(admin_uri, credentials)
       headers["allow"][0].split(",").include? "PUT"
     end
-    # :startdoc:
 
-    private
-
-    def links
-      @links = _get_server_links if @links.nil?
-
-      @links
+    def create(uri, value, type, credentials = nil)
+      @connection.POST(uri, value, type, credentials)
     end
 
-    def create_attribute(path, value, type, credentials = nil)
-      @connection.POST(path, value, type, credentials)
-    end
-
-    def get_attribute(path, type, *rest)
+    def read(uri, type, *rest)
       credentials = nil
       range = nil
 
@@ -439,25 +359,37 @@ module T2Server
       end
 
       begin
-        @connection.GET(path, type, range, credentials)
+        @connection.GET(uri, type, range, credentials)
       rescue ConnectionRedirectError => cre
+        # We've been redirected so save the new connection object with the new
+        # server URI and try again with the new URI.
         @connection = cre.redirect
+        uri = Util.replace_uri_path(@connection.uri, uri.path)
         retry
       end
     end
 
-    def set_attribute(path, value, type, credentials = nil)
-      @connection.PUT(path, value, type, credentials)
+    def update(uri, value, type, credentials = nil)
+      @connection.PUT(uri, value, type, credentials)
     end
 
-    def delete_attribute(path, credentials = nil)
-      @connection.DELETE(path, credentials)
+    def delete(uri, credentials = nil)
+      @connection.DELETE(uri, credentials)
+    end
+    # :startdoc:
+
+    private
+
+    def links
+      @links = _get_server_links if @links.nil?
+
+      @links
     end
 
     def _get_server_description
       if @server_doc.nil?
-        @server_doc = xml_document(get_attribute("#{uri.path}/#{REST_ENDPOINT}",
-          "application/xml"))
+        rest_uri = Util.append_to_uri_path(uri, REST_ENDPOINT)
+        @server_doc = xml_document(read(rest_uri, "application/xml"))
       end
 
       @server_doc
@@ -487,52 +419,53 @@ module T2Server
     def _get_server_links
       doc = _get_server_description
       links = {}
-      links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href")).path
+      links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href"))
 
-      links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href")).path
-      doc = xml_document(get_attribute(links[:policy], "application/xml"))
+      links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href"))
+      doc = xml_document(read(links[:policy], "application/xml"))
 
       links[:permlisteners] =
-        URI.parse(xpath_attr(doc, XPaths[:permlstt], "href")).path
+        URI.parse(xpath_attr(doc, XPaths[:permlstt], "href"))
       links[:notifications] =
-        URI.parse(xpath_attr(doc, XPaths[:notify], "href")).path
+        URI.parse(xpath_attr(doc, XPaths[:notify], "href"))
 
       links[:runlimit]      =
-        URI.parse(xpath_attr(doc, XPaths[:runlimit], "href")).path
+        URI.parse(xpath_attr(doc, XPaths[:runlimit], "href"))
       links[:permworkflows] =
-        URI.parse(xpath_attr(doc, XPaths[:permwkf], "href")).path
+        URI.parse(xpath_attr(doc, XPaths[:permwkf], "href"))
 
-      links[:admin] = "#{uri.path}/#{ADMIN_ENDPOINT}"
+      links[:admin] = Util.append_to_uri_path(uri, ADMIN_ENDPOINT)
 
       links
     end
 
     def get_runs(credentials = nil)
-      run_list = get_attribute("#{links[:runs]}", "application/xml",
-        credentials)
+      run_list = read(links[:runs], "application/xml", credentials)
 
       doc = xml_document(run_list)
 
       # get list of run identifiers
-      ids = []
+      run_list = {}
       xpath_find(doc, XPaths[:run]).each do |run|
-        ids << xml_node_attribute(run, "href").split('/')[-1]
+        uri = URI.parse(xml_node_attribute(run, "href"))
+        id = xml_node_content(run)
+        run_list[id] = uri
       end
 
       # cache run objects - this must be done per user
       user = credentials.nil? ? :all : credentials.username
       @runs[user] = {} unless @runs[user]
 
-      # add new runs
-      ids.each do |id|
+      # add new runs to the user cache
+      run_list.each_key do |id|
         if !@runs[user].has_key? id
-          @runs[user][id] = Run.create(self, "", credentials, id)
+          @runs[user][id] = Run.create(self, "", credentials, run_list[id])
         end
       end
 
       # clear out the expired runs
-      if @runs[user].length > ids.length
-        @runs[user].delete_if {|key, val| !ids.member? key}
+      if @runs[user].length > run_list.length
+        @runs[user].delete_if {|key, val| !run_list.member? key}
       end
 
       @runs[user]

@@ -98,84 +98,18 @@ module T2Server
     end
 
     # :call-seq:
-    #   POST_run(path, value, credentials) -> String
-    #
-    # Initialize a T2Server::Run on a server by uploading its workflow.
-    # The new run's identifier (in String form) is returned.
-    def POST_run(path, value, credentials)
-      response = _POST(path, value, "application/xml", credentials)
-
-      case response
-      when Net::HTTPCreated
-        # return the identifier of the newly created run
-        path_leaf_from_uri(response['location'])
-      when Net::HTTPForbidden
-        raise ServerAtCapacityError.new
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
-    end
-
-    # :call-seq:
-    #   POST_file(path, value, run, credentials) -> bool
-    #
-    # Upload a file to a run. If successful, true is returned.
-    def POST_file(path, value, run, credentials)
-      response = _POST(path, value, "application/xml", credentials)
-
-      case response
-      when Net::HTTPCreated
-        # OK, carry on...
-        true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{run}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
-    end
-
-    # :call-seq:
-    #   POST_dir(path, value, run, dir, credentials) -> bool
-    #
-    # Create a directory in the scratch space of a run. If successful, true
-    # is returned.
-    def POST_dir(path, value, run, dir, credentials)
-      response = _POST(path, value, "application/xml", credentials)
-
-      case response
-      when Net::HTTPCreated
-        # OK, carry on...
-        true
-      when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("#{dir} on run #{run}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
-      else
-        raise UnexpectedServerResponse.new(response)
-      end
-    end
-
-    # :call-seq:
     #   GET(path, type, range, credentials) -> String
     #
     # HTTP GET a resource at _path_ of _type_ from the server. If successful
     # the body of the response is returned. A portion of the data can be
     # retrieved by specifying a byte range, start..end, with the _range_
     # parameter.
-    def GET(path, type, range, credentials)
-      get = Net::HTTP::Get.new(path)
+    def GET(uri, type, range, credentials)
+      get = Net::HTTP::Get.new(uri.path)
       get["Accept"] = type
       get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
 
-      response = submit(get, path, credentials)
+      response = submit(get, uri, credentials)
 
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
@@ -186,9 +120,9 @@ module T2Server
         new_conn = redirect(response["location"])
         raise ConnectionRedirectError.new(new_conn)
       when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(path)
+        raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{path}")
+        raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -201,21 +135,21 @@ module T2Server
     #
     # Perform a HTTP PUT of _value_ to a path on the server. If successful
     # true is returned.
-    def PUT(path, value, type, credentials)
-      put = Net::HTTP::Put.new(path)
+    def PUT(uri, value, type, credentials)
+      put = Net::HTTP::Put.new(uri.path)
       put.content_type = type
       put.body = value
 
-      response = submit(put, path, credentials)
+      response = submit(put, uri, credentials)
 
       case response
       when Net::HTTPOK
         # OK, so carry on
         true
       when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(path)
+        raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{path}")
+        raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -227,18 +161,26 @@ module T2Server
     #   POST(path, value, type, credentials)
     #
     # Perform an HTTP POST of _value_ to a path on the server and return the
-    # identifier of the created attribute as a string.
-    def POST(path, value, type, credentials)
-      response = _POST(path, value, type, credentials)
+    # URI of the created attribute.
+    def POST(uri, value, type, credentials)
+      post = Net::HTTP::Post.new(uri.path)
+      post.content_type = type
+      post.body = value
+
+      response = submit(post, uri, credentials)
 
       case response
       when Net::HTTPCreated
-        # return the identifier of the newly created item
-        path_leaf_from_uri(response['location'])
+        # return the URI of the newly created item
+        URI.parse(response['location'])
       when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(path)
+        raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{path}")
+        if response.body.chomp.include? "server load exceeded"
+          raise ServerAtCapacityError.new
+        else
+          raise AccessForbiddenError.new("attribute #{uri.path}")
+        end
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -251,20 +193,19 @@ module T2Server
     #
     # Perform an HTTP DELETE on a path on the server. If successful true
     # is returned.
-    def DELETE(path, credentials)
-      run = path.split("/")[-1]
-      delete = Net::HTTP::Delete.new(path)
+    def DELETE(uri, credentials)
+      delete = Net::HTTP::Delete.new(uri.path)
 
-      response = submit(delete, path, credentials)
+      response = submit(delete, uri, credentials)
 
       case response
       when Net::HTTPNoContent
         # Success, carry on...
         true
       when Net::HTTPNotFound
-        raise RunNotFoundError.new(run)
+        false
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("run #{run}")
+        raise AccessForbiddenError.new(uri)
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -277,16 +218,16 @@ module T2Server
     #
     # Perform the HTTP OPTIONS command on the given _path_ and return a hash
     # of the headers returned.
-    def OPTIONS(path, credentials)
-      options = Net::HTTP::Options.new(path)
+    def OPTIONS(uri, credentials)
+      options = Net::HTTP::Options.new(uri.path)
 
-      response = submit(options, path, credentials)
+      response = submit(options, uri, credentials)
 
       case response
       when Net::HTTPOK
         response.to_hash
       when Net::HTTPForbidden
-        raise AccessForbiddenError.new("resource #{path}")
+        raise AccessForbiddenError.new("resource #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
@@ -295,26 +236,13 @@ module T2Server
     end
 
     private
-    def _POST(path, value, type, credentials)
-      post = Net::HTTP::Post.new(path)
-      post.content_type = type
-      post.body = value
 
-      submit(post, path, credentials)
-    end
-
-    def path_leaf_from_uri(uri)
-      URI.parse(uri).path.split('/')[-1]
-    end
-
-    def submit(request, path, credentials)
-      full_uri = @uri.clone
-      full_uri.path = path
+    def submit(request, uri, credentials)
 
       credentials.authenticate(request) unless credentials.nil?
 
       begin
-        @http.request(full_uri, request)
+        @http.request(uri, request)
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end
