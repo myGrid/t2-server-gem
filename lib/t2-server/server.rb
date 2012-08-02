@@ -153,6 +153,11 @@ module T2Server
         XML::Fragments::WORKFLOW % workflow, credentials)
     end
 
+    def version_components
+      comps = @version.split(".")
+      comps.map { |v| v.to_i }
+    end
+
     # :call-seq:
     #   uri -> URI
     #
@@ -426,7 +431,17 @@ module T2Server
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
           "are no longer supported.")
       else
-        return version.to_f
+        # Remove SNAPSHOT tag if it's there.
+        if version.end_with? "-SNAPSHOT"
+          version.gsub!("-SNAPSHOT", "")
+        end
+
+        # Add .0 if we only have a major and minor component.
+        if version.split(".").length == 2
+          version += ".0"
+        end
+
+        return version
       end
     end
 
