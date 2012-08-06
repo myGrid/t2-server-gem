@@ -46,11 +46,14 @@ module T2Server
     attr_reader :resources
 
     # :stopdoc:
+    ADMIN_ENDPOINT = "admin"
+
     def initialize(server, credentials = nil)
       @server = server
+      @uri = Util.append_to_uri_path(server.uri, ADMIN_ENDPOINT)
       @credentials = credentials
 
-      admin_description = xml_document(@server.get_admin_attribute("",
+      admin_description = xml_document(@server.read(@uri, "application/xml",
         @credentials))
       @resources = get_resources(admin_description)
       #@resources.each {|key, value| puts "#{key}: #{value}"}
@@ -68,12 +71,12 @@ module T2Server
     end
 
     # :stopdoc:
-    def get_resource_value(path)
-      @server.get_admin_attribute(path, @credentials)
+    def get_resource_value(uri)
+      @server.read(uri, "text/plain", @credentials)
     end
 
-    def set_resource_value(path, val)
-      @server.set_admin_attribute(path, val.to_s, @credentials)
+    def set_resource_value(uri, val)
+      @server.update(uri, val.to_s, "text/plain", @credentials)
     end
     # :startdoc:
 
@@ -82,10 +85,9 @@ module T2Server
       links = {}
 
       xml_children(doc.root) do |res|
-        path = xml_node_attribute(res, 'href').split('/')[-1]
-        write = @server.admin_resource_writable?(path, @credentials)
-        links[res.name.downcase] = AdminResource.new(res.name, path,
-          write, self)
+        uri = URI.parse(xml_node_attribute(res, 'href'))
+        write = @server.is_resource_writable?(uri, @credentials)
+        links[res.name.downcase] = AdminResource.new(res.name, uri, write, self)
       end
 
       links
@@ -100,13 +102,13 @@ module T2Server
       # The name of this resource.
       attr_reader :name
 
-      # The path to this resource on the server.
-      attr_reader :path
+      # The URI of this resource on the server.
+      attr_reader :uri
 
       # :stopdoc:
-      def initialize(name, path, writeable, parent)
+      def initialize(name, uri, writeable, parent)
         @name = name
-        @path = path
+        @uri = uri
         @admin = parent
         @writeable = writeable
 
@@ -123,7 +125,7 @@ module T2Server
       #
       # The resource can only be set if it is writable.
       def value
-        @admin.get_resource_value(@path)
+        @admin.get_resource_value(@uri)
       end
 
       # :call-seq:
@@ -138,7 +140,7 @@ module T2Server
       def make_writable
         (class << self; self; end).instance_eval do
           define_method "value=" do |value|
-            @admin.set_resource_value(@path, value)
+            @admin.set_resource_value(@uri, value)
           end
         end
       end

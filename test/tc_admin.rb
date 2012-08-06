@@ -37,14 +37,17 @@ class TestAdmin < Test::Unit::TestCase
   def test_admin
     T2Server::Server.new($uri, $conn_params) do |server|
 
-      # unauthorized
+      # Test for a user that we know isn't configured on the server.
       assert_raise(T2Server::AuthorizationError) do
         server.administrator(T2Server::HttpBasic.new("u", "p"))
       end
 
+      # Test for a user that is in the system but may or may not be a
+      # superuser. If the user is not a superuser then don't perform any more
+      # tests on the admin resource.
       begin
         server.administrator($creds)
-      rescue T2Server::T2ServerError => e
+      rescue T2Server::AccessForbiddenError => e
         # ignore, just don't run more tests
         return
       end

@@ -44,7 +44,6 @@ module T2Server
     # Internal references to the main rest and admin top-level resource
     # endpoints.
     REST_ENDPOINT = "rest/"
-    ADMIN_ENDPOINT = "admin"
 
     XPaths = {
       # Server top-level XPath queries
@@ -323,19 +322,8 @@ module T2Server
       end
     end
 
-    def get_admin_attribute(path, credentials = nil)
-      admin_uri = Util.append_to_uri_path(links[:admin], path)
-      read(admin_uri, "*/*", credentials)
-    end
-
-    def set_admin_attribute(path, value, credentials = nil)
-      admin_uri = Util.append_to_uri_path(links[:admin], path)
-      set_attribute(admin_uri, value, "text/plain", credentials)
-    end
-
-    def admin_resource_writable?(path, credentials = nil)
-      admin_uri = Util.append_to_uri_path(links[:admin], path)
-      headers = @connection.OPTIONS(admin_uri, credentials)
+    def is_resource_writable?(uri, credentials = nil)
+      headers = @connection.OPTIONS(uri, credentials)
       headers["allow"][0].split(",").include? "PUT"
     end
 
@@ -433,8 +421,6 @@ module T2Server
         URI.parse(xpath_attr(doc, XPaths[:runlimit], "href"))
       links[:permworkflows] =
         URI.parse(xpath_attr(doc, XPaths[:permwkf], "href"))
-
-      links[:admin] = Util.append_to_uri_path(uri, ADMIN_ENDPOINT)
 
       links
     end
