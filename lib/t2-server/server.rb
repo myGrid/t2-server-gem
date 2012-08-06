@@ -306,22 +306,6 @@ module T2Server
       upload_file(run, filename, location, rename, credentials)
     end
 
-    def create_run_attribute(run, path, value, type, credentials = nil)
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      path_uri = Util.append_to_uri_path(links[:runs], "#{run}/#{path}")
-      create_attribute(path_uri, value, type, credentials)
-      rescue AttributeNotFoundError => e
-      if get_runs(credentials).has_key? run
-        raise e
-      else
-        raise RunNotFoundError.new(run)
-      end
-    end
-
     def is_resource_writable?(uri, credentials = nil)
       headers = @connection.OPTIONS(uri, credentials)
       headers["allow"][0].split(",").include? "PUT"
