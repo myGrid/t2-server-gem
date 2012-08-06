@@ -191,7 +191,7 @@ module T2Server
     #
     # Delete this run from the server.
     def delete
-      @server.delete_run(@identifier, @credentials)
+      @server.delete(@uri, @credentials)
     end
 
     # :stopdoc:

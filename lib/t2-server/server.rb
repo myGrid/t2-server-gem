@@ -213,12 +213,11 @@ module T2Server
       get_runs(credentials)[identifier]
     end
 
-    # :call-seq:
-    #   delete_run(run, credentials = nil) -> bool
-    #
-    # Delete the specified run from the server, discarding all of its state.
-    # _run_ can be either a Run instance or a identifier.
+    # :stopdoc:
     def delete_run(run, credentials = nil)
+      warn "[DEPRECATION] 'Server#delete_run' is deprecated and will be " +
+        "removed in 1.0. Please use 'Run#delete' to delete a run."
+
       # get the identifier from the run if that is what is passed in
       if run.instance_of? Run
         run = run.identifier
@@ -232,11 +231,14 @@ module T2Server
         true
       end
     end
+    # :startdoc:
 
     # :call-seq:
     #   delete_all_runs(credentials = nil)
     #
-    # Delete all runs on this server, discarding all of their state.
+    # Delete all runs on this server, discarding all of their state. Note that
+    # only those runs that the provided credentials have permission to delete
+    # will be deleted.
     def delete_all_runs(credentials = nil)
       # first refresh run list
       runs(credentials).each {|run| run.delete}
