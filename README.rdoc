@@ -37,8 +37,8 @@ This version of the library should be compatible with any Ruby code that you
 may have already written against earlier versions but you may see some warnings
 about API deprecations. These are clearly marked [DEPRECATION] and will appear
 on your console output. Anything marked as deprecated will be removed in
-version 1.0.0 so you are advised to update your code at your earliest
-convenience.
+version 1.0.0 (and are not guaranteed to continue working even until then) so
+you are advised to update your code at your earliest convenience.
 
 == Compatibility with Ruby versions
 
@@ -124,12 +124,8 @@ credentials:
     ...
   end
 
-You can delete a run from the server by supplying either a run object or a run
-identifier to the <tt>delete_run</tt> method, along with your credentials:
-
-  server.delete_run(run, credentials)
-
-And all runs can be deleted in one go too:
+An individual run can be deleted with its own <tt>delete</tt> method (see below)
+but all runs on a server can be deleted in one go:
 
   server.delete_all_runs(credentials)
 
