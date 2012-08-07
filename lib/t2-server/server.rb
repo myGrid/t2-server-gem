@@ -293,11 +293,18 @@ module T2Server
     end
 
     def upload_data(data, remote_name, uri, credentials = nil)
-      contents = Base64.encode64(data)
+      # Different Server versions support different upload methods
+      (major, minor, patch) = version_components
 
-      @connection.POST(uri,
-        XML::Fragments::UPLOAD % [remote_name, contents], "application/xml",
-        credentials)
+      if minor == 4 && patch >= 1
+        put_uri = Util.append_to_uri_path(uri, remote_name)
+        @connection.PUT(put_uri, data, "application/octet-stream", credentials)
+      else
+        contents = Base64.encode64(data)
+        @connection.POST(uri,
+          XML::Fragments::UPLOAD % [remote_name, contents], "application/xml",
+          credentials)
+      end
     end
 
     def upload_run_file(run, filename, location, rename, credentials = nil)

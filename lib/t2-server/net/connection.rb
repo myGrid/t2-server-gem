@@ -132,9 +132,11 @@ module T2Server
 
     # :call-seq:
     #   PUT(path, value, type, credentials) -> bool
+    #   PUT(path, value, type, credentials) -> URI
     #
     # Perform a HTTP PUT of _value_ to a path on the server. If successful
-    # true is returned.
+    # true, or a URI to the PUT resource, is returned depending on whether the
+    # operation has set a parameter (true) or uploaded data (URI).
     def PUT(uri, value, type, credentials)
       put = Net::HTTP::Put.new(uri.path)
       put.content_type = type
@@ -144,8 +146,17 @@ module T2Server
 
       case response
       when Net::HTTPOK
-        # OK, so carry on
+        # We've set a parameter so we get 200 back from the server. Return
+        # true to indicate success.
         true
+      when Net::HTTPCreated
+        # We've uploaded data so we get 201 back from the server. Return the
+        # uri of the created resource.
+        URI.parse(response['location'])
+      when Net::HTTPNoContent
+        # We've modified data so we get 204 back from the server. Return the
+        # uri of the modified resource.
+        uri
       when Net::HTTPNotFound
         raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
