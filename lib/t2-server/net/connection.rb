@@ -98,9 +98,9 @@ module T2Server
     end
 
     # :call-seq:
-    #   GET(path, type, range, credentials) -> String
+    #   GET(uri, type, range, credentials) -> String
     #
-    # HTTP GET a resource at _path_ of _type_ from the server. If successful
+    # HTTP GET a resource at _uri_ of _type_ from the server. If successful
     # the body of the response is returned. A portion of the data can be
     # retrieved by specifying a byte range, start..end, with the _range_
     # parameter.
@@ -131,12 +131,13 @@ module T2Server
     end
 
     # :call-seq:
-    #   PUT(path, value, type, credentials) -> bool
-    #   PUT(path, value, type, credentials) -> URI
+    #   PUT(uri, value, type, credentials) -> bool
+    #   PUT(uri, value, type, credentials) -> URI
     #
-    # Perform a HTTP PUT of _value_ to a path on the server. If successful
-    # true, or a URI to the PUT resource, is returned depending on whether the
-    # operation has set a parameter (true) or uploaded data (URI).
+    # Perform a HTTP PUT of _value_ to a location on the server specified by
+    # _uri_ . If successful _true_ , or a URI to the PUT resource, is returned
+    # depending on whether the operation has set a parameter (true) or uploaded
+    # data (URI).
     def PUT(uri, value, type, credentials)
       put = Net::HTTP::Put.new(uri.path)
       put.content_type = type
@@ -169,10 +170,10 @@ module T2Server
     end
 
     # :call-seq:
-    #   POST(path, value, type, credentials)
+    #   POST(uri, value, type, credentials)
     #
-    # Perform an HTTP POST of _value_ to a path on the server and return the
-    # URI of the created attribute.
+    # Perform an HTTP POST of _value_ to a location on the server specified by
+    # _uri_ and return the URI of the created attribute.
     def POST(uri, value, type, credentials)
       post = Net::HTTP::Post.new(uri.path)
       post.content_type = type
@@ -200,9 +201,9 @@ module T2Server
     end
 
     # :call-seq:
-    #   DELETE(path, credentials) -> bool
+    #   DELETE(uri, credentials) -> bool
     #
-    # Perform an HTTP DELETE on a path on the server. If successful true
+    # Perform an HTTP DELETE on a _uri_ on the server. If successful true
     # is returned.
     def DELETE(uri, credentials)
       delete = Net::HTTP::Delete.new(uri.path)
@@ -225,9 +226,9 @@ module T2Server
     end
 
     # :call-seq:
-    #   OPTIONS(path, credentials) -> Hash
+    #   OPTIONS(uri, credentials) -> Hash
     #
-    # Perform the HTTP OPTIONS command on the given _path_ and return a hash
+    # Perform the HTTP OPTIONS command on the given _uri_ and return a hash
     # of the headers returned.
     def OPTIONS(uri, credentials)
       options = Net::HTTP::Options.new(uri.path)
