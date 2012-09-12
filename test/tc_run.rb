@@ -79,6 +79,17 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  # Test run with no input or output
+  def test_run_no_ports
+    T2Server::Run.create($uri, $wkf_no_io, $creds, $conn_params) do |run|
+      assert_nothing_raised { run.input_ports }
+      assert_nothing_raised { run.start }
+      assert(run.running?)
+      run.wait
+      assert_nothing_raised { run.output_ports }
+    end
+  end
+
   # Test run with list inputs
   def test_run_list_input
     T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|

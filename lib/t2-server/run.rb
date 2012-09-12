@@ -1051,7 +1051,12 @@ module T2Server
 
     def _get_output_port_info
       ports = {}
-      port_desc = @server.read(links[:output], "application/xml", @credentials)
+
+      begin
+        port_desc = @server.read(links[:output], "application/xml", @credentials)
+      rescue AttributeNotFoundError => anfe
+        return ports
+      end
 
       doc = xml_document(port_desc)
 
