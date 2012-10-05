@@ -1,7 +1,7 @@
 = Taverna[http://www.taverna.org.uk/] 2 Server Interaction Gem
 
 Authors::     Robert Haines
-Contact::     mailto:rhaines@manchester.ac.uk
+Contact::     mailto:support@mygrid.org.uk
 URL::         http://www.taverna.org.uk/
 Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
 Copyright::   (c) 2010-2012 The University of Manchester, UK

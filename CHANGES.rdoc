@@ -1,5 +1,22 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.9.2
+
+* Cleanup of the README and some delete additions.
+* Complete documentation coverage.
+* Update the parsing of the server version.
+* Optimize Server object creation.
+* Add URI manipulating methods to T2Server::Util.
+* Internal updates to use full URIs rather than relative paths.
+* Updates to the administrator interface to use full URIs.
+* URI code updates for secure workflow and permissions support.
+* Remove (deprecate) Server#delete_run.
+* Support direct PUT of data for newer versions of server.
+* Update the documentation of the Connection classes.
+* Minor updates to the top-level README.
+* Cleanup of t2-server-info script.
+* t2-run-workflow: Only print outputs if there are any.
+
 == Version 0.9.1
 
 * Update unit test code for Ruby 1.9 compatibility.
