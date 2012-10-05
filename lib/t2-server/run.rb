@@ -100,9 +100,10 @@ module T2Server
     BACLAVA_FILE = "out.xml"
 
     # New is private but rdoc does not get it right! Hence :stopdoc: section.
-    def initialize(server, id, credentials = nil)
+    def initialize(server, uri, credentials = nil)
       @server = server
-      @identifier = id
+      @uri = uri
+      @identifier = Util.get_path_leaf_from_uri(@uri)
       @workflow = ""
       @baclava_in = false
       @baclava_out = false
@@ -139,13 +140,13 @@ module T2Server
     # This method will _yield_ the newly created Run if a block is given.
     def Run.create(server, workflow, *rest)
       credentials = nil
-      id = nil
+      uri = nil
       conn_params = nil
 
       rest.each do |param|
         case param
-        when String
-          id = param
+        when URI
+          uri = param
         when ConnectionParameters
           conn_params = param
         when HttpCredentials
@@ -157,11 +158,11 @@ module T2Server
         server = Server.new(server, conn_params)
       end
 
-      if id.nil?
-        id = server.initialize_run(workflow, credentials)
+      if uri.nil?
+        uri = server.initialize_run(workflow, credentials)
       end
 
-      run = new(server, id, credentials)
+      run = new(server, uri, credentials)
       yield(run) if block_given?
       run
     end
@@ -190,7 +191,7 @@ module T2Server
     #
     # Delete this run from the server.
     def delete
-      @server.delete_run(@identifier, @credentials)
+      @server.delete(@uri, @credentials)
     end
 
     # :stopdoc:
@@ -282,8 +283,7 @@ module T2Server
     #
     # Return the expiry time of this run as an instance of class Time.
     def expiry
-      Time.parse(@server.get_run_attribute(@identifier, links[:expiry],
-        "text/plain", @credentials))
+      Time.parse(@server.read(links[:expiry], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -302,8 +302,7 @@ module T2Server
       # parse timezone offsets with a colon (eg +00:00)
       date_str = time.xmlschema(2)
       date_str = date_str[0..-4] + date_str[-2..-1]
-      @server.set_run_attribute(@identifier, links[:expiry], date_str,
-        "text/plain", @credentials)
+      @server.update(links[:expiry], date_str, "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -312,8 +311,8 @@ module T2Server
     # Get the workflow that this run represents.
     def workflow
       if @workflow == ""
-        @workflow = @server.get_run_attribute(@identifier, links[:workflow],
-          "application/xml", @credentials)
+        @workflow = @server.read(links[:workflow], "application/xml",
+          @credentials)
       end
       @workflow
     end
@@ -324,8 +323,7 @@ module T2Server
     # Get the status of this run. Status can be one of :initialized,
     # :running or :finished.
     def status
-      text_to_state(@server.get_run_attribute(@identifier, links[:status],
-        "text/plain", @credentials))
+      text_to_state(@server.read(links[:status], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -341,8 +339,8 @@ module T2Server
       # set all the inputs
       _check_and_set_inputs unless baclava_input?
 
-      @server.set_run_attribute(@identifier, links[:status],
-        state_to_text(:running), "text/plain", @credentials)
+      @server.update(links[:status], state_to_text(:running), "text/plain",
+        @credentials)
     end
 
     # :call-seq:
@@ -379,8 +377,7 @@ module T2Server
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
-      @server.get_run_attribute(@identifier, links[:exitcode], "text/plain",
-        @credentials).to_i
+      @server.read(links[:exitcode], "text/plain", @credentials).to_i
     end
 
     # :call-seq:
@@ -388,8 +385,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard out stream.
     def stdout
-      @server.get_run_attribute(@identifier, links[:stdout], "text/plain",
-        @credentials)
+      @server.read(links[:stdout], "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -397,8 +393,7 @@ module T2Server
     #
     # Get anything that the run printed to the standard error stream.
     def stderr
-      @server.get_run_attribute(@identifier, links[:stderr], "text/plain",
-        @credentials)
+      @server.read(links[:stderr], "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -408,16 +403,8 @@ module T2Server
     # could be used to store input data.
     def mkdir(dir)
       dir = Util.strip_path_slashes(dir)
-      if dir.include? ?/
-        # if a path is given then separate the leaf from the
-        # end and add the rest of the path to the wdir link
-        leaf = dir.split("/")[-1]
-        path = dir[0...-(leaf.length + 1)]
-        @server.create_dir(@identifier, "#{links[:wdir]}/#{path}", leaf,
-          @credentials)
-      else
-        @server.create_dir(@identifier, links[:wdir], dir, @credentials)
-      end
+
+      @server.mkdir(links[:wdir], dir, @credentials)
     end
 
     # :call-seq:
@@ -432,10 +419,10 @@ module T2Server
     # The name of the file on the server is returned.
     def upload_file(filename, params={})
       location = params[:dir] || ""
-      location = "#{links[:wdir]}/#{location}"
+      uri = Util.append_to_uri_path(links[:wdir], location)
       rename = params[:rename] || ""
-      @server.upload_file(@identifier, filename, location, rename,
-        @credentials)
+      file_uri = @server.upload_file(filename, uri, rename, @credentials)
+      Util.get_path_leaf_from_uri(file_uri)
     end
 
     # :call-seq:
@@ -445,9 +432,8 @@ module T2Server
     # remote directory to put this file in can also be specified, but if it is
     # it must first have been created by a call to Run#mkdir.
     def upload_data(data, remote_name, remote_directory = "")
-      location = "#{links[:wdir]}/#{remote_directory}"
-      @server.upload_data(@identifier, data, remote_name, location,
-        @credentials)
+      location_uri = Util.append_to_uri_path(links[:wdir], remote_directory)
+      @server.upload_data(data, remote_name, location_uri, @credentials)
     end
 
     # :stopdoc:
@@ -469,9 +455,8 @@ module T2Server
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
-      rename = upload_file(filename)
-      result = @server.set_run_attribute(@identifier, links[:baclava], rename,
-        "text/plain", @credentials)
+      file = upload_file(filename)
+      result = @server.update(links[:baclava], file, "text/plain", @credentials)
 
       @baclava_in = true if result
 
@@ -502,8 +487,8 @@ module T2Server
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @baclava_out = @server.set_run_attribute(@identifier, links[:output],
-        BACLAVA_FILE, "text/plain", @credentials)
+      @baclava_out = @server.update(links[:output], BACLAVA_FILE, "text/plain",
+        @credentials)
     end
 
     # :stopdoc:
@@ -541,8 +526,9 @@ module T2Server
       raise RunStateError.new(state, :finished) if state != :finished
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
-      @server.get_run_attribute(@identifier,
-        "#{links[:wdir]}/#{BACLAVA_FILE}", "*/*", @credentials)
+
+      baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
+      @server.read(baclava_uri, "*/*", @credentials)
     end
 
     # :stopdoc:
@@ -562,8 +548,8 @@ module T2Server
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
-      @server.get_run_attribute(@identifier, "#{links[:wdir]}/out",
-        "application/zip", @credentials)
+      output_uri = Util.append_to_uri_path(links[:wdir], "out")
+      @server.read(output_uri, "application/zip", @credentials)
     end
 
     # :call-seq:
@@ -595,8 +581,7 @@ module T2Server
     #
     # Get the creation time of this run as an instance of class Time.
     def create_time
-      Time.parse(@server.get_run_attribute(@identifier, links[:createtime],
-        "text/plain", @credentials))
+      Time.parse(@server.read(links[:createtime], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -604,8 +589,7 @@ module T2Server
     #
     # Get the start time of this run as an instance of class Time.
     def start_time
-      Time.parse(@server.get_run_attribute(@identifier, links[:starttime],
-        "text/plain", @credentials))
+      Time.parse(@server.read(links[:starttime], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -613,8 +597,7 @@ module T2Server
     #
     # Get the finish time of this run as an instance of class Time.
     def finish_time
-      Time.parse(@server.get_run_attribute(@identifier, links[:finishtime],
-        "text/plain", @credentials))
+      Time.parse(@server.read(links[:finishtime], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -640,8 +623,7 @@ module T2Server
       return unless owner?
 
       value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
-      @server.create_run_attribute(@identifier, links[:sec_perms], value,
-        "application/xml", @credentials)
+      @server.create(links[:sec_perms], value, "application/xml", @credentials)
     end
 
     # :call-seq:
@@ -654,8 +636,8 @@ module T2Server
       return unless owner?
 
       perms = {}
-      doc = xml_document(@server.get_run_attribute(@identifier,
-        links[:sec_perms], "application/xml", @credentials))
+      doc = xml_document(@server.read(links[:sec_perms], "application/xml",
+        @credentials))
 
       xpath_find(doc, XPaths[:sec_perm]).each do |p|
         user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
@@ -687,22 +669,22 @@ module T2Server
     def revoke_permission(username)
       return unless owner?
 
-      path = "#{links[:sec_perms]}/#{username}"
-      @server.delete_run_attribute(@identifier, path, @credentials)
+      uri = Util.append_to_uri_path(links[:sec_perms], username)
+      @server.delete(uri, @credentials)
     end
 
     # :call-seq:
-    #   add_password_credential(service_uri, username, password) -> String
+    #   add_password_credential(service_uri, username, password) -> URI
     #
     # Provide a username and password credential for the secure service at the
-    # specified URI. The id of the credential on the server is returned. Only
+    # specified URI. The URI of the credential on the server is returned. Only
     # the owner of a run may supply credentials for it. +nil+ is returned if a
     # user other than the owner uses this method.
     def add_password_credential(uri, username, password)
       return unless owner?
 
       # Is this a new credential, or an update?
-      id = credential(uri)
+      cred_uri = credential(uri)
 
       # basic uri checks
       uri = _check_cred_uri(uri)
@@ -710,24 +692,22 @@ module T2Server
       cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
       value = XML::Fragments::CREDENTIAL % cred
 
-      if id.nil?
-        @server.create_run_attribute(@identifier, links[:sec_creds], value,
-          "application/xml", @credentials)
-      else
-        path = "#{links[:sec_creds]}/#{id}"
-        @server.set_run_attribute(@identifier, path, value, "application/xml",
+      if cred_uri.nil?
+        @server.create(links[:sec_creds], value, "application/xml",
           @credentials)
+      else
+        @server.update(cred_uri, value, "application/xml", @credentials)
       end
     end
 
     # :call-seq:
     #   add_keypair_credential(service_uri, filename, password,
-    #     alias = "Imported Certificate", type = :pkcs12) -> String
+    #     alias = "Imported Certificate", type = :pkcs12) -> URI
     #
     # Provide a client certificate credential for the secure service at the
     # specified URI. You will need to provide the password to unlock the
     # private key. You will also need to provide the 'alias' or 'friendlyName'
-    # of the key you wish to use if it differs from the default. The id of the
+    # of the key you wish to use if it differs from the default. The URI of the
     # credential on the server is returned. Only the owner of a run may supply
     # credentials for it. +nil+ is returned if a user other than the owner uses
     # this method.
@@ -745,36 +725,35 @@ module T2Server
         type, password]
       value = XML::Fragments::CREDENTIAL % cred
 
-      @server.create_run_attribute(@identifier, links[:sec_creds], value,
-        "application/xml", @credentials)
+      @server.create(links[:sec_creds], value, "application/xml", @credentials)
     end
 
     # :call-seq:
     #   credentials -> Hash
     #
-    # Return a hash (service_uri => identifier) of all the credentials provided
-    # for this run. Only the owner of a run may query its credentials. +nil+ is
-    # returned if a user other than the owner uses this method.
+    # Return a hash (service_uri => credential_uri) of all the credentials
+    # provided for this run. Only the owner of a run may query its credentials.
+    # +nil+ is returned if a user other than the owner uses this method.
     def credentials
       return unless owner?
 
       creds = {}
-      doc = xml_document(@server.get_run_attribute(@identifier,
-        links[:sec_creds], "application/xml", @credentials))
+      doc = xml_document(@server.read(links[:sec_creds], "application/xml",
+        @credentials))
 
       xpath_find(doc, XPaths[:sec_cred]).each do |c|
-        uri = xml_node_content(xpath_first(c, XPaths[:sec_suri]))
-        id = xml_node_attribute(c, "href").split('/')[-1]
-        creds[uri] = id
+        uri = URI.parse(xml_node_content(xpath_first(c, XPaths[:sec_suri])))
+        cred_uri = URI.parse(xml_node_attribute(c, "href"))
+        creds[uri] = cred_uri
       end
 
       creds
     end
 
     # :call-seq:
-    #   credential(service_uri) -> String
+    #   credential(service_uri) -> URI
     #
-    # Return the identifier of the credential set for the supplied service, if
+    # Return the URI of the credential set for the supplied service, if
     # any. Only the owner of a run may query its credentials. +nil+ is
     # returned if a user other than the owner uses this method.
     def credential(uri)
@@ -792,8 +771,7 @@ module T2Server
     def delete_credential(uri)
       return unless owner?
 
-      path = "#{links[:sec_creds]}/#{credentials[uri]}"
-      @server.delete_run_attribute(@identifier, path, @credentials)
+      @server.delete(credentials[uri], @credentials)
     end
 
     # :call-seq:
@@ -805,15 +783,14 @@ module T2Server
     def delete_all_credentials
       return unless owner?
 
-      @server.delete_run_attribute(@identifier, links[:sec_creds],
-        @credentials)
+      @server.delete(links[:sec_creds], @credentials)
     end
 
     # :call-seq:
-    #   add_trust(filename, type = :x509) -> String
+    #   add_trust(filename, type = :x509) -> URI
     #
     # Add a trusted identity (server public key) to verify peers when using
-    # https connections to Web Services. The id of the trust on the server is
+    # https connections to Web Services. The URI of the trust on the server is
     # returned. Only the owner of a run may add a trust. +nil+ is returned if
     # a user other than the owner uses this method.
     def add_trust(filename, type = :x509)
@@ -824,43 +801,41 @@ module T2Server
       contents = Base64.encode64(IO.read(filename))
 
       value = XML::Fragments::TRUST % [contents, type]
-      @server.create_run_attribute(@identifier, links[:sec_trusts], value,
-        "application/xml", @credentials)
+      @server.create(links[:sec_trusts], value, "application/xml", @credentials)
     end
 
     # :call-seq:
     #   trusts -> Array
     #
-    # Return a list of all the ids of trusts that have been registered for this
-    # run. At present there is no way to differentiate between trusts without
-    # noting the id returned when originally uploaded. Only the owner of a run
-    # may query its trusts. +nil+ is returned if a user other than the owner
-    # uses this method.
+    # Return a list of all the URIs of trusts that have been registered for
+    # this run. At present there is no way to differentiate between trusts
+    # without noting the URI returned when originally uploaded. Only the owner
+    # of a run may query its trusts. +nil+ is returned if a user other than the
+    # owner uses this method.
     def trusts
       return unless owner?
 
-      t_ids = []
-      doc = xml_document(@server.get_run_attribute(@identifier,
-        links[:sec_trusts], "application/xml", @credentials))
+      t_uris = []
+      doc = xml_document(@server.read(links[:sec_trusts], "application/xml",
+        @credentials))
 
       xpath_find(doc, XPaths[:sec_trust]). each do |t|
-        t_ids << xml_node_attribute(t, "href").split('/')[-1]
+        t_uris << URI.parse(xml_node_attribute(t, "href"))
       end
 
-      t_ids
+      t_uris
     end
 
     # :call-seq:
-    #   delete_trust(id) -> bool
+    #   delete_trust(URI) -> bool
     #
-    # Delete the trust with the provided id. Only the owner of a run may
+    # Delete the trust with the provided URI. Only the owner of a run may
     # delete its trusts. +nil+ is returned if a user other than the owner uses
     # this method.
-    def delete_trust(id)
+    def delete_trust(uri)
       return unless owner?
 
-      path = "#{links[:sec_trusts]}/#{id}"
-      @server.delete_run_attribute(@identifier, path, @credentials)
+      @server.delete(uri, @credentials)
     end
 
     # :call-seq:
@@ -872,17 +847,15 @@ module T2Server
     def delete_all_trusts
       return unless owner?
 
-      @server.delete_run_attribute(@identifier, links[:sec_trusts],
-        @credentials)
+      @server.delete(links[:sec_trusts], @credentials)
     end
 
     # :stopdoc:
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
     # downloads a file from the run's working directory.
-    def download_output_data(path, range = nil)
-      @server.download_run_file(@identifier, "#{links[:wdir]}/out/#{path}",
-        range, @credentials)
+    def download_output_data(uri, range = nil)
+      @server.read(uri, "application/octet-stream", range, @credentials)
     end
     # :startdoc:
 
@@ -923,16 +896,14 @@ module T2Server
           end
 
           xml_value = xml_text_node(port.file)
-          path = "#{links[:inputs]}/input/#{port.name}"
-          @server.set_run_attribute(self, path,
-            XML::Fragments::RUNINPUTFILE % xml_value, "application/xml",
-            @credentials)
+          uri = Util.append_to_uri_path(links[:inputs], "input/#{port.name}")
+          @server.update(uri, XML::Fragments::RUNINPUTFILE % xml_value,
+            "application/xml", @credentials)
         else
           xml_value = xml_text_node(port.value)
-          path = "#{links[:inputs]}/input/#{port.name}"
-          @server.set_run_attribute(self, path,
-            XML::Fragments::RUNINPUTVALUE % xml_value, "application/xml",
-            @credentials)
+          uri = Util.append_to_uri_path(links[:inputs], "input/#{port.name}")
+          @server.update(uri, XML::Fragments::RUNINPUTVALUE % xml_value,
+            "application/xml", @credentials)
         end
       end
     end
@@ -960,8 +931,7 @@ module T2Server
       # Create and upload the baclava data.
       baclava = Taverna::Baclava::Writer.write(data_map)
       upload_data(baclava, "in.baclava")
-      @server.set_run_attribute(@identifier, links[:baclava], "in.baclava",
-        "text/plain", @credentials)
+      @server.update(links[:baclava], "in.baclava", "text/plain", @credentials)
     end
 
     # Check that the uri passed in is suitable for credential use:
@@ -987,8 +957,8 @@ module T2Server
     # returned as a list of two lists, "lists" and "values" respectively.
     def _ls_ports(dir="", top=true)
       dir = Util.strip_path_slashes(dir)
-      dir_list = @server.get_run_attribute(@identifier,
-        "#{links[:wdir]}/#{dir}", "*/*", @credentials)
+      uri = Util.append_to_uri_path(links[:wdir], dir)
+      dir_list = @server.read(uri, "*/*", @credentials)
 
       # compile a list of directory entries stripping the
       # directory name from the front of each filename
@@ -1030,8 +1000,8 @@ module T2Server
             return "#{@server.uri}/rest/runs/#{@identifier}/" +
               "#{links[:wdir]}/out/#{output}"
           else
-            return @server.get_run_attribute(@identifier,
-              "#{links[:wdir]}/out/#{output}", "application/octet-stream",
+            out_uri = Util.append_to_uri_path(links[:wdir], "out/#{output}")
+            return @server.read(out_uri, "application/octet-stream",
               @credentials)
           end
         end
@@ -1054,9 +1024,10 @@ module T2Server
           result << "#{@server.uri}/rest/runs/#{@identifier}/" +
             "#{links[:wdir]}/out/#{output}/#{item}"
         else
-          result << @server.get_run_attribute(@identifier,
-            "#{links[:wdir]}/out/#{output}/#{item}",
-            "application/octet-stream", @credentials)
+          out_uri = Util.append_to_uri_path(links[:wdir],
+            "out/#{output}/#{item}")
+          result << @server.read(out_uri, "application/octet-stream",
+            @credentials)
         end
       end
 
@@ -1065,8 +1036,8 @@ module T2Server
 
     def _get_input_port_info
       ports = {}
-      port_desc = @server.get_run_attribute(@identifier, links[:inputexp],
-        "application/xml", @credentials)
+      port_desc = @server.read(links[:inputexp], "application/xml",
+        @credentials)
 
       doc = xml_document(port_desc)
 
@@ -1080,8 +1051,12 @@ module T2Server
 
     def _get_output_port_info
       ports = {}
-      port_desc = @server.get_run_attribute(@identifier, links[:output],
-        "application/xml", @credentials)
+
+      begin
+        port_desc = @server.read(links[:output], "application/xml", @credentials)
+      rescue AttributeNotFoundError => anfe
+        return ports
+      end
 
       doc = xml_document(port_desc)
 
@@ -1095,8 +1070,8 @@ module T2Server
 
     def _get_run_description
       if @run_doc.nil?
-        @run_doc = xml_document(@server.get_run_attribute(@identifier, "",
-          "application/xml", @credentials))
+        @run_doc = xml_document(@server.read(@uri, "application/xml",
+          @credentials))
       end
 
       @run_doc
@@ -1116,34 +1091,33 @@ module T2Server
 
       [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
         :wdir, :inputs, :output, :securectx, :listeners].each do |key|
-          links[key] = xpath_attr(doc, XPaths[key], "href").split('/')[-1]
+          links[key] = URI.parse(xpath_attr(doc, XPaths[key], "href"))
       end
 
       # get inputs
-      inputs = @server.get_run_attribute(@identifier, links[:inputs],
-        "application/xml",@credentials)
+      inputs = @server.read(links[:inputs], "application/xml",@credentials)
       doc = xml_document(inputs)
 
-      links[:baclava] = "#{links[:inputs]}/" +
-        xpath_attr(doc, XPaths[:baclava], "href").split('/')[-1]
-      links[:inputexp] = "#{links[:inputs]}/" +
-        xpath_attr(doc, XPaths[:inputexp], "href").split('/')[-1]
+      links[:baclava] = URI.parse(xpath_attr(doc, XPaths[:baclava], "href"))
+      links[:inputexp] = URI.parse(xpath_attr(doc, XPaths[:inputexp], "href"))
 
       # set io properties
-      links[:io]       = "#{links[:listeners]}/io"
-      links[:stdout]   = "#{links[:io]}/properties/stdout"
-      links[:stderr]   = "#{links[:io]}/properties/stderr"
-      links[:exitcode] = "#{links[:io]}/properties/exitcode"
+      links[:io]       = Util.append_to_uri_path(links[:listeners], "io")
+      links[:stdout]   = Util.append_to_uri_path(links[:io], "properties/stdout")
+      links[:stderr]   = Util.append_to_uri_path(links[:io], "properties/stderr")
+      links[:exitcode] = Util.append_to_uri_path(links[:io], "properties/exitcode")
 
       # security properties - only available to the owner of a run
       if owner?
-        securectx = @server.get_run_attribute(@identifier, links[:securectx],
-          "application/xml", @credentials)
+        securectx = @server.read(links[:securectx], "application/xml",
+          @credentials)
         doc = xml_document(securectx)
 
         [:sec_creds, :sec_perms, :sec_trusts].each do |key|
-          links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
-            "href").split('/')[-1]
+          #links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
+          #  "href").split('/')[-1]
+          links[key] = Util.append_to_uri_path(links[:securectx],
+            xpath_attr(doc, XPaths[key], "href").split('/')[-1])
         end
       end
 

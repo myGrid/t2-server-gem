@@ -31,6 +31,9 @@
 # Author: Robert Haines
 
 module T2Server
+
+  # This module contains various utility methods that the library uses
+  # internally.
   module Util
 
     # :call-seq:
@@ -65,6 +68,42 @@ module T2Server
     # removed from the ends of _path_ (if present).
     def self.strip_path_slashes(path)
       path.gsub(/^\//, "").chomp("/")
+    end
+
+    # :call-seq:
+    #   Util.append_to_uri_path(uri, path) -> URI
+    #
+    # Appends a path to the end of the path of the given URI.
+    def self.append_to_uri_path(uri, path)
+      return uri if path == ""
+
+      new_uri = uri.clone
+      new_uri.path = "#{uri.path}/#{path}"
+
+      new_uri
+    end
+
+    # :call-seq:
+    #   Util.replace_uri_path(uri, path) -> URI
+    #
+    # Replace the given URI's path with a new one. The new path must be an
+    # absolute path (start with a slash).
+    def self.replace_uri_path(uri, path)
+      new_uri = uri.clone
+      new_uri.path = path
+
+      new_uri
+    end
+
+    # :call_seq:
+    #   Util.get_path_leaf_from_uri(uri) -> String
+    #
+    # Get the final component from the path of a URI. This method returns the
+    # empty string (not _nil_ ) if the URI does not have a path.
+    def self.get_path_leaf_from_uri(uri)
+      path = uri.path.split("/")[-1]
+
+      path.nil? ? "" : path
     end
 
   end

@@ -72,3 +72,47 @@ class TestUriStripping < Test::Unit::TestCase
     assert_equal(username, r_creds.username)
   end
 end
+
+class TestUriPathAppending < Test::Unit::TestCase
+  def test_append
+    original = URI.parse("http://www.example.com:8080/old")
+    original_copy = URI.parse("http://www.example.com:8080/old")
+    extra_path = "new/bit"
+    blank_path = ""
+    appended = URI.parse("http://www.example.com:8080/old/new/bit")
+
+    # Prove it works.
+    assert_equal(appended, T2Server::Util.append_to_uri_path(original, extra_path))
+    assert_equal(original, T2Server::Util.append_to_uri_path(original, blank_path))
+
+    # Make sure the original is not changed!
+    assert_equal(original, original_copy)
+  end
+end
+
+class TestUriPathReplacement < Test::Unit::TestCase
+  def test_replace
+    original = URI.parse("http://www.example.com:8080/old/path")
+    original_copy = URI.parse("http://www.example.com:8080/old/path")
+    new_path = "/new/path"
+    replaced = URI.parse("http://www.example.com:8080/new/path")
+
+    # Prove it works.
+    assert_equal(replaced, T2Server::Util.replace_uri_path(original, new_path))
+
+    # Make sure the original is not changed!
+    assert_equal(original, original_copy)
+  end
+end
+
+class TestGetUriPathLeaf < Test::Unit::TestCase
+  def test_get_leaf
+    uri1 = URI.parse("http://www.example.com:8080/old/path")
+    uri2 = URI.parse("http://www.example.com:8080/")
+    uri3 = URI.parse("http://www.example.com:8080")
+
+    assert_equal("path", T2Server::Util.get_path_leaf_from_uri(uri1))
+    assert_equal("", T2Server::Util.get_path_leaf_from_uri(uri2))
+    assert_equal("", T2Server::Util.get_path_leaf_from_uri(uri3))
+  end
+end

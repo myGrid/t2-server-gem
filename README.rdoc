@@ -37,8 +37,8 @@ This version of the library should be compatible with any Ruby code that you
 may have already written against earlier versions but you may see some warnings
 about API deprecations. These are clearly marked [DEPRECATION] and will appear
 on your console output. Anything marked as deprecated will be removed in
-version 1.0.0 so you are advised to update your code at your earliest
-convenience.
+version 1.0.0 (and are not guaranteed to continue working even until then) so
+you are advised to update your code at your earliest convenience.
 
 == Compatibility with Ruby versions
 
@@ -49,7 +49,7 @@ This library is known to work with the following versions of Ruby:
 * jruby 1.6.4 (in Ruby 1.8 mode)
 
 Those marked with an asterisk (*) are supported and bugs found against them
-will be fixed. Other versions may work but are not supported.
+will be fixed. Other versions may work but are not tested or supported.
 
 == Usage
 
@@ -60,7 +60,7 @@ There are two entry points for the T2Server API:
 
 In both cases the gem should be initialized by requiring the top level ruby
 file:
-  require 't2-server.rb'
+  require 't2-server'
 
 === Configuring a Server connection
 
@@ -71,11 +71,11 @@ connection.
 
 Connection configuration settings are passed in to various methods using the
 +ConnectionParameters+ class. Parameters that can be set are:
-* <tt>:ca_file</tt>
-* <tt>:ca_path</tt>
-* <tt>:verify_peer</tt>
-* <tt>:client_certificate</tt>
-* <tt>:client_password</tt>
+* <tt>:ca_file</tt> - A file to use as a Certificate Authority (CA) for self-signed server certificates.
+* <tt>:ca_path</tt> - Path or list of paths to directories of CA certificates.
+* <tt>:verify_peer</tt> - Use a CA to verify that the Taverna Server you are connecting to has a valid server certificate and that it is the correct one.
+* <tt>:client_certificate</tt> - A certificate to use for client certificate authentication.
+* <tt>:client_password</tt> - The password to unlock the private key of the client certificate.
 
 And can be set like this for a standard https connection:
 
@@ -83,7 +83,7 @@ And can be set like this for a standard https connection:
   conn_params[:verify_peer] = true
 
 This will ensure that the identity of the Taverna Server you are connecting to
-will be verified using the set of certificates in <tt>/etc/ssl/certs</tt>.
+will be verified using the default set of certificates for your platform.
 <tt>:ca_path</tt> can also be set to a list of paths if required. You do not
 need to include your platform's default certificate paths as these are included
 automatically.
@@ -116,6 +116,21 @@ and a set of connection parameters to connect to a server:
 Note that credentials are not required by default to simply connect to a
 Taverna Server. Further operations (such as creating and starting runs) may
 require authorization depending on how your server has been set up.
+
+To create a Run on a Server simply pass the workflow you wish to run and your
+credentials:
+
+  server.create_run(workflow, credentials) do |run|
+    ...
+  end
+
+An individual run can be deleted with its own <tt>delete</tt> method (see below)
+but all runs on a server can be deleted in one go:
+
+  server.delete_all_runs(credentials)
+
+Note that you can only delete runs for which your credentials have delete
+authorization. See later for details.
 
 === Run API example
 
@@ -168,6 +183,10 @@ But make sure you request baclava output *before* starting the run:
   run.start
   run.wait
   output = run.baclava_output
+
+A run can be deleted when no longer needed, like so:
+
+  run.delete
 
 See the rdoc for more information. Many methods and classes have much more
 functionality than the defaults described above. Please note that anything
@@ -239,9 +258,9 @@ WSDL address of the service with your username and password:
 
 ==== R Servers (via Rshells)
 
-You can authenticate to R Servers in almost exactly the same as for
+You can authenticate to R Servers in almost exactly the same way as for
 REST services - only the protocol scheme is different. So instead of
-http or https it is rserve:
++http+ or +https+ it is +rserve+:
 
  run.add_password_credential("rserve://example.com:6311", "username", "password")
 

@@ -175,13 +175,16 @@ begin
         puts "Zip file written to '#{options[:zip_out]}'"
       else
         # go through the outputs and print them out
-        puts "Outputs:"
-        run.output_ports.each_value do |port|
-          print "    #{port.name} (#{port.depth}) -> "
-          if options[:output_refs]
-            p port.reference
-          else
-            p port.value
+        outputs = run.output_ports
+        unless outputs.empty?
+          puts "Outputs:"
+          outputs.each_value do |port|
+            print "    #{port.name} (#{port.depth}) -> "
+            if options[:output_refs]
+              p port.reference
+            else
+              p port.value
+            end
           end
         end
       end

@@ -49,6 +49,8 @@ require 't2-server/admin'
 # * T2Server::Server - Use this if you are providing a web interface to a
 #   Taverna 2 Server instance.
 module T2Server
+
+  # Library version information.
   module Version
     # Version information in a Hash
     INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..",

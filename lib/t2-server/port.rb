@@ -283,8 +283,8 @@ module T2Server
     end
 
     # :stopdoc:
-    def download(ref, range = nil)
-      @run.download_output_data("#{path(ref)}", range)
+    def download(uri, range = nil)
+      @run.download_output_data(uri, range)
     end
     # :startdoc:
 
@@ -342,7 +342,7 @@ module T2Server
     # :stopdoc:
     def initialize(port, ref, error, type = "", size = 0)
       @port = port
-      @reference = ref
+      @reference = URI.parse(ref)
       @type = type
       @size = size
       @value = nil

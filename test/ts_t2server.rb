@@ -84,6 +84,7 @@ if address != ""
   $wkf_xml    = File.read("test/workflows/xml_xpath.t2flow")
   $wkf_fail   = File.read("test/workflows/always_fail.t2flow")
   $wkf_errors = File.read("test/workflows/list_with_errors.t2flow")
+  $wkf_no_io  = File.read("test/workflows/no-ports.t2flow")
   $list_input = "test/workflows/empty_list_input.baclava"
   $file_input = "test/workflows/in.txt"
   $file_strs  = "test/workflows/strings.txt"

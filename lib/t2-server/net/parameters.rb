@@ -79,6 +79,8 @@ module T2Server
   # If the connection is over SSL then the peer will be verified using the
   # underlying OS's certificate store.
   class DefaultConnectionParameters < ConnectionParameters
+    # Create connection parameters that are secure by default and verify the
+    # server that is being connected to.
     def initialize
       super
       self[:verify_peer] = true
@@ -88,6 +90,8 @@ module T2Server
   # Connection parameters that specifically turn off peer verification when
   # using SSL.
   class InsecureSSLConnectionParameters < ConnectionParameters
+    # Create connection parameters that are insecure by default and do not
+    # verify the server that is connected to.
     def initialize
       super
       self[:verify_peer] = false

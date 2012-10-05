@@ -40,11 +40,11 @@ class TestServer < Test::Unit::TestCase
     end
   end
 
-  def test_run_creation_deletion
+  def test_run_creation
     T2Server::Server.new($uri, $conn_params) do |server|
       assert_nothing_raised(T2Server::T2ServerError) do
         run = server.create_run($wkf_pass, $creds)
-        server.delete_run(run, $creds)
+        run.delete
       end
     end
   end
