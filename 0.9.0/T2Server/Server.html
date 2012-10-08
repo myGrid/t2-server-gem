@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>class T2Server::Server -  Taverna 2 Server Ruby Interface Library version 0.9.0</title>
+
+<link type="text/css" media="screen" href="../rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="../js/darkfish.js"></script>
+
+
+<body id="top" class="class">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="../index.html">Home</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="file-metadata">
+    <nav id="file-list-section" class="section">
+  <h3 class="section-header">Defined In</h3>
+  <ul>
+    <li>lib/t2-server/server.rb
+  </ul>
+</nav>
+
+    
+  </div>
+
+  <div id="class-metadata">
+    
+    <nav id="parent-class-section" class="section">
+  <h3 class="section-header">Parent</h3>
+  
+  <p class="link">Object
+  
+</nav>
+
+    <!-- Included Modules -->
+<nav id="includes-section" class="section">
+  <h3 class="section-header">Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><span class="include">XML::Methods</span>
+  
+  
+  </ul>
+</nav>
+
+    <!-- Method Quickref -->
+<nav id="method-list-section" class="section">
+  <h3 class="section-header">Methods</h3>
+
+  <ul class="link-list">
+    
+    <li><a href="#method-c-new">::new</a>
+    
+    <li><a href="#method-i-administrator">#administrator</a>
+    
+    <li><a href="#method-i-create_run">#create_run</a>
+    
+    <li><a href="#method-i-delete_all_runs">#delete_all_runs</a>
+    
+    <li><a href="#method-i-delete_run">#delete_run</a>
+    
+    <li><a href="#method-i-initialize_run">#initialize_run</a>
+    
+    <li><a href="#method-i-run">#run</a>
+    
+    <li><a href="#method-i-run_limit">#run_limit</a>
+    
+    <li><a href="#method-i-runs">#runs</a>
+    
+    <li><a href="#method-i-uri">#uri</a>
+    
+  </ul>
+</nav>
+
+  </div>
+
+  <div id="project-metadata">
+    <nav id="fileindex-section" class="section project-section">
+  <h3 class="section-header">Pages</h3>
+
+  <ul>
+  
+    <li class="file"><a href="../CHANGES_rdoc.html">CHANGES</a>
+  
+    <li class="file"><a href="../LICENCE_rdoc.html">LICENCE</a>
+  
+    <li class="file"><a href="../README_rdoc.html">README</a>
+  
+  </ul>
+</nav>
+
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="../T2Server.html">T2Server</a>
+  
+    <li><a href="../T2Server/AccessForbiddenError.html">T2Server::AccessForbiddenError</a>
+  
+    <li><a href="../T2Server/Administrator.html">T2Server::Administrator</a>
+  
+    <li><a href="../T2Server/Administrator/AdminResource.html">T2Server::Administrator::AdminResource</a>
+  
+    <li><a href="../T2Server/AttributeNotFoundError.html">T2Server::AttributeNotFoundError</a>
+  
+    <li><a href="../T2Server/AuthorizationError.html">T2Server::AuthorizationError</a>
+  
+    <li><a href="../T2Server/ClientAuthSSLConnectionParameters.html">T2Server::ClientAuthSSLConnectionParameters</a>
+  
+    <li><a href="../T2Server/ConnectionError.html">T2Server::ConnectionError</a>
+  
+    <li><a href="../T2Server/ConnectionParameters.html">T2Server::ConnectionParameters</a>
+  
+    <li><a href="../T2Server/ConnectionRedirectError.html">T2Server::ConnectionRedirectError</a>
+  
+    <li><a href="../T2Server/CustomCASSLConnectionParameters.html">T2Server::CustomCASSLConnectionParameters</a>
+  
+    <li><a href="../T2Server/DefaultConnectionParameters.html">T2Server::DefaultConnectionParameters</a>
+  
+    <li><a href="../T2Server/InputPort.html">T2Server::InputPort</a>
+  
+    <li><a href="../T2Server/InsecureSSLConnectionParameters.html">T2Server::InsecureSSLConnectionParameters</a>
+  
+    <li><a href="../T2Server/OutputPort.html">T2Server::OutputPort</a>
+  
+    <li><a href="../T2Server/Port.html">T2Server::Port</a>
+  
+    <li><a href="../T2Server/PortValue.html">T2Server::PortValue</a>
+  
+    <li><a href="../T2Server/Run.html">T2Server::Run</a>
+  
+    <li><a href="../T2Server/RunNotFoundError.html">T2Server::RunNotFoundError</a>
+  
+    <li><a href="../T2Server/RunStateError.html">T2Server::RunStateError</a>
+  
+    <li><a href="../T2Server/Server.html">T2Server::Server</a>
+  
+    <li><a href="../T2Server/ServerAtCapacityError.html">T2Server::ServerAtCapacityError</a>
+  
+    <li><a href="../T2Server/T2ServerError.html">T2Server::T2ServerError</a>
+  
+    <li><a href="../T2Server/UnexpectedServerResponse.html">T2Server::UnexpectedServerResponse</a>
+  
+    <li><a href="../T2Server/Util.html">T2Server::Util</a>
+  
+    <li><a href="../T2Server/Version.html">T2Server::Version</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation">
+  <h1 class="class">class T2Server::Server</h1>
+
+  <div id="description" class="description">
+    
+<p>An interface for directly communicating with one or more Taverna 2 <a
+href="Server.html">Server</a> instances.</p>
+
+  </div><!-- description -->
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+    <!-- Attributes -->
+    <section id="attribute-method-details" class="method-section section">
+      <h3 class="section-header">Attributes</h3>
+
+      
+      <div id="attribute-i-version" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">version</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The version of the remote Taverna <a href="Server.html">Server</a>
+instance.</p>
+        
+        </div>
+      </div>
+      
+    </section><!-- attribute-method-details -->
+    
+
+    <!-- Methods -->
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Class Methods</h3>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            new(uri, connection_parameters = nil) &rarr; Server
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            new(uri, connection_parameters = nil) {|self| ...}
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Create a new <a href="Server.html">Server</a> instance that represents the
+real server at <em>uri</em>. If <em>connection_parameters</em> are supplied
+they will be used to set up the network connection to the server.</p>
+
+<p>It will <em>yield</em> itself if a block is given.</p>
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 73</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">params</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-comment"># we want to use URIs here but strings can be passed in</span>
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">URI</span>
+    <span class="ruby-identifier">uri</span> = <span class="ruby-constant">URI</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-constant">Util</span>.<span class="ruby-identifier">strip_path_slashes</span>(<span class="ruby-identifier">uri</span>))
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># strip username and password from the URI if present</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">user</span> <span class="ruby-operator">!=</span> <span class="ruby-keyword">nil</span>
+    <span class="ruby-identifier">uri</span> = <span class="ruby-constant">URI</span><span class="ruby-operator">::</span><span class="ruby-constant">HTTP</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">uri</span>.<span class="ruby-identifier">scheme</span>, <span class="ruby-keyword">nil</span>, <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">host</span>, <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">port</span>, <span class="ruby-keyword">nil</span>,
+    <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">path</span>, <span class="ruby-keyword">nil</span>, <span class="ruby-keyword">nil</span>, <span class="ruby-keyword">nil</span>);
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># setup connection</span>
+  <span class="ruby-ivar">@connection</span> = <span class="ruby-constant">ConnectionFactory</span>.<span class="ruby-identifier">connect</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">params</span>)
+
+  <span class="ruby-comment"># add a slash to the end of this address to work around this bug:</span>
+  <span class="ruby-comment"># http://www.mygrid.org.uk/dev/issues/browse/TAVSERV-113</span>
+  <span class="ruby-identifier">server_description</span> = <span class="ruby-identifier">xml_document</span>(<span class="ruby-identifier">get_attribute</span>(<span class="ruby-node">&quot;#{uri.path}/rest/&quot;</span>,
+    <span class="ruby-string">&quot;application/xml&quot;</span>))
+  <span class="ruby-ivar">@version</span> = <span class="ruby-identifier">get_version</span>(<span class="ruby-identifier">server_description</span>)
+  <span class="ruby-ivar">@links</span> = <span class="ruby-identifier">get_description</span>(<span class="ruby-identifier">server_description</span>)
+  <span class="ruby-ivar">@links</span>[<span class="ruby-value">:admin</span>] = <span class="ruby-node">&quot;#{uri.path}/admin&quot;</span>
+
+  <span class="ruby-comment"># initialize run object cache</span>
+  <span class="ruby-ivar">@runs</span> = {}
+
+  <span class="ruby-keyword">yield</span>(<span class="ruby-keyword">self</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- new-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- new-method -->
+
+    
+    </section><!-- public-class-method-details -->
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section section">
+      <h3 class="section-header">Public Instance Methods</h3>
+
+    
+      <div id="method-i-administrator" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            administrator(credentials = nil) &rarr; Administrator
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            administrator(credentials = nil) {|admin| ...}
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Return an instance of the Taverna <a href="Server.html">Server</a>
+administrator interface. This method will <em>yield</em> the newly created
+administrator if a block is given.</p>
+          
+
+          
+          <div class="method-source-code" id="administrator-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 116</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">administrator</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">admin</span> = <span class="ruby-constant">Administrator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-identifier">credentials</span>)
+
+  <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">admin</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+  <span class="ruby-identifier">admin</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- administrator-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- administrator-method -->
+
+    
+      <div id="method-i-create_run" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            create_run(workflow, credentials = nil) &rarr; run
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            create_run(workflow, credentials = nil) {|run| ...}
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Create a run on this server using the specified <em>workflow</em>. This
+method will <em>yield</em> the newly created <a href="Run.html">Run</a> if
+a block is given.</p>
+          
+
+          
+          <div class="method-source-code" id="create_run-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 129</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">create_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">id</span> = <span class="ruby-identifier">initialize_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span>)
+  <span class="ruby-identifier">run</span> = <span class="ruby-constant">Run</span>.<span class="ruby-identifier">create</span>(<span class="ruby-keyword">self</span>, <span class="ruby-string">&quot;&quot;</span>, <span class="ruby-identifier">credentials</span>, <span class="ruby-identifier">id</span>)
+
+  <span class="ruby-comment"># cache newly created run object - this must be done per user</span>
+  <span class="ruby-identifier">user</span> = <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-value">:all</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">username</span>
+  <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>] = {} <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>]
+  <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>][<span class="ruby-identifier">id</span>] = <span class="ruby-identifier">run</span>
+
+  <span class="ruby-keyword">yield</span>(<span class="ruby-identifier">run</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
+  <span class="ruby-identifier">run</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- create_run-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- create_run-method -->
+
+    
+      <div id="method-i-delete_all_runs" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            delete_all_runs(credentials = nil)
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Delete all runs on this server, discarding all of their state.</p>
+          
+
+          
+          <div class="method-source-code" id="delete_all_runs-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 213</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_all_runs</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-comment"># first refresh run list</span>
+  <span class="ruby-identifier">runs</span>(<span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">each</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">run</span><span class="ruby-operator">|</span> <span class="ruby-identifier">run</span>.<span class="ruby-identifier">delete</span>}
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- delete_all_runs-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- delete_all_runs-method -->
+
+    
+      <div id="method-i-delete_run" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            delete_run(run, credentials = nil) &rarr; bool
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Delete the specified run from the server, discarding all of its state.
+<em>run</em> can be either a <a href="Run.html">Run</a> instance or a
+identifier.</p>
+          
+
+          
+          <div class="method-source-code" id="delete_run-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 195</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_run</span>(<span class="ruby-identifier">run</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-comment"># get the identifier from the run if that is what is passed in</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">run</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Run</span>
+    <span class="ruby-identifier">run</span> = <span class="ruby-identifier">run</span>.<span class="ruby-identifier">identifier</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">delete_attribute</span>(<span class="ruby-node">&quot;#{@links[:runs]}/#{run}&quot;</span>, <span class="ruby-identifier">credentials</span>)
+    <span class="ruby-comment"># delete cached run object - this must be done per user</span>
+    <span class="ruby-identifier">user</span> = <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-value">:all</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">username</span>
+    <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>].<span class="ruby-identifier">delete</span>(<span class="ruby-identifier">run</span>) <span class="ruby-keyword">if</span> <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>]
+    <span class="ruby-keyword">true</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- delete_run-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- delete_run-method -->
+
+    
+      <div id="method-i-initialize_run" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            initialize_run(workflow, credentials = nil) &rarr; string
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Create a run on this server using the specified <em>workflow</em> but do
+not return it as a <a href="Run.html">Run</a> instance. Return its
+identifier instead.</p>
+          
+
+          
+          <div class="method-source-code" id="initialize_run-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 147</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-comment"># set up the run object cache - this must be done per user</span>
+  <span class="ruby-identifier">user</span> = <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-value">:all</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">credentials</span>.<span class="ruby-identifier">username</span>
+  <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>] = {} <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@runs</span>[<span class="ruby-identifier">user</span>]
+
+  <span class="ruby-ivar">@connection</span>.<span class="ruby-constant">POST_run</span>(<span class="ruby-node">&quot;#{@links[:runs]}&quot;</span>,
+    <span class="ruby-constant">XML</span><span class="ruby-operator">::</span><span class="ruby-constant">Fragments</span><span class="ruby-operator">::</span><span class="ruby-constant">WORKFLOW</span> <span class="ruby-operator">%</span> <span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- initialize_run-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- initialize_run-method -->
+
+    
+      <div id="method-i-run" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            run(identifier, credentials = nil) &rarr; run
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Return the specified run.</p>
+          
+
+          
+          <div class="method-source-code" id="run-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 186</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">run</span>(<span class="ruby-identifier">identifier</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">get_runs</span>(<span class="ruby-identifier">credentials</span>)[<span class="ruby-identifier">identifier</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- run-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- run-method -->
+
+    
+      <div id="method-i-run_limit" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            run_limit(credentials = nil) &rarr; num
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>The maximum number of runs that this server will allow at any one time.
+Runs in any state (<code>Initialized</code>, <code>Running</code> and
+<code>Finished</code>) are counted against this maximum.</p>
+          
+
+          
+          <div class="method-source-code" id="run_limit-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 170</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">run_limit</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">get_attribute</span>(<span class="ruby-ivar">@links</span>[<span class="ruby-value">:runlimit</span>], <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">to_i</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- run_limit-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- run_limit-method -->
+
+    
+      <div id="method-i-runs" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            runs(credentials = nil) &rarr; [runs]
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Return the set of runs on this server.</p>
+          
+
+          
+          <div class="method-source-code" id="runs-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 178</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">runs</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-identifier">get_runs</span>(<span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">values</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- runs-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- runs-method -->
+
+    
+      <div id="method-i-uri" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            uri &rarr; URI
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>The URI of the connection to the remote Taverna <a
+href="Server.html">Server</a>.</p>
+          
+
+          
+          <div class="method-source-code" id="uri-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 160</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">uri</span>
+  <span class="ruby-ivar">@connection</span>.<span class="ruby-identifier">uri</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- uri-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- uri-method -->
+
+    
+    </section><!-- public-instance-method-details -->
+  
+  </section><!-- 5Buntitled-5D -->
+
+</div><!-- documentation -->
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.12.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+
