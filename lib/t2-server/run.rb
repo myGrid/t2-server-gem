@@ -167,14 +167,6 @@ module T2Server
       run
     end
 
-    # :stopdoc:
-    def uuid
-      warn "[DEPRECATION] 'uuid' is deprecated and will be removed in 1.0. " +
-        "Please use Run#id or Run#identifier instead."
-      @identifier
-    end
-    # :startdoc:
-
     # :call-seq:
     #   owner -> String
     #
@@ -193,30 +185,6 @@ module T2Server
     def delete
       @server.delete(@uri, @credentials)
     end
-
-    # :stopdoc:
-    def inputs
-      warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
-      links[:inputs]
-    end
-
-    def set_input(input, value)
-      warn "[DEPRECATION] 'Run#set_input' is deprecated and will be removed " +
-        "in 1.0. Input ports are set directly instead. The most direct " +
-        "replacement for this method is: 'Run#input_port(input).value = value'"
-
-      input_port(input).value = value
-    end
-
-    def set_input_file(input, filename)
-      warn "[DEPRECATION] 'Run#set_input_file' is deprecated and will be " +
-        "removed in 1.0. Input ports are set directly instead. The most " +
-        "direct replacement for this method is: " +
-        "'Run#input_port(input).remote_file = filename'"
-
-      input_port(input).remote_file = filename
-    end
-    # :startdoc:
 
     # :call-seq:
     #   input_ports -> Hash
@@ -256,27 +224,6 @@ module T2Server
     def output_port(port)
       output_ports[port] if finished?
     end
-
-    # :stopdoc:
-    def get_output_ports
-      warn "[DEPRECATION] 'get_output_ports' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#output_ports' instead."
-      lists, items = _ls_ports("out")
-      items + lists
-    end
-
-    def get_output(output, refs=false)
-      warn "[DEPRECATION] 'get_output' is deprecated and will be removed " +
-        "in 1.0. Please use 'Run#output_port(port).values' instead."
-      _get_output(output, refs)
-    end
-
-    def get_output_refs(output)
-      warn "[DEPRECATION] 'get_output_refs' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#output_port(port).data' instead."
-      _get_output(output, true)
-    end
-    # :startdoc:
 
     # :call-seq:
     #   expiry -> string
@@ -350,21 +297,9 @@ module T2Server
     # tested for completion can be specified with check_interval.
     #
     # Raises RunStateError if the run is still in the :initialised state.
-    def wait(*params)
+    def wait(interval = 1)
       state = status
       raise RunStateError.new(state, :running) if state == :initialized
-
-      interval = 1
-      params.each do |param|
-        case param
-        when Hash
-          warn "[DEPRECATION] 'Run#wait(params={})' is deprecated and will " +
-            "be removed in 1.0. Please use Run#wait(check_interval) instead."
-          interval = param[:interval] || 1
-        when Integer
-          interval = param
-        end
-      end
 
       # wait
       until finished?
@@ -436,17 +371,6 @@ module T2Server
       @server.upload_data(data, remote_name, location_uri, @credentials)
     end
 
-    # :stopdoc:
-    def upload_input_file(input, filename, params={})
-      warn "[DEPRECATION] 'Run#upload_input_file' is deprecated and will be " +
-        "removed in 1.0. Input ports are set directly instead. The most " +
-        "direct replacement for this method is: " +
-        "'Run#input_port(input).file = filename'"
-
-      input_port(input).file = filename
-    end
-    # :startdoc:
-
     # :call-seq:
     #   baclava_input=(filename) -> bool
     #
@@ -463,20 +387,6 @@ module T2Server
       result
     end
 
-    # :stopdoc:
-    def upload_baclava_input(filename)
-      warn "[DEPRECATION] 'upload_baclava_input' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_input=' instead."
-      self.baclava_input = filename
-    end
-
-    def upload_baclava_file(filename)
-      warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_input=' instead."
-      self.baclava_input = filename
-    end
-    # :startdoc:
-
     # :call-seq:
     #   request_baclava_output -> bool
     #
@@ -490,14 +400,6 @@ module T2Server
       @baclava_out = @server.update(links[:output], BACLAVA_FILE, "text/plain",
         @credentials)
     end
-
-    # :stopdoc:
-    def set_baclava_output(name="")
-      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#request_baclava_output' instead."
-      self.request_baclava_output
-    end
-    # :startdoc:
 
     # :call-seq:
     #   baclava_input? -> bool
@@ -530,14 +432,6 @@ module T2Server
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
       @server.read(baclava_uri, "*/*", @credentials)
     end
-
-    # :stopdoc:
-    def get_baclava_output
-      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_output' instead."
-      baclava_output
-    end
-    # :startdoc:
 
     # :call-seq:
     #   zip_output -> binary blob
@@ -948,90 +842,6 @@ module T2Server
       end
 
       u.to_s
-    end
-
-    # List a directory in the run's workspace on the server. If dir is left
-    # blank then / is listed. As there is no concept of changing into a
-    # directory (cd) in Taverna Server then all paths passed into _ls_ports
-    # should be full paths starting at "root". The contents of a directory are
-    # returned as a list of two lists, "lists" and "values" respectively.
-    def _ls_ports(dir="", top=true)
-      dir = Util.strip_path_slashes(dir)
-      uri = Util.append_to_uri_path(links[:wdir], dir)
-      dir_list = @server.read(uri, "*/*", @credentials)
-
-      # compile a list of directory entries stripping the
-      # directory name from the front of each filename
-      lists = []
-      values = []
-
-      doc = xml_document(dir_list)
-
-      xpath_find(doc, XPaths[:dir]).each do |e|
-        if top
-          lists << xml_node_content(e).split('/')[-1]
-        else
-          index = (xml_node_attribute(e, 'name').to_i - 1)
-          lists[index] = xml_node_content(e).split('/')[-1]
-        end
-      end
-
-      xpath_find(doc, XPaths[:file]).each do |e|
-        if top
-          values << xml_node_content(e).split('/')[-1]
-        else
-          index = (xml_node_attribute(e, 'name').to_i - 1)
-          values[index] = xml_node_content(e).split('/')[-1]
-        end
-      end
-
-      [lists, values]
-    end
-
-    def _get_output(output, refs=false, top=true)
-      output = Util.strip_path_slashes(output)
-
-      # if at the top level we need to check if the port represents a list
-      # or a singleton value
-      if top
-        lists, items = _ls_ports("out")
-        if items.include? output
-          if refs
-            return "#{@server.uri}/rest/runs/#{@identifier}/" +
-              "#{links[:wdir]}/out/#{output}"
-          else
-            out_uri = Util.append_to_uri_path(links[:wdir], "out/#{output}")
-            return @server.read(out_uri, "application/octet-stream",
-              @credentials)
-          end
-        end
-      end
-
-      # we're not at the top level so look at the contents of the output port
-      lists, items = _ls_ports("out/#{output}", false)
-
-      # build up lists of results
-      result = []
-
-      # for each list recurse into it and add the items to the result
-      lists.each do |list|
-        result << _get_output("#{output}/#{list}", refs, false)
-      end
-
-      # for each item, add it to the output list
-      items.each do |item|
-        if refs
-          result << "#{@server.uri}/rest/runs/#{@identifier}/" +
-            "#{links[:wdir]}/out/#{output}/#{item}"
-        else
-          out_uri = Util.append_to_uri_path(links[:wdir],
-            "out/#{output}/#{item}")
-          result << @server.read(out_uri, "application/octet-stream",
-            @credentials)
-        end
-      end
-
-      result
     end
 
     def _get_input_port_info

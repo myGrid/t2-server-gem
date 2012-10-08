@@ -33,12 +33,10 @@ changes in its REST interface. We strongly encourage all users to upgrade to
 the current version of Taverna Server, but if that is not possible right now
 then please continue to use version 0.6.1 of this library for the time being.
 
-This version of the library should be compatible with any Ruby code that you
-may have already written against earlier versions but you may see some warnings
-about API deprecations. These are clearly marked [DEPRECATION] and will appear
-on your console output. Anything marked as deprecated will be removed in
-version 1.0.0 (and are not guaranteed to continue working even until then) so
-you are advised to update your code at your earliest convenience.
+Version 1.0.0 of this library saw the removal of older methods that were
+previously deprecated. If your code no longer works with this version then
+please re-test it with version 0.9.2 and check for deprecation messages before
+reporting bugs.
 
 == Compatibility with Ruby versions
 
