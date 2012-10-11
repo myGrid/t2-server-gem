@@ -279,6 +279,15 @@ module T2Server
       end
     end
 
+    # An internal helper to write streamed data straight to a file.
+    def read_to_file(filename, uri, type, *rest)
+      File.open(filename,"wb") do |file|
+        read(uri, type, *rest) do |chunk|
+          file.syswrite(chunk)
+        end
+      end
+    end
+
     def update(uri, value, type, credentials = nil)
       @connection.PUT(uri, value, type, credentials)
     end
