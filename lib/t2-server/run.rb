@@ -435,15 +435,35 @@ module T2Server
 
     # :call-seq:
     #   zip_output -> binary blob
+    #   zip_output(filename) -> Fixnum
+    #   zip_output {|chunk| ...}
     #
     # Get the working directory of this run directly from the server in zip
     # format.
-    def zip_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # zipped data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in a block will
+    # allow access to the underlying data stream:
+    #   run.zip_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def zip_output(filename = nil, &block)
+      raise ArgumentError, 'both filename and block given for zip_output' if
+        filename && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       output_uri = Util.append_to_uri_path(links[:wdir], "out")
-      @server.read(output_uri, "application/zip", @credentials)
+      if filename.nil?
+        @server.read(output_uri, "application/zip", @credentials, &block)
+      else
+        @server.read_to_file(filename, output_uri, "application/zip",
+          @credentials)
+      end
     end
 
     # :call-seq:

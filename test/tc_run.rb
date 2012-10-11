@@ -69,9 +69,16 @@ class TestRun < Test::Unit::TestCase
       assert_equal(run.output_port("OUT").value, "Hello, World!")
       assert_equal(run.output_port("wrong!"), nil)
 
-      # get zip file
+      # get zip file and test streaming
       assert_nothing_raised(T2Server::T2ServerError) do
-        assert_not_equal(run.zip_output, "")
+        zip_out = run.zip_output
+        assert_not_equal(zip_out, "")
+
+        zip_stream = ""
+        run.zip_output do |chunk|
+          zip_stream += chunk
+        end
+        assert_equal(zip_out, zip_stream)
       end
 
       # deletion
