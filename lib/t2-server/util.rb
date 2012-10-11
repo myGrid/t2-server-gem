@@ -95,7 +95,7 @@ module T2Server
       new_uri
     end
 
-    # :call_seq:
+    # :call-seq:
     #   Util.get_path_leaf_from_uri(uri) -> String
     #
     # Get the final component from the path of a URI. This method returns the
