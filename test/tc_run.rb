@@ -199,8 +199,15 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
 
+      # Test normal and streamed output
       assert_nothing_raised(T2Server::AccessForbiddenError) do
         output = run.baclava_output
+
+        out_stream = ""
+        run.baclava_output do |chunk|
+          out_stream += chunk
+        end
+        assert_equal(output, out_stream)
       end
     end
   end

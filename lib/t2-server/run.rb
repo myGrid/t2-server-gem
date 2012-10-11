@@ -419,18 +419,37 @@ module T2Server
 
     # :call-seq:
     #   baclava_output -> string
+    #   baclava_output(filename) -> Fixnum
+    #   baclava_output {|chunk| ...}
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
     # before starting the run.
-    def baclava_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # XML data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in a block will
+    # allow access to the underlying data stream:
+    #   run.baclava_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def baclava_output(filename = nil, &block)
+      raise ArgumentError,
+        'both filename and block given for baclava_output' if filename && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
 
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
-      @server.read(baclava_uri, "*/*", @credentials)
+      if filename.nil?
+        @server.read(baclava_uri, "*/*", @credentials, &block)
+      else
+        @server.read_to_file(filename, baclava_uri, "*/*", @credentials)
+      end
     end
 
     # :call-seq:
