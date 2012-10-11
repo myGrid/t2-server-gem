@@ -104,12 +104,12 @@ module T2Server
     # the body of the response is returned. A portion of the data can be
     # retrieved by specifying a byte range, start..end, with the _range_
     # parameter.
-    def GET(uri, type, range, credentials)
+    def GET(uri, type, range, credentials, &block)
       get = Net::HTTP::Get.new(uri.path)
       get["Accept"] = type
       get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
 
-      response = submit(get, uri, credentials)
+      response = submit(get, uri, credentials, &block)
 
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
@@ -249,12 +249,20 @@ module T2Server
 
     private
 
-    def submit(request, uri, credentials)
+    # If a block is passed in here then the response is returned in chunks
+    # (streamed). If no block is passed in the whole response is read into
+    # memory and returned.
+    def submit(request, uri, credentials, &block)
 
       credentials.authenticate(request) unless credentials.nil?
 
+      response = nil
       begin
-        @http.request(uri, request)
+        @http.request(uri, request) do |r|
+          r.read_body &block
+          response = r
+        end
+        response
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end

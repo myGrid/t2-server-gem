@@ -253,7 +253,7 @@ module T2Server
       @connection.POST(uri, value, type, credentials)
     end
 
-    def read(uri, type, *rest)
+    def read(uri, type, *rest, &block)
       credentials = nil
       range = nil
 
@@ -269,7 +269,7 @@ module T2Server
       end
 
       begin
-        @connection.GET(uri, type, range, credentials)
+        @connection.GET(uri, type, range, credentials, &block)
       rescue ConnectionRedirectError => cre
         # We've been redirected so save the new connection object with the new
         # server URI and try again with the new URI.
