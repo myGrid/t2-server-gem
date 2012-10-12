@@ -269,7 +269,7 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_fail, $creds, $conn_params) do |run|
       run.start
       run.wait
-      assert(run.output_port("OUT").value.nil?)
+      assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
     end
   end
@@ -278,6 +278,7 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
       run.start
       run.wait
+      assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
     end
   end

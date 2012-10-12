@@ -256,17 +256,15 @@ module T2Server
       @sizes
     end
 
-    # :call-seq:
-    #   error -> String
-    #
-    # Get the error message (if there is one) of this output port.
-    #
-    # This method is only for use on outputs of depth 0. For other depths use
-    # 'port[].error'
+    # :stopdoc:
     def error
+      warn "[DEPRECATION] Using #error to get the error message is " +
+      "deprecated and will be removed in version 1.1.0. Please use #value " +
+      "instead."
       return nil unless depth == 0
-      @structure.error
+      @structure.value
     end
+    # :startdoc:
 
     # :call-seq:
     #   total_size -> int
@@ -301,11 +299,12 @@ module T2Server
         return data
       when 'value'
         return PortValue.new(self, xml_node_attribute(node, 'href'), false,
-          xml_node_attribute(node, 'contentType'),
-          xml_node_attribute(node, 'contentByteLength').to_i)
+          xml_node_attribute(node, 'contentByteLength').to_i,
+          xml_node_attribute(node, 'contentType'))
       when 'error'
         @error = true
-        return PortValue.new(self, xml_node_attribute(node, 'href'), true)
+        return PortValue.new(self, xml_node_attribute(node, 'href'), true,
+          xml_node_attribute(node, 'errorByteLength').to_i)
       end
     end
 
@@ -339,20 +338,18 @@ module T2Server
     # The size (in bytes) of the port value.
     attr_reader :size
 
+    # The mime-type we use for an error value.
+    ERROR_TYPE = "application/x-error"
+
     # :stopdoc:
-    def initialize(port, ref, error, type = "", size = 0)
+    def initialize(port, ref, error, size, type = "")
       @port = port
       @reference = URI.parse(ref)
-      @type = type
+      @type = (error ? ERROR_TYPE : type)
       @size = size
       @value = nil
       @vgot = nil
-      @error = nil
-
-      if error
-        @error = @port.download(@reference)
-        @type = "error"
-      end
+      @error = error
     end
     # :startdoc:
 
@@ -365,10 +362,21 @@ module T2Server
     # portion of the value is downloaded and returned. If no range is specified
     # then the whole value is downloaded and returned.
     #
+    # If this port is an error then this value will be the error message.
+    #
     # All downloaded data is cached and not downloaded a second time if the
     # same or similar ranges are requested.
     def value(range = 0...@size)
-      return nil if error?
+      # The following block is a workaround for Taverna Server versions prior
+      # to 2.4.1 and can be removed when support for those versions is no
+      # longer required.
+      if error? && @size == 0
+        @value = @port.download(@reference)
+        @size = @value.size
+        @vgot = 0...@size
+        return @value
+      end
+
       return "" if @type == "application/x-empty"
       return @value if range == :debug
 
@@ -419,16 +427,17 @@ module T2Server
     #
     # Does this port represent an error?
     def error?
-      !@error.nil?
-    end
-
-    # :call-seq:
-    #   error -> string
-    #
-    # Return the error message for this value, or _nil_ if it is not an error.
-    def error
       @error
     end
+
+    # :stopdoc:
+    def error
+      warn "[DEPRECATION] Using #error to get the error message is " +
+        "deprecated and will be removed in version 1.1.0. Please use #value " +
+        "instead."
+      value
+    end
+    # :startdoc:
 
     # Used within #inspect, below to help override the built in version.
     @@to_s = Kernel.instance_method(:to_s)
