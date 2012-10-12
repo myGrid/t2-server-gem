@@ -787,8 +787,9 @@ module T2Server
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
     # downloads a file from the run's working directory.
-    def download_output_data(uri, range = nil)
-      @server.read(uri, "application/octet-stream", range, @credentials)
+    def download_output_data(uri, range = nil, &block)
+      @server.read(uri, "application/octet-stream", range, @credentials,
+        &block)
     end
     # :startdoc:
 
