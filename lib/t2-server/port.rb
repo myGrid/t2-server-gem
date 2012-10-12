@@ -341,6 +341,10 @@ module T2Server
     # The mime-type we use for an error value.
     ERROR_TYPE = "application/x-error"
 
+    # The mime-type we use for an empty value. Note that an empty value is not
+    # simply an empty string. It is the complete absence of a value.
+    EMPTY_TYPE = "application/x-empty"
+
     # :stopdoc:
     def initialize(port, ref, error, size, type = "")
       @port = port
@@ -377,7 +381,7 @@ module T2Server
         return @value
       end
 
-      return "" if @type == "application/x-empty"
+      return "" if @type == EMPTY_TYPE
       return @value if range == :debug
 
       # check that the range provided is sensible
