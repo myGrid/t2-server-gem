@@ -178,9 +178,11 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_ports.keys.sort, ["MANY", "SINGLE"])
       assert_equal(run.output_port("SINGLE").value, [])
+      assert(!run.output_port("SINGLE").empty?)
       assert_equal(run.output_port("MANY").value,
         [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
       assert_equal(run.output_port("MANY").total_size, 12)
+      assert(run.output_port("MANY")[1][0][0].empty?)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
     end

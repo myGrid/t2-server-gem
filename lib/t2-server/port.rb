@@ -181,6 +181,21 @@ module T2Server
     end
 
     # :call-seq:
+    #   empty? -> bool
+    #
+    # Is this output port empty?
+    #
+    # Note that if the output port holds a list then it is not considered
+    # empty, even if that list is empty. This is because the port itself is
+    # not empty, there is a list there! A separate test should be performed to
+    # see if that list is empty or not.
+    def empty?
+      # Funnily enough, an empty list does *not* make a port empty!
+      return false if @structure.instance_of? Array
+      @structure.empty?
+    end
+
+    # :call-seq:
     #   [int] -> obj
     #
     # This call provides access to the underlying structure of the OutputPort.
@@ -432,6 +447,14 @@ module T2Server
     # Does this port represent an error?
     def error?
       @error
+    end
+
+    # :call-seq:
+    #   empty? -> bool
+    #
+    # Is this port value empty?
+    def empty?
+      @type == EMPTY_TYPE
     end
 
     # :stopdoc:
