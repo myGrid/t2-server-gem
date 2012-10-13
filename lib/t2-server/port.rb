@@ -239,6 +239,27 @@ module T2Server
     end
 
     # :call-seq:
+    #   write_value_to_file(filename) -> Fixnum
+    #   write_value_to_file(filename, range) -> Fixnum
+    #
+    # Stream a singleton port value to a file and return the number of bytes
+    # written. If a range is supplied then only that range of data is
+    # downloaded from the server.
+    #
+    # To save parts of a list port to a file, use
+    # PortValue#write_value_to_file on the list item directly:
+    #   run.output_port("port_name")[0].write_value_to_file
+    def write_value_to_file(filename, range = nil)
+      return 0 unless depth == 0
+
+      if range.nil?
+        @structure.write_value_to_file(filename)
+      else
+        @structure.write_value_to_file(filename, range)
+      end
+    end
+
+    # :call-seq:
     #   reference -> String
     #   reference -> Array
     #
@@ -481,6 +502,26 @@ module T2Server
             @port.download(@reference, need[1])
         end
       end
+    end
+
+    # :call-seq:
+    #   write_value_to_file(filename) -> Fixnum
+    #   write_value_to_file(filename, range) -> Fixnum
+    #
+    # Stream this port value directly to a file. If a range is supplied then
+    # just that range of data is downloaded from the server. No data is cached
+    # by this method.
+    def write_value_to_file(filename, range = 0...@size)
+      bytes = 0
+
+      File.open(filename, "wb") do |file|
+        value(range) do |chunk|
+          file.syswrite(chunk)
+          bytes += chunk.size
+        end
+      end
+
+      bytes
     end
 
     # :call-seq:
