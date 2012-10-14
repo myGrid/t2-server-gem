@@ -37,10 +37,10 @@ module T2Server
   module Util
 
     # :call-seq:
-    #   Util.strip_uri_credentials(uri) -> URI, Credentials
+    #   Util.strip_uri_credentials(uri) -> URI, HttpBasic
     #
     # Strip user credentials from an address in URI or String format and return
-    # a tuple of the URI minus the credentials and a T2Server::Credentials
+    # a tuple of the URI minus the credentials and a T2Server::HttpBasic
     # object.
     def self.strip_uri_credentials(uri)
       # we want to use URIs here but strings can be passed in
