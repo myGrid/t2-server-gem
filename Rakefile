@@ -95,7 +95,6 @@ end
 RDoc::Task.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
-    item.include?("t2server.rb") or
     item.include?("/xml/") or
     item.include?("connection.rb") or
     item.include?("credentials.rb") or
