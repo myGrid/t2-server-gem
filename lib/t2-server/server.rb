@@ -279,12 +279,28 @@ module T2Server
       end
     end
 
+    # An internal helper to write streamed data directly to another stream.
+    # The number of bytes written to the stream is returned. The stream passed
+    # in may be anything that provides a +write+ method; instances of IO and
+    # File, for example.
+    def read_to_stream(stream, uri, type, *rest)
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      bytes = 0
+
+      read(uri, type, *rest) do |chunk|
+        bytes += stream.write(chunk)
+      end
+
+      bytes
+    end
+
     # An internal helper to write streamed data straight to a file.
     def read_to_file(filename, uri, type, *rest)
-      File.open(filename,"wb") do |file|
-        read(uri, type, *rest) do |chunk|
-          file.syswrite(chunk)
-        end
+      File.open(filename, "wb") do |file|
+        read_to_stream(file, uri, type, *rest)
       end
     end
 

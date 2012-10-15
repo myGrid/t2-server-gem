@@ -239,6 +239,32 @@ module T2Server
     end
 
     # :call-seq:
+    #   stream_value(stream) -> Fixnum
+    #   stream_value(stream, range) -> Fixnum
+    #
+    # Stream a singleton port value directly to another stream and return the
+    # number of bytes written. If a range is supplied then only that range of
+    # data is streamed from the server. The stream passed in may be anything
+    # that provides a +write+ method; instances of IO and File, for example.
+    # No data is cached by this method.
+    #
+    # To stream parts of a list port, use PortValue#stream_value on the list
+    # item directly:
+    #   run.output_port("port_name")[0].stream_value(stream)
+    def stream_value(stream, range = nil)
+      return 0 unless depth == 0
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      if range.nil?
+        @structure.stream_value(stream)
+      else
+        @structure.stream_value(stream, range)
+      end
+    end
+
+    # :call-seq:
     #   write_value_to_file(filename) -> Fixnum
     #   write_value_to_file(filename, range) -> Fixnum
     #
@@ -505,6 +531,29 @@ module T2Server
     end
 
     # :call-seq:
+    #   stream_value(stream) -> Fixnum
+    #   stream_value(stream, range) -> Fixnum
+    #
+    # Stream this port value directly into another stream. The stream passed
+    # in may be anything that provides a +write+ method; instances of IO and
+    # File, for example. No data is cached by this method.
+    #
+    # The number of bytes written to the stream is returned.
+    def stream_value(stream, range = 0...@size)
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      bytes = 0
+
+      value(range) do |chunk|
+        bytes += stream.write(chunk)
+      end
+
+      bytes
+    end
+
+    # :call-seq:
     #   write_value_to_file(filename) -> Fixnum
     #   write_value_to_file(filename, range) -> Fixnum
     #
@@ -512,16 +561,9 @@ module T2Server
     # just that range of data is downloaded from the server. No data is cached
     # by this method.
     def write_value_to_file(filename, range = 0...@size)
-      bytes = 0
-
       File.open(filename, "wb") do |file|
-        value(range) do |chunk|
-          file.syswrite(chunk)
-          bytes += chunk.size
-        end
+        stream_value(file, range)
       end
-
-      bytes
     end
 
     # :call-seq:
