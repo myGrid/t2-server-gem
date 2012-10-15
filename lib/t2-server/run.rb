@@ -131,10 +131,10 @@ module T2Server
     # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
-    # created instance of T2Server::Server. The _workflow_ must also be
-    # supplied as a string in t2flow or scufl format. User credentials and
-    # connection parameters can be supplied if required but are both optional.
-    # If _server_ is an instance of T2Server::Server then
+    # created instance of T2Server::Server. The _workflow_ may be supplied
+    # as a string in t2flow format, a filename or a File or IO object. User
+    # credentials and connection parameters can be supplied if required but
+    # are both optional. If _server_ is an instance of T2Server::Server then
     # _connection_parameters_ will be ignored.
     #
     # This method will _yield_ the newly created Run if a block is given.

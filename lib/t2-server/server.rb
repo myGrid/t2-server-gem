@@ -118,6 +118,9 @@ module T2Server
     #
     # Create a run on this server using the specified _workflow_.
     # This method will _yield_ the newly created Run if a block is given.
+    #
+    # The _workflow_ parameter may be the workflow itself, a file name or a
+    # File or IO object.
     def create_run(workflow, credentials = nil)
       id = initialize_run(workflow, credentials)
       run = Run.create(self, "", credentials, id)
@@ -131,9 +134,7 @@ module T2Server
       run
     end
 
-    # :call-seq:
-    #   initialize_run(workflow, credentials = nil) -> string
-    #
+    # :stopdoc:
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its identifier instead.
     def initialize_run(workflow, credentials = nil)
@@ -141,9 +142,20 @@ module T2Server
       user = credentials.nil? ? :all : credentials.username
       @runs[user] = {} unless @runs[user]
 
-      @connection.POST(links[:runs], workflow,
-        "application/vnd.taverna.t2flow+xml", credentials)
+      # If workflow is a String, it might be a filename! If so, stream it.
+      if (workflow.instance_of? String) && (File.file? workflow)
+        return File.open(workflow, "r") do |file|
+          create(links[:runs], file, "application/vnd.taverna.t2flow+xml",
+            credentials)
+        end
+      end
+
+      # If we get here then workflow could either be a String containing a
+      # workflow or a File or IO object.
+      create(links[:runs], workflow, "application/vnd.taverna.t2flow+xml",
+        credentials)
     end
+    # :startdoc:
 
     # :call-seq:
     #   version -> String
@@ -223,10 +235,19 @@ module T2Server
     end
 
     def upload_file(filename, uri, remote_name, credentials = nil)
-      contents = IO.read(filename)
+      # Different Server versions support different upload methods
+      (major, minor, patch) = version_components
+
       remote_name = filename.split('/')[-1] if remote_name == ""
 
-      upload_data(contents, remote_name, uri, credentials)
+      if minor == 4 && patch >= 1
+        File.open(filename, "rb") do |file|
+          upload_data(file, remote_name, uri, credentials)
+        end
+      else
+        contents = IO.read(filename)
+        upload_data(contents, remote_name, uri, credentials)
+      end
     end
 
     def upload_data(data, remote_name, uri, credentials = nil)

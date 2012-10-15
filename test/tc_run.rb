@@ -102,9 +102,11 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test run with no input or output
+  # Test run with no input or output. Also, pre-load workflow into a String.
   def test_run_no_ports
-    T2Server::Run.create($uri, $wkf_no_io, $creds, $conn_params) do |run|
+    workflow = File.read($wkf_no_io)
+
+    T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
       assert_nothing_raised { run.input_ports }
       assert_nothing_raised { run.start }
       assert(run.running?)
@@ -160,8 +162,10 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  # Test run with file input. Also pass workflow as File object.
   def test_run_file_input
-    # run with file input
+    workflow = File.open($wkf_pass, "r")
+
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
@@ -173,6 +177,8 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_port("OUT").value, "Hello, World!")
     end
+
+    workflow.close
   end
 
   # Test run that returns list of lists, some empty, using baclava for input
