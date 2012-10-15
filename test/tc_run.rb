@@ -32,6 +32,24 @@
 
 require 't2-server'
 
+# A class to test data streaming.
+class TestCache
+  attr_reader :data
+
+  def initialize
+    @data = ""
+  end
+
+  def write(data)
+    @data += data
+    data.size
+  end
+
+  def size
+    return @data.size
+  end
+end
+
 class TestRun < Test::Unit::TestCase
 
   # Test run connection
@@ -74,11 +92,9 @@ class TestRun < Test::Unit::TestCase
         zip_out = run.zip_output
         assert_not_equal(zip_out, "")
 
-        zip_stream = ""
-        run.zip_output do |chunk|
-          zip_stream += chunk
-        end
-        assert_equal(zip_out, zip_stream)
+        zip_cache = TestCache.new
+        run.zip_output(zip_cache)
+        assert_equal(zip_out, zip_cache.data)
       end
 
       # deletion
