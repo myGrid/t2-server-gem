@@ -32,6 +32,24 @@
 
 require 't2-server'
 
+# A class to test data streaming.
+class TestCache
+  attr_reader :data
+
+  def initialize
+    @data = ""
+  end
+
+  def write(data)
+    @data += data
+    data.size
+  end
+
+  def size
+    return @data.size
+  end
+end
+
 class TestRun < Test::Unit::TestCase
 
   # Test run connection
@@ -69,9 +87,14 @@ class TestRun < Test::Unit::TestCase
       assert_equal(run.output_port("OUT").value, "Hello, World!")
       assert_equal(run.output_port("wrong!"), nil)
 
-      # get zip file
+      # get zip file and test streaming
       assert_nothing_raised(T2Server::T2ServerError) do
-        assert_not_equal(run.zip_output, "")
+        zip_out = run.zip_output
+        assert_not_equal(zip_out, "")
+
+        zip_cache = TestCache.new
+        run.zip_output(zip_cache)
+        assert_equal(zip_out, zip_cache.data)
       end
 
       # deletion
@@ -79,9 +102,11 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test run with no input or output
+  # Test run with no input or output. Also, pre-load workflow into a String.
   def test_run_no_ports
-    T2Server::Run.create($uri, $wkf_no_io, $creds, $conn_params) do |run|
+    workflow = File.read($wkf_no_io)
+
+    T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
       assert_nothing_raised { run.input_ports }
       assert_nothing_raised { run.start }
       assert(run.running?)
@@ -137,8 +162,10 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  # Test run with file input. Also pass workflow as File object.
   def test_run_file_input
-    # run with file input
+    workflow = File.open($wkf_pass, "r")
+
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
@@ -150,6 +177,8 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_port("OUT").value, "Hello, World!")
     end
+
+    workflow.close
   end
 
   # Test run that returns list of lists, some empty, using baclava for input
@@ -171,9 +200,11 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_ports.keys.sort, ["MANY", "SINGLE"])
       assert_equal(run.output_port("SINGLE").value, [])
+      assert(!run.output_port("SINGLE").empty?)
       assert_equal(run.output_port("MANY").value,
         [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
       assert_equal(run.output_port("MANY").total_size, 12)
+      assert(run.output_port("MANY")[1][0][0].empty?)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
     end
@@ -192,8 +223,15 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
 
+      # Test normal and streamed output
       assert_nothing_raised(T2Server::AccessForbiddenError) do
         output = run.baclava_output
+
+        out_stream = ""
+        run.baclava_output do |chunk|
+          out_stream += chunk
+        end
+        assert_equal(output, out_stream)
       end
     end
   end
@@ -209,42 +247,77 @@ class TestRun < Test::Unit::TestCase
       run.start
       run.wait
 
-      # get total data size (without downloading the data)
+      # Get total data size (without downloading the data).
       assert_equal(run.output_port("OUT").total_size, 100)
       assert_equal(run.output_port("OUT").size, 100)
 
-      # no data downloaded yet
+      # Confirm no data has been downloaded yet.
       assert(run.output_port("OUT").value(:debug).nil?)
 
-      # get just the first 10 bytes
-      assert_equal(run.output_port("OUT").value(0...10),
-        "123456789\n")
+      # Stream just the first 10 bytes.
+      stream = ""
+      run.output_port("OUT").value(0...10) do |chunk|
+        stream += chunk
+      end
+      assert_equal(stream, "123456789\n")
 
-      # get a bad range - should return the first 10 bytes
+      # Confirm nothing cached.
+      assert(run.output_port("OUT").value(:debug).nil?)
+      
+      # Get just the second 10 bytes.
+      assert_equal(run.output_port("OUT").value(10...20),
+        "223456789\n")
+
+      # Stream the first 20 bytes - this only needs to download the first 10,
+      # the rest should be cached, so there should be 2 chunks.
+      stream = []
+      run.output_port("OUT").value(0...20) do |chunk|
+        stream << chunk
+      end
+      assert_equal(stream.size, 2)
+      assert_equal(stream.join, "123456789\n223456789\n")
+
+      # Get a bad range - should return the first 10 bytes.
       assert_equal(run.output_port("OUT").value(-10...10),
         "123456789\n")
 
-      # confirm only the first 10 bytes have been downloaded
+      # Confirm only the first 20 bytes have been downloaded.
       assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n")
+        "123456789\n223456789\n")
 
-      # ask for a separate 10 byte range
-      assert_equal(run.output_port("OUT").value(20...30),
-        "323456789\n")
+      # Ask for a separate 10 byte range.
+      assert_equal(run.output_port("OUT").value(30...40),
+        "423456789\n")
 
-      # confirm that enough was downloaded to connect the two ranges
+      # Confirm that enough was downloaded to connect the two ranges.
       assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n")
+        "123456789\n223456789\n323456789\n423456789\n")
 
-      # ask for a range that we already have
+      # Ask for a range that we already have.
       assert_equal(run.output_port("OUT").value(5..25),
         "6789\n223456789\n323456")
 
-      # confirm that no more has actually been downloaded
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n")
+      # Stream a range we already have. There should be one chunk.
+      stream = []
+      run.output_port("OUT").value(5..25) do |chunk|
+        stream << chunk
+      end
+      assert_equal(stream.size, 1)
+      assert_equal(stream.join, "6789\n223456789\n323456")
 
-      # now get the lot and check its size
+      # Confirm that no more has actually been downloaded.
+      assert_equal(run.output_port("OUT").value(:debug),
+        "123456789\n223456789\n323456789\n423456789\n")
+
+      # Stream the lot and check total length. There should be two chunks.
+      stream = []
+      run.output_port("OUT").value do |chunk|
+        stream << chunk
+      end
+      assert_equal(stream.length, 2)
+      assert_equal(stream.join.length, 100)
+
+      # Now get the lot and check its size.
       out = run.output_port("OUT").value
       assert_equal(out.length, 100)
     end
@@ -255,7 +328,7 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_fail, $creds, $conn_params) do |run|
       run.start
       run.wait
-      assert(run.output_port("OUT").value.nil?)
+      assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
     end
   end
@@ -264,6 +337,7 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
       run.start
       run.wait
+      assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
     end
   end

@@ -104,7 +104,7 @@ These are simple to set up:
 
 === Server API example
 
-The Server constructor can yield the newly created object. Simple supply a URI
+The Server constructor can yield the newly created object. Simply supply a URI
 and a set of connection parameters to connect to a server:
 
   T2Server::Server.new(uri, conn_params) do |server|
@@ -122,6 +122,9 @@ credentials:
     ...
   end
 
+The +workflow+ parameter can be the workflow itself, a filename or a File or
+IO object.
+
 An individual run can be deleted with its own <tt>delete</tt> method (see below)
 but all runs on a server can be deleted in one go:
 
@@ -138,6 +141,9 @@ a couple of runs directly:
   T2Server::Run.create(uri, workflow, credentials, conn_params) do |run|
     ...
   end
+
+As before, the +workflow+ parameter can be the workflow itself, a filename or
+a File or IO object.
 
 Setting an input port to a run is very easy:
 
@@ -162,25 +168,47 @@ Or just wait until the run has finished:
 
   run.wait
 
-Then the outputs can be collected:
+Then the outputs can be collected into memory or saved to a file:
 
   result = run.output_port("port_name").value
+  run.output_port("port_name").write_value_to_file("/path/to/value.txt")
 
-If you have a lot of output you can grab the whole lot as a zip file:
+Outputs can be queried as to their type, size (in bytes) or if they contain an
+error message:
 
-  zip_data = run.zip_output
+  run.output_port("port_name").type
+  run.output_port("port_name").size
+  run.output_port("port_name").error?
+
+If the output does hold an error then it can be found in the value of the
+output as normal.
+
+If you have a lot of output you can grab the whole lot in a zip archive. This
+can be downloaded into memory or saved directly to a file.
+
+  zip_data = run.zip_output              # download to memory
+  run.zip_output("/path/to/output.zip")  # save to a file
 
 Using baclava documents for setting inputs and collecting outputs is also
 supported:
 
   run.baclava_input = filename
 
-But make sure you request baclava output *before* starting the run:
+But make sure you request baclava output *before* starting the run. Baclava
+output can be downloaded into memory or saved directly to a file.
 
   run.request_baclava_output
   run.start
   run.wait
-  output = run.baclava_output
+  output = run.baclava_output                    # download to memory
+  run.baclava_output("/path/to/output.baclava")  # save to a file
+
+When downloading outputs the underlying stream can be accessed by supplying a
+block to the value, zip_output or baclava_output methods:
+
+  run.output_port("port_name").value do |data|
+    print data
+  end
 
 A run can be deleted when no longer needed, like so:
 

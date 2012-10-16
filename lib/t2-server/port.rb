@@ -181,6 +181,21 @@ module T2Server
     end
 
     # :call-seq:
+    #   empty? -> bool
+    #
+    # Is this output port empty?
+    #
+    # Note that if the output port holds a list then it is not considered
+    # empty, even if that list is empty. This is because the port itself is
+    # not empty, there is a list there! A separate test should be performed to
+    # see if that list is empty or not.
+    def empty?
+      # Funnily enough, an empty list does *not* make a port empty!
+      return false if @structure.instance_of? Array
+      @structure.empty?
+    end
+
+    # :call-seq:
     #   [int] -> obj
     #
     # This call provides access to the underlying structure of the OutputPort.
@@ -195,24 +210,78 @@ module T2Server
     end
 
     # :call-seq:
-    #   value -> obj
-    #   value(range) -> obj
+    #   value -> binary blob
+    #   value(range) -> binary blob
+    #   value {|chunk| ...}
+    #   value(range) {|chunk| ...}
     #   value -> Array
     #
-    # For singleton outputs get the value (or part of it). For list outputs
-    # get all the values in an Array structure that mirrors the structure of
-    # the output port. To get part of a value from a list use
-    # 'port[].value(range)'.
-    def value(range = nil)
+    # For singleton outputs download or stream the data (or part of it) held
+    # by the output port. Please see the documentation for PortValue#value for
+    # full details.
+    #
+    # For list outputs all data values are downloaded into memory and returned
+    # in an Array structure that mirrors the structure of the output port. Do
+    # not use this form if the output port has large amounts of data! To get
+    # part of a value from a list use something like:
+    #   run.output_port("port_name")[0].value(0..100)
+    def value(range = nil, &block)
       if depth == 0
         if range.nil?
-          @structure.value
+          @structure.value(&block)
         else
-          @structure.value(range)
+          @structure.value(range, &block)
         end
       else
         @values = strip(:value) if @values.nil?
         @values
+      end
+    end
+
+    # :call-seq:
+    #   stream_value(stream) -> Fixnum
+    #   stream_value(stream, range) -> Fixnum
+    #
+    # Stream a singleton port value directly to another stream and return the
+    # number of bytes written. If a range is supplied then only that range of
+    # data is streamed from the server. The stream passed in may be anything
+    # that provides a +write+ method; instances of IO and File, for example.
+    # No data is cached by this method.
+    #
+    # To stream parts of a list port, use PortValue#stream_value on the list
+    # item directly:
+    #   run.output_port("port_name")[0].stream_value(stream)
+    def stream_value(stream, range = nil)
+      return 0 unless depth == 0
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      if range.nil?
+        @structure.stream_value(stream)
+      else
+        @structure.stream_value(stream, range)
+      end
+    end
+
+    # :call-seq:
+    #   write_value_to_file(filename) -> Fixnum
+    #   write_value_to_file(filename, range) -> Fixnum
+    #
+    # Stream a singleton port value to a file and return the number of bytes
+    # written. If a range is supplied then only that range of data is
+    # downloaded from the server.
+    #
+    # To save parts of a list port to a file, use
+    # PortValue#write_value_to_file on the list item directly:
+    #   run.output_port("port_name")[0].write_value_to_file
+    def write_value_to_file(filename, range = nil)
+      return 0 unless depth == 0
+
+      if range.nil?
+        @structure.write_value_to_file(filename)
+      else
+        @structure.write_value_to_file(filename, range)
       end
     end
 
@@ -256,17 +325,15 @@ module T2Server
       @sizes
     end
 
-    # :call-seq:
-    #   error -> String
-    #
-    # Get the error message (if there is one) of this output port.
-    #
-    # This method is only for use on outputs of depth 0. For other depths use
-    # 'port[].error'
+    # :stopdoc:
     def error
+      warn "[DEPRECATION] Using #error to get the error message is " +
+      "deprecated and will be removed in version 1.1.0. Please use #value " +
+      "instead."
       return nil unless depth == 0
-      @structure.error
+      @structure.value
     end
+    # :startdoc:
 
     # :call-seq:
     #   total_size -> int
@@ -283,8 +350,8 @@ module T2Server
     end
 
     # :stopdoc:
-    def download(uri, range = nil)
-      @run.download_output_data(uri, range)
+    def download(uri, range = nil, &block)
+      @run.download_output_data(uri, range, &block)
     end
     # :startdoc:
 
@@ -301,11 +368,12 @@ module T2Server
         return data
       when 'value'
         return PortValue.new(self, xml_node_attribute(node, 'href'), false,
-          xml_node_attribute(node, 'contentType'),
-          xml_node_attribute(node, 'contentByteLength').to_i)
+          xml_node_attribute(node, 'contentByteLength').to_i,
+          xml_node_attribute(node, 'contentType'))
       when 'error'
         @error = true
-        return PortValue.new(self, xml_node_attribute(node, 'href'), true)
+        return PortValue.new(self, xml_node_attribute(node, 'href'), true,
+          xml_node_attribute(node, 'errorByteLength').to_i)
       end
     end
 
@@ -339,78 +407,162 @@ module T2Server
     # The size (in bytes) of the port value.
     attr_reader :size
 
+    # The mime-type we use for an error value.
+    ERROR_TYPE = "application/x-error"
+
+    # The mime-type we use for an empty value. Note that an empty value is not
+    # simply an empty string. It is the complete absence of a value.
+    EMPTY_TYPE = "application/x-empty"
+
     # :stopdoc:
-    def initialize(port, ref, error, type = "", size = 0)
+    def initialize(port, ref, error, size, type = "")
       @port = port
       @reference = URI.parse(ref)
-      @type = type
+      @type = (error ? ERROR_TYPE : type)
       @size = size
       @value = nil
       @vgot = nil
-      @error = nil
-
-      if error
-        @error = @port.download(@reference)
-        @type = "error"
-      end
+      @error = error
     end
     # :startdoc:
 
     # :call-seq:
-    #   value -> obj
-    #   value(range) -> obj
+    #   value -> binary blob
+    #   value(range) -> binary blob
+    #   value {|chunk| ...}
+    #   value(range) {|chunk| ...}
     #
-    # Return the value of this port. It is downloaded from the server if it
-    # has not already been retrieved. If a range is specified then just that
-    # portion of the value is downloaded and returned. If no range is specified
-    # then the whole value is downloaded and returned.
+    # Get the value of this port from the server.
     #
-    # All downloaded data is cached and not downloaded a second time if the
-    # same or similar ranges are requested.
-    def value(range = 0...@size)
-      return nil if error?
-      return "" if @type == "application/x-empty"
+    # If no parameters are supplied then this method will simply download and
+    # return all the data. Supplying a Range will download and return the data
+    # in that range. In these two cases the data is downloaded into memory and
+    # cached.
+    #
+    # Passing in a block will allow access to the underlying data stream. The
+    # data is not stored in memory and it is not cached:
+    #   run.output_port("port") do |chunk|
+    #     print chunk
+    #   end
+    #
+    # No data that has already been cached will be re-downloaded. No data that
+    # is streamed will be cached. When downloading port outputs that will not
+    # fit into memory, use the streaming versions of this method; do not use
+    # the caching versions.
+    #
+    # If this port is an error then this value will be the error message.
+    def value(range = 0...@size, &block)
+      # The following block is a workaround for Taverna Server versions prior
+      # to 2.4.1 and can be removed when support for those versions is no
+      # longer required.
+      if error? && @size == 0
+        @value = @port.download(@reference)
+        @size = @value.size
+        @vgot = 0...@size
+        return @value
+      end
+
+      return "" if @type == EMPTY_TYPE
       return @value if range == :debug
 
-      # check that the range provided is sensible
+      # Check that the range provided is sensible
       range = 0..range.max if range.min < 0
       range = range.min...@size if range.max >= @size
 
       need = fill(@vgot, range)
       case need.length
       when 0
-        # we already have all the data we need, just return the right bit.
-        # @vgot cannot be nil here and must fully encompass range.
+        # We already have all the data we need, just return or stream the
+        # right bit. @vgot cannot be nil here and must fully encompass range.
         ret_range = (range.min - @vgot.min)..(range.max - @vgot.min)
-        @value[ret_range]
-      when 1
-        # we either have some data, at one end of range or either side of it,
-        # or none. @vgot can be nil here.
-        # In both cases we download what we need.
-        new_data = @port.download(@reference, need[0])
-        if @vgot.nil?
-          # this is the only data we have, return it all.
-          @vgot = range
-          @value = new_data
+        if block_given?
+          yield @value[ret_range]
         else
-          # add the new data to the correct end of the data we have, then
-          # return the range requested.
-          if range.max <= @vgot.max
-            @vgot = range.min..@vgot.max
-            @value = new_data + @value
-            @value[0..range.max]
+          @value[ret_range]
+        end
+      when 1
+        # We either have some data, at one end of range or either side of it,
+        # or none. @vgot can be nil here. In both cases we download or stream
+        # what we need.
+        if @vgot.nil?
+          # We have no data, so download or stream it all.
+          if block_given?
+            @port.download(@reference, need[0], &block)
           else
-            @vgot = @vgot.min..range.max
-            @value = @value + new_data
-            @value[(range.min - @vgot.min)..@vgot.max]
+            @vgot = range
+            @value = @port.download(@reference, need[0])
+          end
+        else
+          # Add the new data to the correct end of the data we have, then
+          # return or stream the range requested.
+          if range.max <= @vgot.max
+            if block_given?
+              @port.download(@reference, need[0], &block)
+              yield @value[0..(range.max - @vgot.min)]
+            else
+              @vgot = range.min..@vgot.max
+              @value = @port.download(@reference, need[0]) + @value
+              @value[0..range.max]
+            end
+          else
+            if block_given?
+              yield @value[(range.min - @vgot.min)..-1]
+              @port.download(@reference, need[0], &block)
+            else
+              @vgot = @vgot.min..range.max
+              @value = @value + @port.download(@reference, need[0])
+              @value[(range.min - @vgot.min)..@vgot.max]
+            end
           end
         end
       when 2
-        # we definitely have some data and it is in the middle of the
+        # We definitely have some data and it is in the middle of the
         # range requested. @vgot cannot be nil here.
-        @vgot = range
-        @value = @port.download(@reference, need[0]) + @value +
-          @port.download(@reference, need[1])
+        if block_given?
+          @port.download(@reference, need[0], &block)
+          yield @value
+          @port.download(@reference, need[1], &block)
+        else
+          @vgot = range
+          @value = @port.download(@reference, need[0]) + @value +
+            @port.download(@reference, need[1])
+        end
+      end
+    end
+
+    # :call-seq:
+    #   stream_value(stream) -> Fixnum
+    #   stream_value(stream, range) -> Fixnum
+    #
+    # Stream this port value directly into another stream. The stream passed
+    # in may be anything that provides a +write+ method; instances of IO and
+    # File, for example. No data is cached by this method.
+    #
+    # The number of bytes written to the stream is returned.
+    def stream_value(stream, range = 0...@size)
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      bytes = 0
+
+      value(range) do |chunk|
+        bytes += stream.write(chunk)
+      end
+
+      bytes
+    end
+
+    # :call-seq:
+    #   write_value_to_file(filename) -> Fixnum
+    #   write_value_to_file(filename, range) -> Fixnum
+    #
+    # Stream this port value directly to a file. If a range is supplied then
+    # just that range of data is downloaded from the server. No data is cached
+    # by this method.
+    def write_value_to_file(filename, range = 0...@size)
+      File.open(filename, "wb") do |file|
+        stream_value(file, range)
       end
     end
 
@@ -419,16 +571,25 @@ module T2Server
     #
     # Does this port represent an error?
     def error?
-      !@error.nil?
+      @error
     end
 
     # :call-seq:
-    #   error -> string
+    #   empty? -> bool
     #
-    # Return the error message for this value, or _nil_ if it is not an error.
-    def error
-      @error
+    # Is this port value empty?
+    def empty?
+      @type == EMPTY_TYPE
     end
+
+    # :stopdoc:
+    def error
+      warn "[DEPRECATION] Using #error to get the error message is " +
+        "deprecated and will be removed in version 1.1.0. Please use #value " +
+        "instead."
+      value
+    end
+    # :startdoc:
 
     # Used within #inspect, below to help override the built in version.
     @@to_s = Kernel.instance_method(:to_s)

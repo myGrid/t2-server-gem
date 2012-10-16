@@ -171,14 +171,10 @@ begin
 
     if exitcd == 0
       if options[:baclava_out]
-        File.open(options[:baclava_out], "w") do |file|
-          file.syswrite(run.baclava_output)
-        end
+        run.baclava_output(options[:baclava_out])
         puts "Baclava file written to '#{options[:baclava_out]}'"
       elsif options[:zip_out]
-        File.open(options[:zip_out],"w") do |file|
-          file.syswrite(run.zip_output)
-        end
+        run.zip_output(options[:zip_out])
         puts "Zip file written to '#{options[:zip_out]}'"
       else
         # go through the outputs and print them out

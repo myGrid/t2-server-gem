@@ -104,12 +104,12 @@ module T2Server
     # the body of the response is returned. A portion of the data can be
     # retrieved by specifying a byte range, start..end, with the _range_
     # parameter.
-    def GET(uri, type, range, credentials)
+    def GET(uri, type, range, credentials, &block)
       get = Net::HTTP::Get.new(uri.path)
       get["Accept"] = type
       get["Range"] = "bytes=#{range.min}-#{range.max}" unless range.nil?
 
-      response = submit(get, uri, credentials)
+      response = submit(get, uri, credentials, &block)
 
       case response
       when Net::HTTPOK, Net::HTTPPartialContent
@@ -133,15 +133,20 @@ module T2Server
     # :call-seq:
     #   PUT(uri, value, type, credentials) -> bool
     #   PUT(uri, value, type, credentials) -> URI
+    #   PUT(uri, stream, type, credentials) -> URI
     #
-    # Perform a HTTP PUT of _value_ to a location on the server specified by
-    # _uri_ . If successful _true_ , or a URI to the PUT resource, is returned
-    # depending on whether the operation has set a parameter (true) or uploaded
-    # data (URI).
-    def PUT(uri, value, type, credentials)
+    # Upload data via HTTP PUT. Data may be specified as a value or as a
+    # stream. The stream can be any object that has a read(length) method;
+    # instances of File or IO, for example.
+    #
+    # If successful _true_ or a URI to the uploaded resource is returned
+    # depending on whether the operation has altered a parameter (true) or
+    # uploaded new data (URI).
+    def PUT(uri, data, type, credentials)
       put = Net::HTTP::Put.new(uri.path)
       put.content_type = type
-      put.body = value
+
+      set_upload_body(put, data)
 
       response = submit(put, uri, credentials)
 
@@ -170,14 +175,19 @@ module T2Server
     end
 
     # :call-seq:
-    #   POST(uri, value, type, credentials)
+    #   POST(uri, value, type, credentials) -> URI
+    #   POST(uri, stream, type, credentials) -> URI
     #
-    # Perform an HTTP POST of _value_ to a location on the server specified by
-    # _uri_ and return the URI of the created attribute.
-    def POST(uri, value, type, credentials)
+    # Upload data via HTTP POST. Data may be specified as a value or as a
+    # stream. The stream can be any object that has a read(length) method;
+    # instances of File or IO, for example.
+    #
+    # If successful the URI of the uploaded resource is returned.
+    def POST(uri, data, type, credentials)
       post = Net::HTTP::Post.new(uri.path)
       post.content_type = type
-      post.body = value
+
+      set_upload_body(post, data)
 
       response = submit(post, uri, credentials)
 
@@ -249,12 +259,37 @@ module T2Server
 
     private
 
-    def submit(request, uri, credentials)
+    # If we have a stream then we need to set body_stream and then either
+    # supply a content length or set the transfer encoding to "chunked". A
+    # file object can supply its size, a bare IO object cannot. If we have a
+    # simple value we can set body directly.
+    def set_upload_body(request, data)
+      if data.respond_to? :read
+        request.body_stream = data
+        if data.respond_to? :size
+          request.content_length = data.size
+        else
+          request["Transfer-encoding"] = "chunked"
+        end
+      else
+        request.body = data
+      end
+    end
+
+    # If a block is passed in here then the response is returned in chunks
+    # (streamed). If no block is passed in the whole response is read into
+    # memory and returned.
+    def submit(request, uri, credentials, &block)
 
       credentials.authenticate(request) unless credentials.nil?
 
+      response = nil
       begin
-        @http.request(uri, request)
+        @http.request(uri, request) do |r|
+          r.read_body &block
+          response = r
+        end
+        response
       rescue InternalHTTPError => e
         raise ConnectionError.new(e)
       end

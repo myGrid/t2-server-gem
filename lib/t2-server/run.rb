@@ -131,10 +131,10 @@ module T2Server
     # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
-    # created instance of T2Server::Server. The _workflow_ must also be
-    # supplied as a string in t2flow or scufl format. User credentials and
-    # connection parameters can be supplied if required but are both optional.
-    # If _server_ is an instance of T2Server::Server then
+    # created instance of T2Server::Server. The _workflow_ may be supplied
+    # as a string in t2flow format, a filename or a File or IO object. User
+    # credentials and connection parameters can be supplied if required but
+    # are both optional. If _server_ is an instance of T2Server::Server then
     # _connection_parameters_ will be ignored.
     #
     # This method will _yield_ the newly created Run if a block is given.
@@ -419,31 +419,83 @@ module T2Server
 
     # :call-seq:
     #   baclava_output -> string
+    #   baclava_output(filename) -> Fixnum
+    #   baclava_output(stream) -> Fixnum
+    #   baclava_output {|chunk| ...}
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
     # before starting the run.
-    def baclava_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # XML data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the XML data directly to that object and return the number of
+    # bytes that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   run.baclava_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def baclava_output(param = nil, &block)
+      raise ArgumentError,
+        'both a parameter and block given for baclava_output' if param && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
 
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
-      @server.read(baclava_uri, "*/*", @credentials)
+      if param.respond_to? :write
+        @server.read_to_stream(param, baclava_uri, "*/*", @credentials)
+      elsif param.instance_of? String
+        @server.read_to_file(param, baclava_uri, "*/*", @credentials)
+      else
+        @server.read(baclava_uri, "*/*", @credentials, &block)
+      end
     end
 
     # :call-seq:
     #   zip_output -> binary blob
+    #   zip_output(filename) -> Fixnum
+    #   zip_output(stream) -> Fixnum
+    #   zip_output {|chunk| ...}
     #
     # Get the working directory of this run directly from the server in zip
     # format.
-    def zip_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # zipped data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the zip data directly to that object and return the number of
+    # bytes that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   run.zip_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def zip_output(param = nil, &block)
+      raise ArgumentError,
+        "both a parameter and block given for zip_output" if param && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       output_uri = Util.append_to_uri_path(links[:wdir], "out")
-      @server.read(output_uri, "application/zip", @credentials)
+      if param.respond_to? :write
+        @server.read_to_stream(param, output_uri, "application/zip",
+          @credentials)
+      elsif param.instance_of? String
+        @server.read_to_file(param, output_uri, "application/zip",
+          @credentials)
+      else
+        @server.read(output_uri, "application/zip", @credentials, &block)
+      end
     end
 
     # :call-seq:
@@ -748,8 +800,9 @@ module T2Server
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
     # downloads a file from the run's working directory.
-    def download_output_data(uri, range = nil)
-      @server.read(uri, "application/octet-stream", range, @credentials)
+    def download_output_data(uri, range = nil, &block)
+      @server.read(uri, "application/octet-stream", range, @credentials,
+        &block)
     end
     # :startdoc:
 
