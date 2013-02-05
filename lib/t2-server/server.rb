@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -51,6 +51,7 @@ module T2Server
       :policy   => XML::Methods.xpath_compile("//nsr:policy"),
       :run      => XML::Methods.xpath_compile("//nsr:run"),
       :runs     => XML::Methods.xpath_compile("//nsr:runs"),
+      :intfeed  => XML::Methods.xpath_compile("//nsr:interactionFeed"),
 
       # Server policy XPath queries
       :runlimit => XML::Methods.xpath_compile("//nsr:runLimit"),
@@ -189,6 +190,14 @@ module T2Server
     # The URI of the connection to the remote Taverna Server.
     def uri
       @connection.uri
+    end
+
+    # :call-seq:
+    #   has_interaction_support? -> Boolean
+    #
+    # Does this server support interactions and provide a feed for them?
+    def has_interaction_support?
+      !links[:intfeed].nil?
     end
 
     # :call-seq:
@@ -376,6 +385,8 @@ module T2Server
       doc = _get_server_description
       links = {}
       links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href"))
+      uri = xpath_attr(doc, XPaths[:intfeed], "href")
+      links[:intfeed] = uri.nil? ? nil : URI.parse(uri)
 
       links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href"))
       doc = xml_document(read(links[:policy], "application/xml"))
