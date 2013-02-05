@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -33,6 +33,7 @@
 
 require 'rubygems'
 require 't2-server-cli'
+require 'launchy'
 
 include T2Server::CLI
 
@@ -154,10 +155,13 @@ begin
     # bail out if user doesn't want to wait
     exit 0 if options[:no_wait]
 
-    # otherwise wait
-    print "Running"
+    # otherwise wait, but open notifications in a web browser if there are any
+    print "Running. Please check your Web browser for notifications."
     until run.finished?
       sleep(1)
+      run.notifications.each do |note|
+        Launchy.open note.uri
+      end
       print "."
       $stdout.flush
     end

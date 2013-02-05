@@ -92,6 +92,7 @@ module T2Server
       @server_doc = nil
       @version = nil
       @version_components = nil
+      @interaction_feed = nil
       @links = nil
 
       # initialize run object cache
@@ -340,6 +341,12 @@ module T2Server
 
     def delete(uri, credentials = nil)
       @connection.DELETE(uri, credentials)
+    end
+
+    def interaction_reader(run)
+      @interaction_feed ||= Interaction::Feed.new(links[:intfeed])
+
+      Interaction::Reader.new(@interaction_feed, run)
     end
     # :startdoc:
 

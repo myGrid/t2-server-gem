@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -119,6 +119,9 @@ module T2Server
       # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
       @output_ports = nil
+
+      # The interaction reader to use for this run, if required.
+      @interaction_reader = nil
     end
     # :startdoc:
 
@@ -805,6 +808,20 @@ module T2Server
         &block)
     end
     # :startdoc:
+
+    # :call-seq:
+    #   notifications -> Array
+    #
+    # Get a list of notifications that are awaiting a response. Returns the
+    # empty list if there are none, or if the server does not support the
+    # Interaction Service.
+    def notifications
+      return [] unless server.has_interaction_support?
+
+      @interaction_reader ||= server.interaction_reader(self)
+
+      @interaction_reader.new_notifications
+    end
 
     private
 

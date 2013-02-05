@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -38,6 +38,7 @@ require 't2-server/net/credentials'
 require 't2-server/net/connection'
 require 't2-server/net/parameters'
 require 't2-server/port'
+require 't2-server/interaction'
 require 't2-server/server'
 require 't2-server/run'
 require 't2-server/admin'
