@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -295,8 +295,7 @@ module T2Server
     # uris is returned. For an individual reference from a list use
     # 'port[].reference'.
     def reference
-      @refs = strip(:reference) if @refs.nil?
-      @refs
+      @refs ||= strip(:reference)
     end
 
     # :call-seq:
@@ -308,8 +307,7 @@ module T2Server
     # For a singleton output a single type is returned. For lists an array of
     # types is returned. For an individual type from a list use 'port[].type'.
     def type
-      @types = strip(:type) if @types.nil?
-      @types
+      @types ||= strip(:type)
     end
 
     # :call-seq:
@@ -321,8 +319,7 @@ module T2Server
     # For a singleton output a single size is returned. For lists an array of
     # sizes is returned. For an individual size from a list use 'port[].size'.
     def size
-      @sizes = strip(:size) if @sizes.nil?
-      @sizes
+      @sizes ||= strip(:size)
     end
 
     # :stopdoc:

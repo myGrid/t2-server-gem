@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -44,9 +44,7 @@ module T2Server
     # object.
     def self.strip_uri_credentials(uri)
       # we want to use URIs here but strings can be passed in
-      unless uri.is_a? URI
-        uri = URI.parse(Util.strip_path_slashes(uri))
-      end
+      uri = URI.parse(Util.strip_path_slashes(uri)) unless uri.is_a? URI
 
       creds = nil
 

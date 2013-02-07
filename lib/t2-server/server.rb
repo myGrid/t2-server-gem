@@ -158,11 +158,7 @@ module T2Server
     #
     # The version string of the remote Taverna Server.
     def version
-      if @version.nil?
-        @version = _get_version
-      end
-
-      @version
+      @version ||= _get_version
     end
 
     # :call-seq:

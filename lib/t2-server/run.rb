@@ -157,14 +157,13 @@ module T2Server
         end
       end
 
-      if server.class != Server
-        server = Server.new(server, conn_params)
-      end
+      # If server is not a Server object, get one.
+      server = Server.new(server, conn_params) if server.class != Server
 
-      if uri.nil?
-        uri = server.initialize_run(workflow, credentials)
-      end
+      # If we are not given a URI to a run then we know we need to create one.
+      uri ||= server.initialize_run(workflow, credentials)
 
+      # Create the run object and yield it if necessary.
       run = new(server, uri, credentials)
       yield(run) if block_given?
       run
@@ -176,9 +175,7 @@ module T2Server
     # Get the username of the owner of this run. The owner is the user who
     # created the run on the server.
     def owner
-      @owner = _get_run_owner if @owner.nil?
-
-      @owner
+      @owner ||= _get_run_owner
     end
 
     # :call-seq:
@@ -194,9 +191,7 @@ module T2Server
     #
     # Return a hash (name, port) of all the input ports this run expects.
     def input_ports
-      @input_ports = _get_input_port_info if @input_ports.nil?
-
-      @input_ports
+      @input_ports ||= _get_input_port_info
     end
 
     # :call-seq:
@@ -826,9 +821,7 @@ module T2Server
     private
 
     def links
-      @links = _get_run_links if @links.nil?
-
-      @links
+      @links ||= _get_run_links
     end
 
     # Check each input to see if it requires a list input and call the

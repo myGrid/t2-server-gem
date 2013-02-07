@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -112,22 +112,14 @@ begin
       p port.type
     end
 
-    if options[:tsize]
-      puts "  Total data size: #{port.total_size}"
-    end
+    puts "  Total data size: #{port.total_size}" if options[:tsize]
   end
 
-  if options[:exitcode]
-    puts "Exitcode: #{run.exitcode}"
-  end
+  puts "Exitcode: #{run.exitcode}" if options[:exitcode]
 
-  if options[:stdout]
-    puts "Stdout: #{run.stdout}"
-  end
+  puts "Stdout: #{run.stdout}" if options[:stdout]
 
-  if options[:stderr]
-    puts "Stderr: #{run.stderr}"
-  end
+  puts "Stderr: #{run.stderr}" if options[:stderr]
 rescue RuntimeError => e
   puts e
   exit 1
