@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -37,6 +37,14 @@ class TestServer < Test::Unit::TestCase
   def test_server_connection
     assert_nothing_raised(T2Server::ConnectionError) do
       T2Server::Server.new($uri, $conn_params)
+    end
+  end
+
+  def test_interaction_support
+    T2Server::Server.new($uri, $conn_params) do |server|
+      assert_nothing_raised do
+        server.has_interaction_support?
+      end
     end
   end
 

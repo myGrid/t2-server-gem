@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -78,7 +78,8 @@ module T2Server
       end
 
       def xpath_attr(doc, expr, attribute)
-        REXML::XPath.first(doc, expr, Namespaces::MAP).attributes[attribute]
+        node = xpath_first(doc, expr)
+        node.nil? ? nil : node.attributes[attribute]
       end
     end
   end
