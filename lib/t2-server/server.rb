@@ -124,8 +124,8 @@ module T2Server
     # The _workflow_ parameter may be the workflow itself, a file name or a
     # File or IO object.
     def create_run(workflow, credentials = nil)
-      id = initialize_run(workflow, credentials)
-      run = Run.create(self, "", credentials, id)
+      uri = initialize_run(workflow, credentials)
+      run = Run.create(self, "", credentials, uri)
 
       # cache newly created run object in the user's run cache
       user_runs(credentials)[run.id] = run
@@ -135,8 +135,8 @@ module T2Server
     end
 
     # :stopdoc:
-    # Create a run on this server using the specified _workflow_ but do not
-    # return it as a Run instance. Return its identifier instead.
+    # Create a run on this server using the specified _workflow_ and return
+    # the URI to it.
     def initialize_run(workflow, credentials = nil)
       # If workflow is a String, it might be a filename! If so, stream it.
       if (workflow.instance_of? String) && (File.file? workflow)
