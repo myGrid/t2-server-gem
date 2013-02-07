@@ -127,10 +127,8 @@ module T2Server
       id = initialize_run(workflow, credentials)
       run = Run.create(self, "", credentials, id)
 
-      # cache newly created run object - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
-      @runs[user][id] = run
+      # cache newly created run object in the user's run cache
+      user_runs(credentials)[run.id] = run
 
       yield(run) if block_given?
       run
@@ -140,10 +138,6 @@ module T2Server
     # Create a run on this server using the specified _workflow_ but do not
     # return it as a Run instance. Return its identifier instead.
     def initialize_run(workflow, credentials = nil)
-      # set up the run object cache - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
-
       # If workflow is a String, it might be a filename! If so, stream it.
       if (workflow.instance_of? String) && (File.file? workflow)
         return File.open(workflow, "r") do |file|
@@ -424,23 +418,27 @@ module T2Server
         run_list[id] = uri
       end
 
-      # cache run objects - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
+      # cache run objects in the user's run cache
+      runs_cache = user_runs(credentials)
 
       # add new runs to the user cache
       run_list.each_key do |id|
-        if !@runs[user].has_key? id
-          @runs[user][id] = Run.create(self, "", credentials, run_list[id])
+        if !runs_cache.has_key? id
+          runs_cache[id] = Run.create(self, "", credentials, run_list[id])
         end
       end
 
       # clear out the expired runs
-      if @runs[user].length > run_list.length
-        @runs[user].delete_if {|key, val| !run_list.member? key}
+      if runs_cache.length > run_list.length
+        runs_cache.delete_if {|key, val| !run_list.member? key}
       end
 
-      @runs[user]
+      runs_cache
+    end
+
+    def user_runs(credentials = nil)
+      user = credentials.nil? ? :all : credentials.username
+      @runs[user] ||= {}
     end
   end
 end
