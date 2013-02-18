@@ -268,7 +268,7 @@ module T2Server
     # Get the status of this run. Status can be one of :initialized,
     # :running or :finished.
     def status
-      text_to_state(@server.read(links[:status], "text/plain", @credentials))
+      Status.to_sym(@server.read(links[:status], "text/plain", @credentials))
     end
 
     # :call-seq:
@@ -284,7 +284,7 @@ module T2Server
       # set all the inputs
       _check_and_set_inputs unless baclava_input?
 
-      @server.update(links[:status], state_to_text(:running), "text/plain",
+      @server.update(links[:status], Status.to_text(:running), "text/plain",
         @credentials)
     end
 
@@ -988,27 +988,30 @@ module T2Server
     end
 
     # :stopdoc:
-    STATE2TEXT = {
-      :initialized => "Initialized",
-      :running     => "Operating",
-      :finished    => "Finished",
-      :stopped     => "Stopped"
-    }
+    class Status
+      STATE2TEXT = {
+        :initialized => "Initialized",
+        :running     => "Operating",
+        :finished    => "Finished",
+        :stopped     => "Stopped"
+      }
 
-    TEXT2STATE = {
-      "Initialized" => :initialized,
-      "Operating"   => :running,
-      "Finished"    => :finished,
-      "Stopped"     => :stopped
-    }
+      TEXT2STATE = {
+        "Initialized" => :initialized,
+        "Operating"   => :running,
+        "Finished"    => :finished,
+        "Stopped"     => :stopped
+      }
+
+      def Status.to_text(state)
+        STATE2TEXT[state.to_sym]
+      end
+
+      def Status.to_sym(text)
+        TEXT2STATE[text]
+      end
+    end
     # :startdoc:
 
-    def state_to_text(state)
-      STATE2TEXT[state.to_sym]
-    end
-
-    def text_to_state(text)
-      TEXT2STATE[text]
-    end
   end
 end
