@@ -830,24 +830,18 @@ module T2Server
       input_ports.each_value do |port|
         next unless port.set?
 
+        uri = Util.append_to_uri_path(links[:inputs], "input/#{port.name}")
         if port.file?
           # If we're using a local file upload it first then set the port to
           # use a remote file.
-          unless port.remote_file?
-            file = upload_file(port.file)
-            port.remote_file = file
-          end
+          port.remote_file = upload_file(port.file) unless port.remote_file?
 
-          xml_value = xml_text_node(port.file)
-          uri = Util.append_to_uri_path(links[:inputs], "input/#{port.name}")
-          @server.update(uri, XML::Fragments::RUNINPUTFILE % xml_value,
-            "application/xml", @credentials)
+          xml_value = XML::Fragments::RUNINPUTFILE % xml_text_node(port.file)
         else
-          xml_value = xml_text_node(port.value)
-          uri = Util.append_to_uri_path(links[:inputs], "input/#{port.name}")
-          @server.update(uri, XML::Fragments::RUNINPUTVALUE % xml_value,
-            "application/xml", @credentials)
+          xml_value = XML::Fragments::RUNINPUTVALUE % xml_text_node(port.value)
         end
+
+        @server.update(uri, xml_value, "application/xml", @credentials)
       end
     end
 
