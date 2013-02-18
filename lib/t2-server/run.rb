@@ -447,13 +447,7 @@ module T2Server
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
 
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
-      if param.respond_to? :write
-        @server.read_to_stream(param, baclava_uri, "*/*", @credentials)
-      elsif param.instance_of? String
-        @server.read_to_file(param, baclava_uri, "*/*", @credentials)
-      else
-        @server.read(baclava_uri, "*/*", @credentials, &block)
-      end
+      download_or_stream(param, baclava_uri, "*/*", &block)
     end
 
     # :call-seq:
@@ -485,15 +479,7 @@ module T2Server
       raise RunStateError.new(state, :finished) if state != :finished
 
       output_uri = Util.append_to_uri_path(links[:wdir], "out")
-      if param.respond_to? :write
-        @server.read_to_stream(param, output_uri, "application/zip",
-          @credentials)
-      elsif param.instance_of? String
-        @server.read_to_file(param, output_uri, "application/zip",
-          @credentials)
-      else
-        @server.read(output_uri, "application/zip", @credentials, &block)
-      end
+      download_or_stream(param, output_uri, "application/zip", &block)
     end
 
     # :call-seq:
@@ -995,6 +981,16 @@ module T2Server
       end
 
       links
+    end
+
+    def download_or_stream(param, uri, type, &block)
+      if param.respond_to? :write
+        @server.read_to_stream(param, uri, type, @credentials)
+      elsif param.instance_of? String
+        @server.read_to_file(param, uri, type, @credentials)
+      else
+        @server.read(uri, type, @credentials, &block)
+      end
     end
 
     # :stopdoc:
