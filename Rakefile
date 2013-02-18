@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -68,7 +68,9 @@ Jeweler::Tasks.new do |s|
   s.add_development_dependency('jeweler', '~> 1.8.3')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
+  s.add_runtime_dependency('ratom', '~> 0.7.2')
   s.add_runtime_dependency('hirb', '>= 0.4.0')
+  s.add_runtime_dependency('launchy', '~> 2.1.2')
 end
 
 # This test task does not use the standard Rake::TestTask class as we need to
@@ -95,10 +97,8 @@ end
 RDoc::Task.new do |r|
   r.main = "README.rdoc"
   lib = Dir.glob("lib/**/*.rb").delete_if do |item|
-    item.include?("t2server.rb") or
     item.include?("/xml/") or
     item.include?("connection.rb") or
-    item.include?("credentials.rb") or
     item.include?("t2-server-cli.rb")
   end
   r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)

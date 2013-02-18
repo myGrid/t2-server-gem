@@ -4,7 +4,7 @@ Authors::     Robert Haines
 Contact::     mailto:support@mygrid.org.uk
 URL::         http://www.taverna.org.uk/
 Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
-Copyright::   (c) 2010-2012 The University of Manchester, UK
+Copyright::   (c) 2010-2013 The University of Manchester, UK
 
 
 == Synopsis
@@ -25,22 +25,33 @@ https://rubygems.org/gems/t2-server
 You can also download the source code from here:
 https://github.com/myGrid/t2-server-gem
 
-== Compatibility with Taverna Server versions
+== Compatibility
+
+This gem follows the principles of {Semantic Versioning}[http://semver.org/].
+
+=== Taverna Server
 
 From version 0.9.0 this library is compatible with Taverna Server 2.3 onwards.
 It is not compatible with any earlier version of Taverna Server due to breaking
-changes in its REST interface. We strongly encourage all users to upgrade to
-the current version of Taverna Server, but if that is not possible right now
-then please continue to use version 0.6.1 of this library for the time being.
+changes in its REST interface.
 
-This version of the library should be compatible with any Ruby code that you
-may have already written against earlier versions but you may see some warnings
-about API deprecations. These are clearly marked [DEPRECATION] and will appear
-on your console output. Anything marked as deprecated will be removed in
-version 1.0.0 (and are not guaranteed to continue working even until then) so
-you are advised to update your code at your earliest convenience.
+From version 1.0.0 this library is not guaranteed to be compatible with
+Taverna Server 2.3. It might work but it is not supported, and may stop working
+at any time.
 
-== Compatibility with Ruby versions
+Version 1.0.0 of this library saw the removal of older methods that were
+previously deprecated. If your code no longer works with this version then
+please re-test it with version 0.9.2 and check for deprecation messages before
+reporting bugs.
+
+We strongly encourage all users to upgrade to the current version of Taverna
+Server, but if that is not possible right now then these are the recommended
+version pairings:
+* pre Taverna Server 2.3, use version 0.6.1 of the gem
+* 2.3, use version 0.9.2
+* 2.4 and up, use version 1.0.0
+
+=== Ruby
 
 This library is known to work with the following versions of Ruby:
 * 1.8.7 *
@@ -106,7 +117,7 @@ These are simple to set up:
 
 === Server API example
 
-The Server constructor can yield the newly created object. Simple supply a URI
+The Server constructor can yield the newly created object. Simply supply a URI
 and a set of connection parameters to connect to a server:
 
   T2Server::Server.new(uri, conn_params) do |server|
@@ -124,6 +135,9 @@ credentials:
     ...
   end
 
+The +workflow+ parameter can be the workflow itself, a filename or a File or
+IO object.
+
 An individual run can be deleted with its own <tt>delete</tt> method (see below)
 but all runs on a server can be deleted in one go:
 
@@ -140,6 +154,9 @@ a couple of runs directly:
   T2Server::Run.create(uri, workflow, credentials, conn_params) do |run|
     ...
   end
+
+As before, the +workflow+ parameter can be the workflow itself, a filename or
+a File or IO object.
 
 Setting an input port to a run is very easy:
 
@@ -164,25 +181,63 @@ Or just wait until the run has finished:
 
   run.wait
 
-Then the outputs can be collected:
+While a workflow is running it might produce notifications via the
+{Interaction Service}[http://dev.mygrid.org.uk/wiki/display/taverna/Interaction+service].
+These can be polled with:
+
+  run.notifications
+
+If there are any new notifications that have not been responded to they will
+be returned in a list to be processed. Notifications take the form of a Web
+page to be displayed and the notification objects returned from the above call
+hold a URI to that page. The following code prints those URIs to the console:
+
+  run.notifications.each do |i|
+    puts i.uri
+  end
+
+When the workflow has finished executing then the outputs can be collected
+into memory or saved to a file:
 
   result = run.output_port("port_name").value
+  run.output_port("port_name").write_value_to_file("/path/to/value.txt")
 
-If you have a lot of output you can grab the whole lot as a zip file:
+Outputs can be queried as to their type, size (in bytes) or if they contain an
+error message:
 
-  zip_data = run.zip_output
+  run.output_port("port_name").type
+  run.output_port("port_name").size
+  run.output_port("port_name").error?
+
+If the output does hold an error then it can be found in the value of the
+output as normal.
+
+If you have a lot of output you can grab the whole lot in a zip archive. This
+can be downloaded into memory or saved directly to a file.
+
+  zip_data = run.zip_output              # download to memory
+  run.zip_output("/path/to/output.zip")  # save to a file
 
 Using baclava documents for setting inputs and collecting outputs is also
 supported:
 
   run.baclava_input = filename
 
-But make sure you request baclava output *before* starting the run:
+But make sure you request baclava output *before* starting the run. Baclava
+output can be downloaded into memory or saved directly to a file.
 
   run.request_baclava_output
   run.start
   run.wait
-  output = run.baclava_output
+  output = run.baclava_output                    # download to memory
+  run.baclava_output("/path/to/output.baclava")  # save to a file
+
+When downloading outputs the underlying stream can be accessed by supplying a
+block to the value, zip_output or baclava_output methods:
+
+  run.output_port("port_name").value do |data|
+    print data
+  end
 
 A run can be deleted when no longer needed, like so:
 

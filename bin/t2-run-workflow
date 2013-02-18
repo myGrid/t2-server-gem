@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -33,6 +33,7 @@
 
 require 'rubygems'
 require 't2-server-cli'
+require 'launchy'
 
 include T2Server::CLI
 
@@ -88,6 +89,15 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
   opt.on("-z", "--zip=FILE", "Get the entire working directory of the run " +
     "in zip format and save it to the provided filename.") do |val|
       options[:zip_out] = val.chomp
+  end
+  opt.on("-x", "--exitcode", "Return the exitcode of the run.") do
+    options[:exitcode] = true
+  end
+  opt.on("--stderr", 'Return the "standard error" output of the run.') do
+    options[:stderr] = true
+  end
+  opt.on("--stdout", 'Return the "standard out" output of the run.') do
+    options[:stdout] = true
   end
 end
 
@@ -145,33 +155,30 @@ begin
     # bail out if user doesn't want to wait
     exit 0 if options[:no_wait]
 
-    # otherwise wait
-    print "Running"
+    # otherwise wait, but open notifications in a web browser if there are any
+    print "Running. Please check your Web browser for notifications."
     until run.finished?
       sleep(1)
+      run.notifications.each do |note|
+        Launchy.open note.uri
+      end
       print "."
       $stdout.flush
     end
     puts "\nFinished at #{run.finish_time}"
 
     # get outputs
-    stdout = run.stdout
-    stderr = run.stderr
     exitcd = run.exitcode
-    puts "Exitcode: #{exitcd}"
-    if stdout != "" then puts "Stdout:\n#{stdout}" end
-    if stderr != "" then puts "Stderr:\n#{stderr}" end
+    puts "Exitcode: #{exitcd}" if options[:exitcode] || exitcd != 0
+    puts "Stdout:\n#{run.stdout}" if options[:stdout]
+    puts "Stderr:\n#{run.stderr}" if options[:stderr]
 
     if exitcd == 0
       if options[:baclava_out]
-        File.open(options[:baclava_out], "w") do |file|
-          file.syswrite(run.baclava_output)
-        end
+        run.baclava_output(options[:baclava_out])
         puts "Baclava file written to '#{options[:baclava_out]}'"
       elsif options[:zip_out]
-        File.open(options[:zip_out],"w") do |file|
-          file.syswrite(run.zip_output)
-        end
+        run.zip_output(options[:zip_out])
         puts "Zip file written to '#{options[:zip_out]}'"
       else
         # go through the outputs and print them out

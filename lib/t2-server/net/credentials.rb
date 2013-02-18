@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2012 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -33,20 +33,26 @@
 module T2Server
 
   # This class serves as a base class for concrete HTTP credential systems.
+  #
+  # Instances of this class cannot be used to authenticate a connection;
+  # please use HttpBasic instead.
   class HttpCredentials
     # The username held by these credentials.
     attr_reader :username
 
+    # :stopdoc:
     # Create a set of credentials with the supplied username and password.
     def initialize(username, password)
       @username = username
       @password = password
     end
+    # :startdoc:
 
     # :call-seq:
-    #   to_s
+    #   to_s -> String
     #
-    # Return the username held by these credentials.
+    # Return a String representation of these credentials. Just the username
+    # is returned; the password is kept hidden.
     def to_s
       @username
     end
@@ -55,7 +61,7 @@ module T2Server
     @@to_s = Kernel.instance_method(:to_s)
 
     # :call-seq:
-    #   inspect
+    #   inspect -> String
     #
     # Override the Kernel#inspect method so that the password is not exposed
     # when it is called.
@@ -64,21 +70,27 @@ module T2Server
     end
   end
 
-  # A class representing HTTP Basic credentials.
+  # A class representing HTTP Basic credentials. Use this class to
+  # authenticate operations on a Taverna Server that require it.
+  #
+  # See also Util.strip_uri_credentials.
   class HttpBasic < HttpCredentials
 
-    # Create a set of credentials with the supplied username and password.
+    # :call-seq:
+    #   new(username, password) -> HttpBasic
+    #
+    # Create a set of basic credentials using the supplied username and
+    # password.
     def initialize(username, password)
       super(username, password)
     end
 
-    # :call-seq:
-    #   authenticate(request)
-    #
+    # :stopdoc:
     # Authenticate the supplied HTTP request with the credentials held within
     # this class.
     def authenticate(request)
       request.basic_auth @username, @password
     end
+    # :startdoc:
   end
 end

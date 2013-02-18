@@ -82,17 +82,19 @@ if options[:all]
       "Some may remain on the server."
   end
 else
-  for run in runs
+  server_runs = server.runs(creds)
+
+  for run in server_runs
     begin
-      server.delete_run(run, creds)
+      run.delete if runs.include? run.id
     rescue T2Server::RunNotFoundError => rnf
-      puts "Run '#{run}' not found - skipping."
+      puts "Run '#{run.id}' not found - skipping."
       next
     rescue T2Server::AuthorizationError => ae
-      puts "You are not authorized to delete run '#{run}' - skipping."
+      puts "You are not authorized to delete run '#{run.id}' - skipping."
       next
     rescue T2Server::T2ServerError => e
-      puts "There was a problem while deleting run '#{run}' - skipping."
+      puts "There was a problem while deleting run '#{run.id}' - skipping."
       next
     end
   end

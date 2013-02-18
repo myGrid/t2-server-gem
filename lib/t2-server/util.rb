@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -37,16 +37,14 @@ module T2Server
   module Util
 
     # :call-seq:
-    #   Util.strip_uri_credentials(uri) -> URI, Credentials
+    #   Util.strip_uri_credentials(uri) -> URI, HttpBasic
     #
     # Strip user credentials from an address in URI or String format and return
-    # a tuple of the URI minus the credentials and a T2Server::Credentials
+    # a tuple of the URI minus the credentials and a T2Server::HttpBasic
     # object.
     def self.strip_uri_credentials(uri)
       # we want to use URIs here but strings can be passed in
-      unless uri.is_a? URI
-        uri = URI.parse(Util.strip_path_slashes(uri))
-      end
+      uri = URI.parse(Util.strip_path_slashes(uri)) unless uri.is_a? URI
 
       creds = nil
 
@@ -95,7 +93,7 @@ module T2Server
       new_uri
     end
 
-    # :call_seq:
+    # :call-seq:
     #   Util.get_path_leaf_from_uri(uri) -> String
     #
     # Get the final component from the path of a URI. This method returns the

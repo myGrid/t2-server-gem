@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -119,6 +119,9 @@ module T2Server
       # initialize ports lists to nil as an empty list means no inputs/outputs
       @input_ports = nil
       @output_ports = nil
+
+      # The interaction reader to use for this run, if required.
+      @interaction_reader = nil
     end
     # :startdoc:
 
@@ -131,10 +134,10 @@ module T2Server
     # Create a new run in the :initialized state. The run will be created on
     # the server with address supplied by _server_. This can either be a
     # String of the form <tt>http://example.com:8888/blah</tt> or an already
-    # created instance of T2Server::Server. The _workflow_ must also be
-    # supplied as a string in t2flow or scufl format. User credentials and
-    # connection parameters can be supplied if required but are both optional.
-    # If _server_ is an instance of T2Server::Server then
+    # created instance of T2Server::Server. The _workflow_ may be supplied
+    # as a string in t2flow format, a filename or a File or IO object. User
+    # credentials and connection parameters can be supplied if required but
+    # are both optional. If _server_ is an instance of T2Server::Server then
     # _connection_parameters_ will be ignored.
     #
     # This method will _yield_ the newly created Run if a block is given.
@@ -154,26 +157,17 @@ module T2Server
         end
       end
 
-      if server.class != Server
-        server = Server.new(server, conn_params)
-      end
+      # If server is not a Server object, get one.
+      server = Server.new(server, conn_params) if server.class != Server
 
-      if uri.nil?
-        uri = server.initialize_run(workflow, credentials)
-      end
+      # If we are not given a URI to a run then we know we need to create one.
+      uri ||= server.initialize_run(workflow, credentials)
 
+      # Create the run object and yield it if necessary.
       run = new(server, uri, credentials)
       yield(run) if block_given?
       run
     end
-
-    # :stopdoc:
-    def uuid
-      warn "[DEPRECATION] 'uuid' is deprecated and will be removed in 1.0. " +
-        "Please use Run#id or Run#identifier instead."
-      @identifier
-    end
-    # :startdoc:
 
     # :call-seq:
     #   owner -> String
@@ -181,9 +175,7 @@ module T2Server
     # Get the username of the owner of this run. The owner is the user who
     # created the run on the server.
     def owner
-      @owner = _get_run_owner if @owner.nil?
-
-      @owner
+      @owner ||= _get_run_owner
     end
 
     # :call-seq:
@@ -194,38 +186,12 @@ module T2Server
       @server.delete(@uri, @credentials)
     end
 
-    # :stopdoc:
-    def inputs
-      warn "[DEPRECATION] 'inputs' is deprecated and will be removed in 1.0."
-      links[:inputs]
-    end
-
-    def set_input(input, value)
-      warn "[DEPRECATION] 'Run#set_input' is deprecated and will be removed " +
-        "in 1.0. Input ports are set directly instead. The most direct " +
-        "replacement for this method is: 'Run#input_port(input).value = value'"
-
-      input_port(input).value = value
-    end
-
-    def set_input_file(input, filename)
-      warn "[DEPRECATION] 'Run#set_input_file' is deprecated and will be " +
-        "removed in 1.0. Input ports are set directly instead. The most " +
-        "direct replacement for this method is: " +
-        "'Run#input_port(input).remote_file = filename'"
-
-      input_port(input).remote_file = filename
-    end
-    # :startdoc:
-
     # :call-seq:
     #   input_ports -> Hash
     #
     # Return a hash (name, port) of all the input ports this run expects.
     def input_ports
-      @input_ports = _get_input_port_info if @input_ports.nil?
-
-      @input_ports
+      @input_ports ||= _get_input_port_info
     end
 
     # :call-seq:
@@ -256,27 +222,6 @@ module T2Server
     def output_port(port)
       output_ports[port] if finished?
     end
-
-    # :stopdoc:
-    def get_output_ports
-      warn "[DEPRECATION] 'get_output_ports' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#output_ports' instead."
-      lists, items = _ls_ports("out")
-      items + lists
-    end
-
-    def get_output(output, refs=false)
-      warn "[DEPRECATION] 'get_output' is deprecated and will be removed " +
-        "in 1.0. Please use 'Run#output_port(port).values' instead."
-      _get_output(output, refs)
-    end
-
-    def get_output_refs(output)
-      warn "[DEPRECATION] 'get_output_refs' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#output_port(port).data' instead."
-      _get_output(output, true)
-    end
-    # :startdoc:
 
     # :call-seq:
     #   expiry -> string
@@ -350,21 +295,9 @@ module T2Server
     # tested for completion can be specified with check_interval.
     #
     # Raises RunStateError if the run is still in the :initialised state.
-    def wait(*params)
+    def wait(interval = 1)
       state = status
       raise RunStateError.new(state, :running) if state == :initialized
-
-      interval = 1
-      params.each do |param|
-        case param
-        when Hash
-          warn "[DEPRECATION] 'Run#wait(params={})' is deprecated and will " +
-            "be removed in 1.0. Please use Run#wait(check_interval) instead."
-          interval = param[:interval] || 1
-        when Integer
-          interval = param
-        end
-      end
 
       # wait
       until finished?
@@ -436,17 +369,6 @@ module T2Server
       @server.upload_data(data, remote_name, location_uri, @credentials)
     end
 
-    # :stopdoc:
-    def upload_input_file(input, filename, params={})
-      warn "[DEPRECATION] 'Run#upload_input_file' is deprecated and will be " +
-        "removed in 1.0. Input ports are set directly instead. The most " +
-        "direct replacement for this method is: " +
-        "'Run#input_port(input).file = filename'"
-
-      input_port(input).file = filename
-    end
-    # :startdoc:
-
     # :call-seq:
     #   baclava_input=(filename) -> bool
     #
@@ -463,20 +385,6 @@ module T2Server
       result
     end
 
-    # :stopdoc:
-    def upload_baclava_input(filename)
-      warn "[DEPRECATION] 'upload_baclava_input' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_input=' instead."
-      self.baclava_input = filename
-    end
-
-    def upload_baclava_file(filename)
-      warn "[DEPRECATION] 'upload_baclava_file' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_input=' instead."
-      self.baclava_input = filename
-    end
-    # :startdoc:
-
     # :call-seq:
     #   request_baclava_output -> bool
     #
@@ -490,14 +398,6 @@ module T2Server
       @baclava_out = @server.update(links[:output], BACLAVA_FILE, "text/plain",
         @credentials)
     end
-
-    # :stopdoc:
-    def set_baclava_output(name="")
-      warn "[DEPRECATION] 'set_baclava_output' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#request_baclava_output' instead."
-      self.request_baclava_output
-    end
-    # :startdoc:
 
     # :call-seq:
     #   baclava_input? -> bool
@@ -517,39 +417,83 @@ module T2Server
 
     # :call-seq:
     #   baclava_output -> string
+    #   baclava_output(filename) -> Fixnum
+    #   baclava_output(stream) -> Fixnum
+    #   baclava_output {|chunk| ...}
     #
     # Get the outputs of this run in baclava format. This can only be done if
     # the output has been requested in baclava format by #set_baclava_output
     # before starting the run.
-    def baclava_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # XML data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the XML data directly to that object and return the number of
+    # bytes that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   run.baclava_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def baclava_output(param = nil, &block)
+      raise ArgumentError,
+        'both a parameter and block given for baclava_output' if param && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       raise AccessForbiddenError.new("baclava output") if !@baclava_out
 
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
-      @server.read(baclava_uri, "*/*", @credentials)
+      if param.respond_to? :write
+        @server.read_to_stream(param, baclava_uri, "*/*", @credentials)
+      elsif param.instance_of? String
+        @server.read_to_file(param, baclava_uri, "*/*", @credentials)
+      else
+        @server.read(baclava_uri, "*/*", @credentials, &block)
+      end
     end
-
-    # :stopdoc:
-    def get_baclava_output
-      warn "[DEPRECATION] 'get_baclava_output' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#baclava_output' instead."
-      baclava_output
-    end
-    # :startdoc:
 
     # :call-seq:
     #   zip_output -> binary blob
+    #   zip_output(filename) -> Fixnum
+    #   zip_output(stream) -> Fixnum
+    #   zip_output {|chunk| ...}
     #
     # Get the working directory of this run directly from the server in zip
     # format.
-    def zip_output
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # zipped data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the zip data directly to that object and return the number of
+    # bytes that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   run.zip_output do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def zip_output(param = nil, &block)
+      raise ArgumentError,
+        "both a parameter and block given for zip_output" if param && block
+
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
       output_uri = Util.append_to_uri_path(links[:wdir], "out")
-      @server.read(output_uri, "application/zip", @credentials)
+      if param.respond_to? :write
+        @server.read_to_stream(param, output_uri, "application/zip",
+          @credentials)
+      elsif param.instance_of? String
+        @server.read_to_file(param, output_uri, "application/zip",
+          @credentials)
+      else
+        @server.read(output_uri, "application/zip", @credentials, &block)
+      end
     end
 
     # :call-seq:
@@ -854,17 +798,30 @@ module T2Server
     # Outputs are represented as a directory structure with the eventual list
     # items (leaves) as files. This method (not part of the public API)
     # downloads a file from the run's working directory.
-    def download_output_data(uri, range = nil)
-      @server.read(uri, "application/octet-stream", range, @credentials)
+    def download_output_data(uri, range = nil, &block)
+      @server.read(uri, "application/octet-stream", range, @credentials,
+        &block)
     end
     # :startdoc:
+
+    # :call-seq:
+    #   notifications -> Array
+    #
+    # Get a list of notifications that are awaiting a response. Returns the
+    # empty list if there are none, or if the server does not support the
+    # Interaction Service.
+    def notifications
+      return [] unless server.has_interaction_support?
+
+      @interaction_reader ||= server.interaction_reader(self)
+
+      @interaction_reader.new_notifications
+    end
 
     private
 
     def links
-      @links = _get_run_links if @links.nil?
-
-      @links
+      @links ||= _get_run_links
     end
 
     # Check each input to see if it requires a list input and call the
@@ -948,90 +905,6 @@ module T2Server
       end
 
       u.to_s
-    end
-
-    # List a directory in the run's workspace on the server. If dir is left
-    # blank then / is listed. As there is no concept of changing into a
-    # directory (cd) in Taverna Server then all paths passed into _ls_ports
-    # should be full paths starting at "root". The contents of a directory are
-    # returned as a list of two lists, "lists" and "values" respectively.
-    def _ls_ports(dir="", top=true)
-      dir = Util.strip_path_slashes(dir)
-      uri = Util.append_to_uri_path(links[:wdir], dir)
-      dir_list = @server.read(uri, "*/*", @credentials)
-
-      # compile a list of directory entries stripping the
-      # directory name from the front of each filename
-      lists = []
-      values = []
-
-      doc = xml_document(dir_list)
-
-      xpath_find(doc, XPaths[:dir]).each do |e|
-        if top
-          lists << xml_node_content(e).split('/')[-1]
-        else
-          index = (xml_node_attribute(e, 'name').to_i - 1)
-          lists[index] = xml_node_content(e).split('/')[-1]
-        end
-      end
-
-      xpath_find(doc, XPaths[:file]).each do |e|
-        if top
-          values << xml_node_content(e).split('/')[-1]
-        else
-          index = (xml_node_attribute(e, 'name').to_i - 1)
-          values[index] = xml_node_content(e).split('/')[-1]
-        end
-      end
-
-      [lists, values]
-    end
-
-    def _get_output(output, refs=false, top=true)
-      output = Util.strip_path_slashes(output)
-
-      # if at the top level we need to check if the port represents a list
-      # or a singleton value
-      if top
-        lists, items = _ls_ports("out")
-        if items.include? output
-          if refs
-            return "#{@server.uri}/rest/runs/#{@identifier}/" +
-              "#{links[:wdir]}/out/#{output}"
-          else
-            out_uri = Util.append_to_uri_path(links[:wdir], "out/#{output}")
-            return @server.read(out_uri, "application/octet-stream",
-              @credentials)
-          end
-        end
-      end
-
-      # we're not at the top level so look at the contents of the output port
-      lists, items = _ls_ports("out/#{output}", false)
-
-      # build up lists of results
-      result = []
-
-      # for each list recurse into it and add the items to the result
-      lists.each do |list|
-        result << _get_output("#{output}/#{list}", refs, false)
-      end
-
-      # for each item, add it to the output list
-      items.each do |item|
-        if refs
-          result << "#{@server.uri}/rest/runs/#{@identifier}/" +
-            "#{links[:wdir]}/out/#{output}/#{item}"
-        else
-          out_uri = Util.append_to_uri_path(links[:wdir],
-            "out/#{output}/#{item}")
-          result << @server.read(out_uri, "application/octet-stream",
-            @credentials)
-        end
-      end
-
-      result
     end
 
     def _get_input_port_info

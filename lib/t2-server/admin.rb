@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -56,7 +56,6 @@ module T2Server
       admin_description = xml_document(@server.read(@uri, "application/xml",
         @credentials))
       @resources = get_resources(admin_description)
-      #@resources.each {|key, value| puts "#{key}: #{value}"}
 
       yield(self) if block_given?
     end

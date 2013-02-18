@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "t2-server"
-  s.version = "0.9.2"
+  s.version = "1.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Robert Haines"]
-  s.date = "2012-04-30"
+  s.date = "2013-02-05"
   s.description = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
   s.email = ["rhaines@manchester.ac.uk"]
   s.executables = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output", "t2-server-admin"]
@@ -43,7 +43,6 @@ Gem::Specification.new do |s|
     "lib/t2-server/xml/nokogiri.rb",
     "lib/t2-server/xml/rexml.rb",
     "lib/t2-server/xml/xml.rb",
-    "lib/t2server.rb",
     "t2-server.gemspec",
     "test/tc_admin.rb",
     "test/tc_params.rb",
@@ -59,6 +58,7 @@ Gem::Specification.new do |s|
     "test/workflows/in.txt",
     "test/workflows/list_and_value.t2flow",
     "test/workflows/list_with_errors.t2flow",
+    "test/workflows/no-ports.t2flow",
     "test/workflows/pass_through.t2flow",
     "test/workflows/secure/basic-http.t2flow",
     "test/workflows/secure/basic-https.t2flow",
@@ -91,7 +91,9 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, ["~> 1.8.3"])
       s.add_runtime_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_runtime_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
+      s.add_runtime_dependency(%q<ratom>, ["~> 0.7.2"])
       s.add_runtime_dependency(%q<hirb>, [">= 0.4.0"])
+      s.add_runtime_dependency(%q<launchy>, ["~> 2.1.2"])
     else
       s.add_dependency(%q<rake>, ["~> 0.9.2"])
       s.add_dependency(%q<libxml-ruby>, [">= 1.1.4"])
@@ -100,7 +102,9 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<jeweler>, ["~> 1.8.3"])
       s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
+      s.add_dependency(%q<ratom>, ["~> 0.7.2"])
       s.add_dependency(%q<hirb>, [">= 0.4.0"])
+      s.add_dependency(%q<launchy>, ["~> 2.1.2"])
     end
   else
     s.add_dependency(%q<rake>, ["~> 0.9.2"])
@@ -110,7 +114,9 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<jeweler>, ["~> 1.8.3"])
     s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
     s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
+    s.add_dependency(%q<ratom>, ["~> 0.7.2"])
     s.add_dependency(%q<hirb>, [">= 0.4.0"])
+    s.add_dependency(%q<launchy>, ["~> 2.1.2"])
   end
 end
 

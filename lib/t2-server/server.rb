@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -51,6 +51,7 @@ module T2Server
       :policy   => XML::Methods.xpath_compile("//nsr:policy"),
       :run      => XML::Methods.xpath_compile("//nsr:run"),
       :runs     => XML::Methods.xpath_compile("//nsr:runs"),
+      :intfeed  => XML::Methods.xpath_compile("//nsr:interactionFeed"),
 
       # Server policy XPath queries
       :runlimit => XML::Methods.xpath_compile("//nsr:runLimit"),
@@ -91,6 +92,7 @@ module T2Server
       @server_doc = nil
       @version = nil
       @version_components = nil
+      @interaction_feed = nil
       @links = nil
 
       # initialize run object cache
@@ -98,14 +100,6 @@ module T2Server
 
       yield(self) if block_given?
     end
-
-    # :stopdoc:
-    def Server.connect(uri, username="", password="")
-      warn "[DEPRECATION] 'Server#connect' is deprecated and will be " +
-        "removed in 1.0."
-      new(uri)
-    end
-    # :startdoc:
 
     # :call-seq:
     #   administrator(credentials = nil) -> Administrator
@@ -126,43 +120,45 @@ module T2Server
     #
     # Create a run on this server using the specified _workflow_.
     # This method will _yield_ the newly created Run if a block is given.
+    #
+    # The _workflow_ parameter may be the workflow itself, a file name or a
+    # File or IO object.
     def create_run(workflow, credentials = nil)
-      id = initialize_run(workflow, credentials)
-      run = Run.create(self, "", credentials, id)
+      uri = initialize_run(workflow, credentials)
+      run = Run.create(self, "", credentials, uri)
 
-      # cache newly created run object - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
-      @runs[user][id] = run
+      # cache newly created run object in the user's run cache
+      user_runs(credentials)[run.id] = run
 
       yield(run) if block_given?
       run
     end
 
-    # :call-seq:
-    #   initialize_run(workflow, credentials = nil) -> string
-    #
-    # Create a run on this server using the specified _workflow_ but do not
-    # return it as a Run instance. Return its identifier instead.
+    # :stopdoc:
+    # Create a run on this server using the specified _workflow_ and return
+    # the URI to it.
     def initialize_run(workflow, credentials = nil)
-      # set up the run object cache - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
+      # If workflow is a String, it might be a filename! If so, stream it.
+      if (workflow.instance_of? String) && (File.file? workflow)
+        return File.open(workflow, "r") do |file|
+          create(links[:runs], file, "application/vnd.taverna.t2flow+xml",
+            credentials)
+        end
+      end
 
-      @connection.POST(links[:runs], workflow,
-        "application/vnd.taverna.t2flow+xml", credentials)
+      # If we get here then workflow could either be a String containing a
+      # workflow or a File or IO object.
+      create(links[:runs], workflow, "application/vnd.taverna.t2flow+xml",
+        credentials)
     end
+    # :startdoc:
 
     # :call-seq:
     #   version -> String
     #
     # The version string of the remote Taverna Server.
     def version
-      if @version.nil?
-        @version = _get_version
-      end
-
-      @version
+      @version ||= _get_version
     end
 
     # :call-seq:
@@ -185,6 +181,14 @@ module T2Server
     # The URI of the connection to the remote Taverna Server.
     def uri
       @connection.uri
+    end
+
+    # :call-seq:
+    #   has_interaction_support? -> Boolean
+    #
+    # Does this server support interactions and provide a feed for them?
+    def has_interaction_support?
+      !links[:intfeed].nil?
     end
 
     # :call-seq:
@@ -213,26 +217,6 @@ module T2Server
       get_runs(credentials)[identifier]
     end
 
-    # :stopdoc:
-    def delete_run(run, credentials = nil)
-      warn "[DEPRECATION] 'Server#delete_run' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#delete' to delete a run."
-
-      # get the identifier from the run if that is what is passed in
-      if run.instance_of? Run
-        run = run.identifier
-      end
-
-      run_uri = Util.append_to_uri_path(links[:runs], run)
-      if delete(run_uri, credentials)
-        # delete cached run object - this must be done per user
-        user = credentials.nil? ? :all : credentials.username
-        @runs[user].delete(run) if @runs[user]
-        true
-      end
-    end
-    # :startdoc:
-
     # :call-seq:
     #   delete_all_runs(credentials = nil)
     #
@@ -245,51 +229,25 @@ module T2Server
     end
 
     # :stopdoc:
-    def set_run_input(run, input, value, credentials = nil)
-      warn "[DEPRECATION] 'Server#set_run_input' is deprecated and will be " +
-        "removed in 1.0. Input ports are set directly instead. The most " +
-        "direct replacement for this method is: " +
-        "'Run#input_port(input).value = value'"
-
-      # get the run from the identifier if that is what is passed in
-      if not run.instance_of? Run
-        run = run(run, credentials)
-      end
-
-      run.input_port(input).value = value
-    end
-
-    def set_run_input_file(run, input, filename, credentials = nil)
-      warn "[DEPRECATION] 'Server#set_run_input_file' is deprecated and " +
-        "will be removed in 1.0. Input ports are set directly instead. The " +
-        "most direct replacement for this method is: " +
-        "'Run#input_port(input).remote_file = filename'"
-
-      # get the run from the identifier if that is what is passed in
-      if not run.instance_of? Run
-        run = run(run, credentials)
-      end
-
-      run.input_port(input).remote_file = filename
-    end
-
     def mkdir(uri, dir, credentials = nil)
       @connection.POST(uri, XML::Fragments::MKDIR % dir, "application/xml",
         credentials)
     end
 
-    def make_run_dir(run, root, dir, credentials = nil)
-      warn "[DEPRECATION] 'Server#make_run_dir' is deprecated and will be " +
-        "removed in 1.0. Please use 'Run#mkdir' instead."
-
-      create_dir(run, root, dir, credentials)
-    end
-
     def upload_file(filename, uri, remote_name, credentials = nil)
-      contents = IO.read(filename)
+      # Different Server versions support different upload methods
+      (major, minor, patch) = version_components
+
       remote_name = filename.split('/')[-1] if remote_name == ""
 
-      upload_data(contents, remote_name, uri, credentials)
+      if minor == 4 && patch >= 1
+        File.open(filename, "rb") do |file|
+          upload_data(file, remote_name, uri, credentials)
+        end
+      else
+        contents = IO.read(filename)
+        upload_data(contents, remote_name, uri, credentials)
+      end
     end
 
     def upload_data(data, remote_name, uri, credentials = nil)
@@ -307,14 +265,6 @@ module T2Server
       end
     end
 
-    def upload_run_file(run, filename, location, rename, credentials = nil)
-      warn "[DEPRECATION] 'Server#upload_run_file' is deprecated and will " +
-        "be removed in 1.0. Please use 'Run#upload_file' or " +
-        "'Run#input_port(input).file = filename' instead."
-
-      upload_file(run, filename, location, rename, credentials)
-    end
-
     def is_resource_writable?(uri, credentials = nil)
       headers = @connection.OPTIONS(uri, credentials)
       headers["allow"][0].split(",").include? "PUT"
@@ -324,7 +274,7 @@ module T2Server
       @connection.POST(uri, value, type, credentials)
     end
 
-    def read(uri, type, *rest)
+    def read(uri, type, *rest, &block)
       credentials = nil
       range = nil
 
@@ -340,7 +290,7 @@ module T2Server
       end
 
       begin
-        @connection.GET(uri, type, range, credentials)
+        @connection.GET(uri, type, range, credentials, &block)
       rescue ConnectionRedirectError => cre
         # We've been redirected so save the new connection object with the new
         # server URI and try again with the new URI.
@@ -350,12 +300,43 @@ module T2Server
       end
     end
 
+    # An internal helper to write streamed data directly to another stream.
+    # The number of bytes written to the stream is returned. The stream passed
+    # in may be anything that provides a +write+ method; instances of IO and
+    # File, for example.
+    def read_to_stream(stream, uri, type, *rest)
+      raise ArgumentError,
+        "Stream passed in must provide a write method" unless
+          stream.respond_to? :write
+
+      bytes = 0
+
+      read(uri, type, *rest) do |chunk|
+        bytes += stream.write(chunk)
+      end
+
+      bytes
+    end
+
+    # An internal helper to write streamed data straight to a file.
+    def read_to_file(filename, uri, type, *rest)
+      File.open(filename, "wb") do |file|
+        read_to_stream(file, uri, type, *rest)
+      end
+    end
+
     def update(uri, value, type, credentials = nil)
       @connection.PUT(uri, value, type, credentials)
     end
 
     def delete(uri, credentials = nil)
       @connection.DELETE(uri, credentials)
+    end
+
+    def interaction_reader(run)
+      @interaction_feed ||= Interaction::Feed.new(links[:intfeed])
+
+      Interaction::Reader.new(@interaction_feed, run)
     end
     # :startdoc:
 
@@ -401,6 +382,8 @@ module T2Server
       doc = _get_server_description
       links = {}
       links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href"))
+      uri = xpath_attr(doc, XPaths[:intfeed], "href")
+      links[:intfeed] = uri.nil? ? nil : URI.parse(uri)
 
       links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href"))
       doc = xml_document(read(links[:policy], "application/xml"))
@@ -431,23 +414,27 @@ module T2Server
         run_list[id] = uri
       end
 
-      # cache run objects - this must be done per user
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] = {} unless @runs[user]
+      # cache run objects in the user's run cache
+      runs_cache = user_runs(credentials)
 
       # add new runs to the user cache
       run_list.each_key do |id|
-        if !@runs[user].has_key? id
-          @runs[user][id] = Run.create(self, "", credentials, run_list[id])
+        if !runs_cache.has_key? id
+          runs_cache[id] = Run.create(self, "", credentials, run_list[id])
         end
       end
 
       # clear out the expired runs
-      if @runs[user].length > run_list.length
-        @runs[user].delete_if {|key, val| !run_list.member? key}
+      if runs_cache.length > run_list.length
+        runs_cache.delete_if {|key, val| !run_list.member? key}
       end
 
-      @runs[user]
+      runs_cache
+    end
+
+    def user_runs(credentials = nil)
+      user = credentials.nil? ? :all : credentials.username
+      @runs[user] ||= {}
     end
   end
 end
