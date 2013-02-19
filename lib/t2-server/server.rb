@@ -73,16 +73,9 @@ module T2Server
     #
     # It will _yield_ itself if a block is given.
     def initialize(uri, params = nil)
-      # we want to use URIs here but strings can be passed in
-      unless uri.is_a? URI
-        uri = URI.parse(Util.strip_path_slashes(uri))
-      end
-
-      # strip username and password from the URI if present
-      if uri.user != nil
-        uri = URI::HTTP.new(uri.scheme, nil, uri.host, uri.port, nil,
-        uri.path, nil, nil, nil);
-      end
+      # Convert strings to URIs and strip any credentials that have been given
+      # in the URI. We do not want to store credentials in this class.
+      uri, creds = Util.strip_uri_credentials(uri)
 
       # setup connection
       @connection = ConnectionFactory.connect(uri, params)
