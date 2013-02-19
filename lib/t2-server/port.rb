@@ -606,22 +606,27 @@ module T2Server
     def fill(got, want)
       return [want] if got.nil?
 
-      if got.member? want.min
-        if got.member? want.max
-          return []
+      w_min = want.min
+      w_max = want.max
+      g_min = got.min
+      g_max = got.max
+
+      if got.member? w_min
+        if got.member? w_max
+          []
         else
-          return [(got.max + 1)..want.max]
+          [(g_max + 1)..w_max]
         end
       else
-        if got.member? want.max
-          return [want.min..(got.min - 1)]
+        if got.member? w_max
+          [w_min..(g_min - 1)]
         else
-          if want.max < got.min
-            return [want.min..(got.min - 1)]
-          elsif want.min > got.max
-            return [(got.max + 1)..want.max]
+          if w_max < g_min
+            [w_min..(g_min - 1)]
+          elsif w_min > g_max
+            [(g_max + 1)..w_max]
           else
-            return [want.min..(got.min - 1), (got.max + 1)..want.max]
+            [w_min..(g_min - 1), (g_max + 1)..w_max]
           end
         end
       end
