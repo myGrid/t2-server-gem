@@ -337,9 +337,7 @@ module T2Server
     private
 
     def links
-      @links = _get_server_links if @links.nil?
-
-      @links
+      @links ||= _get_server_links
     end
 
     def _get_server_description
