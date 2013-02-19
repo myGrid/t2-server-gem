@@ -59,42 +59,43 @@ module T2Server
     attr_reader :server
 
     # :stopdoc:
-    XPaths = {
+    XPATHS = {
       # Run XPath queries
-      :run_desc   => XML::Methods.xpath_compile("/nsr:runDescription"),
-      :dir        => XML::Methods.xpath_compile("//nss:dir"),
-      :file       => XML::Methods.xpath_compile("//nss:file"),
-      :expiry     => XML::Methods.xpath_compile("//nsr:expiry"),
-      :workflow   => XML::Methods.xpath_compile("//nsr:creationWorkflow"),
-      :status     => XML::Methods.xpath_compile("//nsr:status"),
-      :createtime => XML::Methods.xpath_compile("//nsr:createTime"),
-      :starttime  => XML::Methods.xpath_compile("//nsr:startTime"),
-      :finishtime => XML::Methods.xpath_compile("//nsr:finishTime"),
-      :wdir       => XML::Methods.xpath_compile("//nsr:workingDirectory"),
-      :inputs     => XML::Methods.xpath_compile("//nsr:inputs"),
-      :output     => XML::Methods.xpath_compile("//nsr:output"),
-      :securectx  => XML::Methods.xpath_compile("//nsr:securityContext"),
-      :listeners  => XML::Methods.xpath_compile("//nsr:listeners"),
-      :baclava    => XML::Methods.xpath_compile("//nsr:baclava"),
-      :inputexp   => XML::Methods.xpath_compile("//nsr:expected"),
+      :run_desc   => "/nsr:runDescription",
+      :dir        => "//nss:dir",
+      :file       => "//nss:file",
+      :expiry     => "//nsr:expiry",
+      :workflow   => "//nsr:creationWorkflow",
+      :status     => "//nsr:status",
+      :createtime => "//nsr:createTime",
+      :starttime  => "//nsr:startTime",
+      :finishtime => "//nsr:finishTime",
+      :wdir       => "//nsr:workingDirectory",
+      :inputs     => "//nsr:inputs",
+      :output     => "//nsr:output",
+      :securectx  => "//nsr:securityContext",
+      :listeners  => "//nsr:listeners",
+      :baclava    => "//nsr:baclava",
+      :inputexp   => "//nsr:expected",
 
       # Port descriptions XPath queries
-      :port_in    => XML::Methods.xpath_compile("//port:input"),
-      :port_out   => XML::Methods.xpath_compile("//port:output"),
+      :port_in    => "//port:input",
+      :port_out   => "//port:output",
 
       # Run security XPath queries
-      :sec_creds  => XML::Methods.xpath_compile("//nsr:credentials"),
-      :sec_perms  => XML::Methods.xpath_compile("//nsr:permissions"),
-      :sec_trusts => XML::Methods.xpath_compile("//nsr:trusts"),
-      :sec_perm   =>
-       XML::Methods.xpath_compile("/nsr:permissionsDescriptor/nsr:permission"),
-      :sec_uname  => XML::Methods.xpath_compile("nsr:userName"),
-      :sec_uperm  => XML::Methods.xpath_compile("nsr:permission"),
-      :sec_cred   => XML::Methods.xpath_compile("/nsr:credential"),
-      :sec_suri   => XML::Methods.xpath_compile("nss:serviceURI"),
-      :sec_trust  =>
-       XML::Methods.xpath_compile("/nsr:trustedIdentities/nsr:trust")
+      :sec_creds  => "//nsr:credentials",
+      :sec_perms  => "//nsr:permissions",
+      :sec_trusts => "//nsr:trusts",
+      :sec_perm   => "/nsr:permissionsDescriptor/nsr:permission",
+      :sec_uname  => "nsr:userName",
+      :sec_uperm  => "nsr:permission",
+      :sec_cred   => "/nsr:credential",
+      :sec_suri   => "nss:serviceURI",
+      :sec_trust  => "/nsr:trustedIdentities/nsr:trust"
     }
+
+    @@xpaths = XML::XPathCache.instance
+    @@xpaths.register_xpaths XPATHS
 
     # The name to be used internally for retrieving results via baclava
     BACLAVA_FILE = "out.xml"
@@ -569,9 +570,9 @@ module T2Server
       doc = xml_document(@server.read(links[:sec_perms], "application/xml",
         @credentials))
 
-      xpath_find(doc, XPaths[:sec_perm]).each do |p|
-        user = xml_node_content(xpath_first(p, XPaths[:sec_uname]))
-        perm = xml_node_content(xpath_first(p, XPaths[:sec_uperm])).to_sym
+      xpath_find(doc, @@xpaths[:sec_perm]).each do |p|
+        user = xml_node_content(xpath_first(p, @@xpaths[:sec_uname]))
+        perm = xml_node_content(xpath_first(p, @@xpaths[:sec_uperm])).to_sym
         perms[user] = perm
       end
 
@@ -671,8 +672,8 @@ module T2Server
       doc = xml_document(@server.read(links[:sec_creds], "application/xml",
         @credentials))
 
-      xpath_find(doc, XPaths[:sec_cred]).each do |c|
-        uri = URI.parse(xml_node_content(xpath_first(c, XPaths[:sec_suri])))
+      xpath_find(doc, @@xpaths[:sec_cred]).each do |c|
+        uri = URI.parse(xml_node_content(xpath_first(c, @@xpaths[:sec_suri])))
         cred_uri = URI.parse(xml_node_attribute(c, "href"))
         creds[uri] = cred_uri
       end
@@ -749,7 +750,7 @@ module T2Server
       doc = xml_document(@server.read(links[:sec_trusts], "application/xml",
         @credentials))
 
-      xpath_find(doc, XPaths[:sec_trust]). each do |t|
+      xpath_find(doc, @@xpaths[:sec_trust]). each do |t|
         t_uris << URI.parse(xml_node_attribute(t, "href"))
       end
 
@@ -894,7 +895,7 @@ module T2Server
 
       doc = xml_document(port_desc)
 
-      xpath_find(doc, XPaths[:port_in]).each do |inp|
+      xpath_find(doc, @@xpaths[:port_in]).each do |inp|
         port = InputPort.new(self, inp)
         ports[port.name] = port
       end
@@ -913,7 +914,7 @@ module T2Server
 
       doc = xml_document(port_desc)
 
-      xpath_find(doc, XPaths[:port_out]).each do |out|
+      xpath_find(doc, @@xpaths[:port_out]).each do |out|
         port = OutputPort.new(self, out)
         ports[port.name] = port
       end
@@ -933,32 +934,28 @@ module T2Server
     def _get_run_owner
       doc = _get_run_description
 
-      xpath_attr(doc, XPaths[:run_desc], "owner")
+      xpath_attr(doc, @@xpaths[:run_desc], "owner")
     end
 
     def _get_run_links
       doc = _get_run_description
 
       # first parse out the basic stuff
-      links = {}
-
-      [:expiry, :workflow, :status, :createtime, :starttime, :finishtime,
-        :wdir, :inputs, :output, :securectx, :listeners].each do |key|
-          links[key] = URI.parse(xpath_attr(doc, XPaths[key], "href"))
-      end
+      links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
+        :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
+        :securectx, :listeners])
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)
       doc = xml_document(inputs)
 
-      links[:baclava] = URI.parse(xpath_attr(doc, XPaths[:baclava], "href"))
-      links[:inputexp] = URI.parse(xpath_attr(doc, XPaths[:inputexp], "href"))
+      links.merge! get_uris_from_doc(doc, [:baclava, :inputexp])
 
       # set io properties
       links[:io]       = Util.append_to_uri_path(links[:listeners], "io")
-      links[:stdout]   = Util.append_to_uri_path(links[:io], "properties/stdout")
-      links[:stderr]   = Util.append_to_uri_path(links[:io], "properties/stderr")
-      links[:exitcode] = Util.append_to_uri_path(links[:io], "properties/exitcode")
+      [:stdout, :stderr, :exitcode].each do |res|
+        links[res] = Util.append_to_uri_path(links[:io], "properties/#{res}")
+      end
 
       # security properties - only available to the owner of a run
       if owner?
@@ -966,12 +963,8 @@ module T2Server
           @credentials)
         doc = xml_document(securectx)
 
-        [:sec_creds, :sec_perms, :sec_trusts].each do |key|
-          #links[key] = "#{links[:securectx]}/" + xpath_attr(doc, XPaths[key],
-          #  "href").split('/')[-1]
-          links[key] = Util.append_to_uri_path(links[:securectx],
-            xpath_attr(doc, XPaths[key], "href").split('/')[-1])
-        end
+        links.merge! get_uris_from_doc(doc,
+          [:sec_creds, :sec_perms, :sec_trusts])
       end
 
       links

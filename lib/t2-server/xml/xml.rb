@@ -103,10 +103,7 @@ module T2Server
 
     module Methods
       # Most methods in this module are provided by the particular XML
-      # library selected above. The xpath_compile method needs to be declared
-      # as a module method so it can be used as a class method when it is
-      # mixed in.
-      module_function :xpath_compile
+      # library selected above.
 
       # Given a list of xpath keys, extract the href URIs from those elements.
       def get_uris_from_doc(doc, keys)
