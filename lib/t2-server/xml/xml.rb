@@ -58,46 +58,46 @@ module T2Server
     end
 
     module Fragments
-      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
-                      "  %s\n</t2s:workflow>"
-      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n" +
-                      "  %s\n</t2sr:runInput>"
+      WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
+                        "  %s\n</t2s:workflow>"
+      RUNINPUT      = "<t2sr:runInput xmlns:t2sr=\"#{Namespaces::REST}\">\n"\
+                        "  %s\n</t2sr:runInput>"
       RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
       RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
-      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" " +
+      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" "\
                         "t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
-      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" " +
+      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" "\
                         "t2sr:name=\"%s\" />"
 
-      PERMISSION    = "<t2sr:userName>%s</t2sr:userName>" +
+      PERMISSION    = "<t2sr:userName>%s</t2sr:userName>"\
                       "<t2sr:permission>%s</t2sr:permission>"
-      PERM_UPDATE   = "<t2sr:permissionUpdate " +
-                      "xmlns:t2sr=\"#{Namespaces::REST}\">" +
-                      "#{PERMISSION}</t2sr:permissionUpdate>"
+      PERM_UPDATE   = "<t2sr:permissionUpdate "\
+                        "xmlns:t2sr=\"#{Namespaces::REST}\">"\
+                        "#{PERMISSION}</t2sr:permissionUpdate>"
 
       SERVICE_URI   = "<t2s:serviceURI>%s</t2s:serviceURI>"
-      CREDENTIAL    = "<t2sr:credential xmlns:t2sr=\"#{Namespaces::REST}\"" +
-                        " xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
-                      "%s\n</t2sr:credential>"
-      USERPASS_CRED = "<t2s:userpass>\n" +
-                      "  #{SERVICE_URI}\n" +
-                      "  <t2s:username>%s</t2s:username>\n" +
-                      "  <t2s:password>%s</t2s:password>\n" +
-                      "</t2s:userpass>"
+      CREDENTIAL    = "<t2sr:credential xmlns:t2sr=\"#{Namespaces::REST}\""\
+                        " xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
+                        "%s\n</t2sr:credential>"
+      USERPASS_CRED = "<t2s:userpass>\n"\
+                        "  #{SERVICE_URI}\n"\
+                        "  <t2s:username>%s</t2s:username>\n"\
+                        "  <t2s:password>%s</t2s:password>\n"\
+                        "</t2s:userpass>"
 
-      KEYPAIR_CRED  = "<t2s:keypair>\n" +
-                      "  #{SERVICE_URI}\n" +
-                      "  <t2s:credentialName>%s</t2s:credentialName>\n" +
-                      "  <t2s:credentialBytes>%s</t2s:credentialBytes>\n" +
-                      "  <t2s:fileType>%s</t2s:fileType>\n" +
-                      "  <t2s:unlockPassword>%s</t2s:unlockPassword>\n" +
-                      "</t2s:keypair>"
+      KEYPAIR_CRED  = "<t2s:keypair>\n"\
+                        "  #{SERVICE_URI}\n"\
+                        "  <t2s:credentialName>%s</t2s:credentialName>\n"\
+                        "  <t2s:credentialBytes>%s</t2s:credentialBytes>\n"\
+                        "  <t2s:fileType>%s</t2s:fileType>\n"\
+                        "  <t2s:unlockPassword>%s</t2s:unlockPassword>\n"\
+                        "</t2s:keypair>"
 
-      TRUST         = "<t2s:trustedIdentity " +
-                        "xmlns:t2s=\"#{Namespaces::SERVER}\">\n" +
-                      "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n" +
-                      "  <t2s:fileType>%s</t2s:fileType>\n" +
-                      "</t2s:trustedIdentity>"
+      TRUST         = "<t2s:trustedIdentity "\
+                        "xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
+                        "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n"\
+                        "  <t2s:fileType>%s</t2s:fileType>\n"\
+                        "</t2s:trustedIdentity>"
     end
 
     module Methods
