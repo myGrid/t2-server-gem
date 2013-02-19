@@ -325,7 +325,7 @@ module T2Server
     # :stopdoc:
     def error
       warn "[DEPRECATION] Using #error to get the error message is " +
-      "deprecated and will be removed in version 1.1.0. Please use #value " +
+      "deprecated and will be removed in version 2.0.0. Please use #value " +
       "instead."
       return nil unless depth == 0
       @structure.value
@@ -582,7 +582,7 @@ module T2Server
     # :stopdoc:
     def error
       warn "[DEPRECATION] Using #error to get the error message is " +
-        "deprecated and will be removed in version 1.1.0. Please use #value " +
+        "deprecated and will be removed in version 2.0.0. Please use #value " +
         "instead."
       value
     end
