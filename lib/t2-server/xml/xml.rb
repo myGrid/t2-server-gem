@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -39,6 +39,7 @@ rescue LoadError
     require 't2-server/xml/rexml'
   end
 end
+require 't2-server/xml/xpath_cache'
 
 module T2Server
   module XML
@@ -101,11 +102,24 @@ module T2Server
     end
 
     module Methods
-      # The methods in this namespace are provided by the particular XML
+      # Most methods in this module are provided by the particular XML
       # library selected above. The xpath_compile method needs to be declared
       # as a module method so it can be used as a class method when it is
       # mixed in.
       module_function :xpath_compile
+
+      # Given a list of xpath keys, extract the href URIs from those elements.
+      def get_uris_from_doc(doc, keys)
+        cache = XPathCache.instance
+        uris = {}
+
+        keys.each do |key|
+          uri = xpath_attr(doc, cache[key], "href")
+          uris[key] = uri.nil? ? nil : URI.parse(uri)
+        end
+
+        uris
+      end
     end
   end
 end

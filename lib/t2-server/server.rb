@@ -45,22 +45,23 @@ module T2Server
     # endpoints.
     REST_ENDPOINT = "rest/"
 
-    XPaths = {
+    XPATHS = {
       # Server top-level XPath queries
-      :server   => XML::Methods.xpath_compile("//nsr:serverDescription"),
-      :policy   => XML::Methods.xpath_compile("//nsr:policy"),
-      :run      => XML::Methods.xpath_compile("//nsr:run"),
-      :runs     => XML::Methods.xpath_compile("//nsr:runs"),
-      :intfeed  => XML::Methods.xpath_compile("//nsr:interactionFeed"),
+      :server   => "//nsr:serverDescription",
+      :policy   => "//nsr:policy",
+      :run      => "//nsr:run",
+      :runs     => "//nsr:runs",
+      :intfeed  => "//nsr:interactionFeed",
 
       # Server policy XPath queries
-      :runlimit => XML::Methods.xpath_compile("//nsr:runLimit"),
-      :permwkf  => XML::Methods.xpath_compile("//nsr:permittedWorkflows"),
-      :permlstn => XML::Methods.xpath_compile("//nsr:permittedListeners"),
-      :permlstt => XML::Methods.xpath_compile("//nsr:permittedListenerTypes"),
-      :notify   =>
-        XML::Methods.xpath_compile("//nsr:enabledNotificationFabrics")
+      :runlimit      => "//nsr:runLimit",
+      :permworkflows => "//nsr:permittedWorkflows",
+      :permlisteners => "//nsr:permittedListenerTypes",
+      :notifications => "//nsr:enabledNotificationFabrics"
     }
+
+    @@xpaths = XML::XPathCache.instance
+    @@xpaths.register_xpaths XPATHS
     # :startdoc:
 
     # :call-seq:
@@ -352,7 +353,7 @@ module T2Server
 
     def _get_version
       doc = _get_server_description
-      version = xpath_attr(doc, XPaths[:server], "serverVersion")
+      version = xpath_attr(doc, @@xpaths[:server], "serverVersion")
       if version == nil
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
           "are no longer supported.")
@@ -373,25 +374,11 @@ module T2Server
 
     def _get_server_links
       doc = _get_server_description
-      links = {}
-      links[:runs] = URI.parse(xpath_attr(doc, XPaths[:runs], "href"))
-      uri = xpath_attr(doc, XPaths[:intfeed], "href")
-      links[:intfeed] = uri.nil? ? nil : URI.parse(uri)
+      links = get_uris_from_doc(doc, [:runs, :intfeed, :policy])
 
-      links[:policy] = URI.parse(xpath_attr(doc, XPaths[:policy], "href"))
       doc = xml_document(read(links[:policy], "application/xml"))
-
-      links[:permlisteners] =
-        URI.parse(xpath_attr(doc, XPaths[:permlstt], "href"))
-      links[:notifications] =
-        URI.parse(xpath_attr(doc, XPaths[:notify], "href"))
-
-      links[:runlimit]      =
-        URI.parse(xpath_attr(doc, XPaths[:runlimit], "href"))
-      links[:permworkflows] =
-        URI.parse(xpath_attr(doc, XPaths[:permwkf], "href"))
-
-      links
+      links.merge get_uris_from_doc(doc,
+        [:permlisteners, :notifications, :runlimit, :permworkflows])
     end
 
     def get_runs(credentials = nil)
@@ -401,7 +388,7 @@ module T2Server
 
       # get list of run identifiers
       run_list = {}
-      xpath_find(doc, XPaths[:run]).each do |run|
+      xpath_find(doc, @@xpaths[:run]).each do |run|
         uri = URI.parse(xml_node_attribute(run, "href"))
         id = xml_node_content(run)
         run_list[id] = uri
