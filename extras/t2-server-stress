@@ -1,0 +1,177 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2010-2013 The University of Manchester, UK.
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#  * Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+#
+#  * Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+#  * Neither the names of The University of Manchester nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# Author: Robert Haines
+
+require 'rubygems'
+require 't2-server-cli'
+require 'hirb'
+
+include T2Server::CLI
+
+# Set up options and workflow inputs.
+inputs  = {}
+files = {}
+options = {:number => 5, :backoff => 0, :screds => []}
+conn_params, creds = register_options("Usage: t2-server-stress [options] "\
+  "server-address") do |opt|
+  opt.separator "  Where server-address is the full URI of the server to"
+  opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
+  opt.separator "  and [options] can be:"
+
+  opt.on("-n NUMBER", "--number=NUMBER", "Number of concurrent runs. "\
+    "Default 5") do |val|
+      options[:number] = val.chomp.to_i
+  end
+  opt.on("-b NUMBER", "--backoff=NUMBER", "Time (in seconds) to back off "\
+    "before starting next run. Default 0") do |val|
+      options[:backoff] = val.chomp.to_i
+  end
+  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If "\
+    "this is not specified then the workflow is read from standard "\
+    "input") do |val|
+      options[:wkf_file] = val.chomp
+  end
+  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to "\
+    "VALUE") do |val|
+      input, value = val.chomp.split(':', 2)
+      inputs[input] = value
+  end
+  opt.on("-f INPUT:FILE", "--input-file=INPUT:FILE",
+    "Set input port INPUT to use the contents of FILE as its input") do |val|
+      input, filename = val.chomp.split(':', 2)
+      files[input] = filename
+  end
+  opt.on("-K", "--keep-runs",
+    "Do not delete the runs at the end of the test") do
+      options[:keep] = true
+  end
+  opt.on("-c URI::USER:PASS", "--credential=URI::USER:PASS",
+    "Provide a credential for a secure remote service. NOTE :: between URI "\
+    "and credential") do |val|
+      uri, cred = val.chomp.split('::', 2)
+      user, pass = cred.chomp.split(':', 2)
+      options[:screds] << [uri, user, pass]
+  end
+end
+
+# Read and check server address and credentials.
+uri, creds = parse_address(ARGV.shift, creds)
+
+# Read workflow and ensure that it is not empty.
+if options[:wkf_file]
+  wkf = IO.read(options[:wkf_file])
+else
+  wkf = ARGF.read
+end
+exit 1 if wkf == ""
+
+# Connect to server and check it's in a good state.
+server = T2Server::Server.new(uri, conn_params)
+puts "\nConnected to server at #{server.uri}"
+
+current_runs = server.runs(creds)
+unless current_runs.length == 0
+  puts "\nServer already has runs on it. Please clear out all runs before "\
+    "running the stress tests."
+  exit 1
+end
+
+run_limit = server.run_limit(creds)
+unless run_limit >= options[:number]
+  puts "\nYou have asked for more concurrent runs than this server has been "\
+    "configured to allow. Please set the number to #{run_limit} or less."
+  exit 1
+end
+
+puts "\nInitializing #{options[:number]} runs and setting inputs."
+runs = []
+options[:number].times do
+  server.create_run(wkf, creds) do |run|
+    # Set inputs.
+    run.input_ports.each_value do |port|
+      input = port.name
+      if inputs.include? input
+        port.value = inputs[input]
+      elsif files.include? input
+        port.file = files[input]
+      else
+        puts "Input '#{input}' has not been given, exiting."
+        run.delete
+        exit 1
+      end
+    end
+
+    options[:screds].each do |list|
+      run.add_password_credential(list[0], list[1], list[2])
+    end
+
+    runs << run
+  end
+end
+
+puts "\nStarting runs with #{options[:backoff]} seconds back-off time between."
+
+w_start = Time.now
+runs.each do |run|
+  run.start
+  sleep options[:backoff] if options[:backoff] > 0  
+end
+
+puts "\nWaiting for runs to finish."
+
+while runs.count { |run| run.finished? } < options[:number] do
+  sleep(5)
+end
+w_end = Time.now
+
+puts "\nRuns finished.\n\nRun times:"
+
+total = 0
+runs.each do |run|
+  time = run.finish_time - run.start_time
+  total += time
+  puts time
+end
+
+average = total / options[:number]
+puts "\nAverage time: #{average}"
+w_time = w_end - w_start
+puts "Wallclock time: #{w_time}"
+
+unless options[:keep]
+  puts "\nDeleting runs."
+  runs.each do |run|
+    run.delete
+  end
+end
+
+puts "\nDone."
