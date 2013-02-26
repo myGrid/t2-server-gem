@@ -41,17 +41,17 @@ include T2Server::CLI
 inputs  = {}
 files = {}
 options = {}
-conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
+conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
-  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If " +
-    "this is not specified then the workflow is read from standard " +
+  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If "\
+    "this is not specified then the workflow is read from standard "\
     "input") do |val|
       options[:wkf_file] = val.chomp
   end
-  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to " +
+  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to "\
     "VALUE") do |val|
       input, value = val.chomp.split(':', 2)
       inputs[input] = value
@@ -61,32 +61,32 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
       input, filename = val.chomp.split(':', 2)
       files[input] = filename
   end
-  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this " +
+  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this "\
     "run") do |val|
       options[:expiry] = Time.parse(val.chomp)
   end
-  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input " +
+  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input "\
     "port values") do |val|
       inputs[:baclava] = val
   end
-  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format." +
+  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format."\
     " A filename may be specified or 'out.xml' is used") do |val|
       options[:baclava_out] = val.chomp
   end
-  opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return " +
+  opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return "\
     "once it has started running") do |val|
       options[:no_wait] = true
   end
-  opt.on("-r", "--output-refs", "Return URIs that point to the data items " +
+  opt.on("-r", "--output-refs", "Return URIs that point to the data items "\
     "of the output rather than the data items themselves.") do |val|
       options[:output_refs] = val
   end
-  opt.on("-D", "--delete", "Delete the run from the server when it is " +
-    "complete. By default the run and its results are preserved. Note that " +
+  opt.on("-D", "--delete", "Delete the run from the server when it is "\
+    "complete. By default the run and its results are preserved. Note that "\
     "the run will still be deleted when its expiry time is reached") do |val|
       options[:delete] = val
   end
-  opt.on("-z", "--zip=FILE", "Get the entire working directory of the run " +
+  opt.on("-z", "--zip=FILE", "Get the entire working directory of the run "\
     "in zip format and save it to the provided filename.") do |val|
       options[:zip_out] = val.chomp
   end
