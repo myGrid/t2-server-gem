@@ -40,7 +40,7 @@ include T2Server::CLI
 # set up options
 inputs  = {}
 files = {}
-options = {}
+options = {:screds => []}
 conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
@@ -64,6 +64,13 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
   opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this "\
     "run") do |val|
       options[:expiry] = Time.parse(val.chomp)
+  end
+  opt.on("-c URI::USER:PASS", "--credential=URI::USER:PASS",
+    "Provide a credential for a secure remote service. NOTE :: between URI "\
+    "and credential") do |val|
+      uri, cred = val.chomp.split('::', 2)
+      user, pass = cred.chomp.split(':', 2)
+      options[:screds] << [uri, user, pass]
   end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input "\
     "port values") do |val|
@@ -143,6 +150,11 @@ begin
           exit 1
         end
       end
+    end
+
+    # set remote service credentials
+    options[:screds].each do |list|
+      run.add_password_credential(list[0], list[1], list[2])
     end
 
     # output baclava?
