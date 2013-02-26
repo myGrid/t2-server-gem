@@ -48,6 +48,10 @@ conn_params, creds = register_options("Usage: t2-delete-runs [options] "\
   opt.on("--all", "Delete all runs on the server") do
     options[:all] = true
   end
+  opt.on("-f", "--finished", "Delete only finished runs. Combine with --all "\
+    "to delete all finished runs") do
+      options[:finished] = true
+  end
 end
 
 # get runs and server address from the arguments
@@ -71,31 +75,27 @@ rescue RuntimeError => e
   exit 1
 end
 
-# ...and delete them!
-if options[:all]
-  begin
-    server.delete_all_runs(creds)
-  rescue T2Server::AuthorizationError => ae
-    puts "You are not authorized to delete runs on this server."
-  rescue T2Server::T2ServerError => e
-    puts "There was a problem while deleting runs. " +
-      "Some may remain on the server."
-  end
-else
-  server_runs = server.runs(creds)
+# ...get the runs...
+server_runs = server.runs(creds)
 
-  for run in server_runs
-    begin
-      run.delete if runs.include? run.id
-    rescue T2Server::RunNotFoundError => rnf
-      puts "Run '#{run.id}' not found - skipping."
-      next
-    rescue T2Server::AuthorizationError => ae
-      puts "You are not authorized to delete run '#{run.id}' - skipping."
-      next
-    rescue T2Server::T2ServerError => e
-      puts "There was a problem while deleting run '#{run.id}' - skipping."
-      next
+# ...and delete them!
+for run in server_runs
+  begin
+    if options[:all] || runs.include?(run.id)
+      if options[:finished]
+        run.delete if run.finished?
+      else
+        run.delete
+      end
     end
+  rescue T2Server::RunNotFoundError => rnf
+    puts "Run '#{run.id}' not found - skipping."
+    next
+  rescue T2Server::AuthorizationError => ae
+    puts "You are not authorized to delete run '#{run.id}' - skipping."
+    next
+  rescue T2Server::T2ServerError => e
+    puts "There was a problem while deleting run '#{run.id}' - skipping."
+    next
   end
 end
