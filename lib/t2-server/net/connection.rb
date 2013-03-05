@@ -198,13 +198,11 @@ module T2Server
       when Net::HTTPNotFound
         raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
-        if response.body.chomp.include? "server load exceeded"
-          raise ServerAtCapacityError.new
-        else
-          raise AccessForbiddenError.new("attribute #{uri.path}")
-        end
+        raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
+      when Net::HTTPServiceUnavailable
+        raise ServerAtCapacityError.new
       else
         raise UnexpectedServerResponse.new(response)
       end
