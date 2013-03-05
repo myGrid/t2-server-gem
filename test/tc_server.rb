@@ -61,13 +61,28 @@ class TestServer < Test::Unit::TestCase
   def test_server_limits_delete_all
     T2Server::Server.new($uri, $conn_params) do |server|
       limit = server.run_limit($creds)
+      max_runs = 0
       assert_instance_of(Fixnum, limit)
       assert_raise(T2Server::ServerAtCapacityError) do
+        # Detect the concurrent run limit and
         # add 1 just in case there are no runs at this point
+        more = true
         (limit + 1).times do
-          server.create_run($wkf_pass, $creds)
+          run = server.create_run($wkf_pass, $creds)
+          if more
+            run.input_port("IN").value = "Hello"
+            more = run.start
+            if more
+              max_runs += 1
+              assert(run.running?)
+            else
+              assert(run.initialized?)
+            end
+          end
         end
       end
+
+      assert(max_runs <= limit)
 
       assert_nothing_raised(T2Server::T2ServerError) do
         server.delete_all_runs($creds)
