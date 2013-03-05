@@ -169,6 +169,8 @@ module T2Server
         raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
+      when Net::HTTPServiceUnavailable
+        raise ServerAtCapacityError.new
       else
         raise UnexpectedServerResponse.new(response)
       end

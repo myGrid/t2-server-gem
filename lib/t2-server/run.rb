@@ -273,9 +273,10 @@ module T2Server
     end
 
     # :call-seq:
-    #   start
+    #   start -> boolean
     #
-    # Start this run on the server.
+    # Start this run on the server. Returns true if the run was started, false
+    # otherwise.
     #
     # Raises RunStateError if the run is not in the :initialized state.
     def start
@@ -285,8 +286,12 @@ module T2Server
       # set all the inputs
       _check_and_set_inputs unless baclava_input?
 
-      @server.update(links[:status], Status.to_text(:running), "text/plain",
-        @credentials)
+      begin
+        @server.update(links[:status], Status.to_text(:running), "text/plain",
+          @credentials)
+      rescue ServerAtCapacityError => sace
+        false
+      end
     end
 
     # :call-seq:
