@@ -47,6 +47,7 @@ class TestPermissions < Test::Unit::TestCase
 
       assert(!run1.owner?)
       assert_not_equal(run1.owner, $creds1.username)
+      assert(run.delete)
     end
   end
 
@@ -81,6 +82,10 @@ class TestPermissions < Test::Unit::TestCase
       assert_raise(T2Server::AccessForbiddenError) do
         run1.delete
       end
+
+      assert_nothing_raised(T2Server::AccessForbiddenError) do
+        run.delete
+      end
     end
   end
 
@@ -105,6 +110,10 @@ class TestPermissions < Test::Unit::TestCase
 
       assert_raise(T2Server::AccessForbiddenError) do
         run1.delete
+      end
+
+      assert_nothing_raised(T2Server::AccessForbiddenError) do
+        run.delete
       end
     end
   end
