@@ -286,7 +286,7 @@ module T2Server
       response = nil
       begin
         @http.request(uri, request) do |r|
-          r.read_body &block
+          r.read_body(&block)
           response = r
         end
         response
