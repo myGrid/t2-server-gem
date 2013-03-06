@@ -160,8 +160,13 @@ begin
     # output baclava?
     run.request_baclava_output if options[:baclava_out]
 
-    # start run and wait until it is finished
-    run.start
+    # try to start run
+    unless run.start
+      puts "Run could not be started because the server is already running "\
+        "its configured maximum number of runs. Please try again later."
+      run.delete
+      exit 1
+    end
     puts "Started at #{run.start_time}"
 
     # bail out if user doesn't want to wait
