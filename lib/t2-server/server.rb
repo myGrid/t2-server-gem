@@ -337,6 +337,13 @@ module T2Server
 
     def delete(uri, credentials = nil)
       @connection.DELETE(uri, credentials)
+    rescue AttributeNotFoundError => ane
+      # Ignore this. Delete is idempotent so deleting something that has
+      # already been deleted, or is for some other reason not there, should
+      # happen silently. Return true here because when deleting it's enough to
+      # know that it's no longer there rather than whether it was deleted
+      # *this time* or not.
+      true
     end
 
     def interaction_reader(run)

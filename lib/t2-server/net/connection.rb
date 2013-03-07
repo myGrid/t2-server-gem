@@ -225,7 +225,7 @@ module T2Server
         # Success, carry on...
         true
       when Net::HTTPNotFound
-        false
+        raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new(uri)
       when Net::HTTPUnauthorized
