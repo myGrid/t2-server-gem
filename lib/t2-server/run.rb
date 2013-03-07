@@ -606,7 +606,7 @@ module T2Server
     def permission(username)
       return unless owner?
 
-      permissions[username]
+      permissions[username] || :none
     end
 
     # :call-seq:
