@@ -111,6 +111,9 @@ module T2Server
 
       @credentials = credentials
 
+      # Has this Run object been deleted from the server?
+      @deleted = false
+
       # The following three fields hold cached data about the run that is only
       # downloaded the first time it is requested.
       @run_doc = nil
@@ -185,6 +188,15 @@ module T2Server
     # Delete this run from the server.
     def delete
       @server.delete(@uri, @credentials)
+      @deleted = true
+    end
+
+    # :call-seq:
+    #   deleted? -> boolean
+    #
+    # Has this run been deleted from the server?
+    def deleted?
+      @deleted
     end
 
     # :call-seq:
@@ -269,6 +281,7 @@ module T2Server
     # Get the status of this run. Status can be one of :initialized,
     # :running or :finished.
     def status
+      return :deleted if @deleted
       Status.to_sym(@server.read(links[:status], "text/plain", @credentials))
     end
 
@@ -991,7 +1004,8 @@ module T2Server
         :initialized => "Initialized",
         :running     => "Operating",
         :finished    => "Finished",
-        :stopped     => "Stopped"
+        :stopped     => "Stopped",
+        :deleted     => "Deleted"
       }
 
       TEXT2STATE = {

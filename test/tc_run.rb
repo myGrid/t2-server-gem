@@ -53,10 +53,17 @@ end
 class TestRun < Test::Unit::TestCase
 
   # Test run connection
-  def test_run_misc
+  def test_run_create_and_delete
     assert_nothing_raised(T2Server::ConnectionError) do
       run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
-      run.delete
+      assert_equal(run.status, :initialized)
+      assert(run.delete)
+      assert(run.deleted?)
+      assert_equal(run.status, :deleted)
+      assert_nothing_raised(T2Server::AttributeNotFoundError) do
+        assert(run.delete) # Should still return true, not raise 404
+      end
+      assert(run.delete) # Should still return true
     end
   end
 
