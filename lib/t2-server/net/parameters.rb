@@ -44,6 +44,7 @@ module T2Server
   # * :verify_peer
   # * :client_certificate
   # * :client_password
+  # * :ssl_version
   # All others will be ignored. Any parameters not set will return +nil+ when
   # queried.
   class ConnectionParameters
@@ -53,7 +54,8 @@ module T2Server
       :ca_path,
       :verify_peer,
       :client_certificate,
-      :client_password
+      :client_password,
+      :ssl_version
     ]
     # :startdoc:
 
