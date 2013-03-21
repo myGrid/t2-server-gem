@@ -105,6 +105,15 @@ class TestRun < Test::Unit::TestCase
         assert_equal(zip_out, zip_cache.data)
       end
 
+      # show getting a zip file of a singleton port does nothing
+      assert_nothing_raised(T2Server::T2ServerError) do
+        assert_equal(run.output_port("OUT").zip, 0)
+
+        zip_cache = TestCache.new
+        run.output_port("OUT").zip(zip_cache)
+        assert_equal(zip_cache.data, "")
+      end
+
       # deletion
       assert(run.delete)
     end
@@ -139,6 +148,17 @@ class TestRun < Test::Unit::TestCase
 
       assert_equal(run.output_port("MANY").value, many)
       assert_equal(run.output_port("SINGLE").value, single_out)
+
+      # get zip file of a single port and test streaming
+      assert_nothing_raised(T2Server::T2ServerError) do
+        zip_out = run.output_port("MANY").zip
+        assert_not_equal(zip_out, "")
+
+        zip_cache = TestCache.new
+        run.output_port("MANY").zip(zip_cache)
+        assert_equal(zip_out, zip_cache.data)
+      end
+
       assert(run.delete)
     end
   end

@@ -490,14 +490,15 @@ module T2Server
     #   end
     #
     # Raises RunStateError if the run has not finished running.
-    def zip_output(param = nil, &block)
+    def zip_output(param = nil, port = "", &block)
       raise ArgumentError,
         "both a parameter and block given for zip_output" if param && block
 
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
-      output_uri = Util.append_to_uri_path(links[:wdir], "out")
+      path = port.empty? ? "out" : "out/#{port}"
+      output_uri = Util.append_to_uri_path(links[:wdir], path)
       download_or_stream(param, output_uri, "application/zip", &block)
     end
 
