@@ -393,6 +393,13 @@ module T2Server
       doc = _get_server_description
       links = get_uris_from_doc(doc, [:runs, :intfeed, :policy])
 
+      ###
+      ### MASSIVE HACK UNTIL TAVERNA SERVER IS FIXED!
+      ###
+      if links[:intfeed]
+        links[:intfeed] = Util.replace_uri_path(uri, links[:intfeed].path)
+      end
+
       doc = xml_document(read(links[:policy], "application/xml"))
       links.merge get_uris_from_doc(doc,
         [:permlisteners, :notifications, :runlimit, :permworkflows])
