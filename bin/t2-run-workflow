@@ -33,14 +33,13 @@
 
 require 'rubygems'
 require 't2-server-cli'
-require 'launchy'
 
 include T2Server::CLI
 
 # set up options
 inputs  = {}
 files = {}
-options = {:screds => []}
+options = {:screds => [], :interactions => :show}
 conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
@@ -60,6 +59,17 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "Set input port INPUT to use the contents of FILE as its input") do |val|
       input, filename = val.chomp.split(':', 2)
       files[input] = filename
+  end
+  opt.on("-I LEVEL", "--interactions=LEVEL", "Show, open or ignore any "\
+    "workflow interactions. LEVEL can be 'show' (the default), which simply "\
+    "lists the interaction URI in the terminal; 'open', which will open the "\
+    "interaction in a Web browser; or 'none', which will not check for "\
+    "interactions from the workflow at all. This should only be set to "\
+    "'none' if you are sure the workflow has no interactions or if you will "\
+    "be handling them in some other way.") do |val|
+      levels = [:show, :open, :none]
+      level = val.downcase.to_sym
+      options[:interactions] = levels.include?(level) ? level : :show
   end
   opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this "\
     "run") do |val|
@@ -105,6 +115,18 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
   end
   opt.on("--stdout", 'Return the "standard out" output of the run.') do
     options[:stdout] = true
+  end
+end
+
+if options[:interactions] == :open
+  begin
+    require 'launchy'
+  rescue LoadError
+    puts "\n****\nTo support opening interactions in your Web browser the "\
+      "launchy gem must be installed:\n\n$ gem install launchy\n\n"\
+      "Interaction URIs will be listed here instead. Please copy and paste "\
+      "them into your Web browser to display them.\n****\n\n"
+    options[:interactions] = :show
   end
 end
 
@@ -172,12 +194,18 @@ begin
     # bail out if user doesn't want to wait
     exit 0 if options[:no_wait]
 
-    # otherwise wait, but open notifications in a web browser if there are any
-    print "Running. Please check your Web browser for notifications."
+    # otherwise wait, but list or open notifications if there are any
+    print "Running."
     until run.finished?
       sleep(1)
-      run.notifications.each do |note|
-        Launchy.open note.uri
+      unless options[:interactions] == :none
+        run.notifications.each do |note|
+          if options[:interactions] == :open
+            Launchy.open note.uri
+          else
+            puts "\n#{note.uri}\n"
+          end
+        end
       end
       print "."
       $stdout.flush
