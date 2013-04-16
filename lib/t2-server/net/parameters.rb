@@ -100,6 +100,15 @@ module T2Server
     end
   end
 
+  # Connection parameters that specify the use of SSL version 3.
+  class SSL3ConnectionParameters < DefaultConnectionParameters
+    # Create connection parameters that specify the use of SSL version 3.
+    def initialize
+      super
+      self[:ssl_version] = :SSLv3
+    end
+  end
+
   # Connection parameters that simplify setting up verification of servers with
   # "self-signed" or non-standard certificates.
   class CustomCASSLConnectionParameters < DefaultConnectionParameters
