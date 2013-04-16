@@ -311,7 +311,9 @@ module T2Server
     def initialize(uri, params = nil)
       super(uri, params)
 
-      @http.ssl_version ||= params[:ssl_version]
+      if OpenSSL::SSL::SSLContext::METHODS.include? params[:ssl_version]
+        @http.ssl_version = params[:ssl_version]
+      end
 
       # Peer verification
       if @params[:verify_peer]
