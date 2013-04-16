@@ -39,12 +39,12 @@ module T2Server
   # stored.
   #
   # The parameters that can be set are:
-  # * :ca_file
-  # * :ca_path
-  # * :verify_peer
-  # * :client_certificate
-  # * :client_password
-  # * :ssl_version
+  # * :ca_file - A file with the correct CA chain to verify the remote server.
+  # * :ca_path - A directory containing the CA files for server verification.
+  # * :verify_peer - Use peer verification? (true or false).
+  # * :client_certificate - File with the client's certificate and private key.
+  # * :client_password - The password to unlock the client's private key.
+  # * :ssl_version - The TLS/SSL version to use (:TLSv1, :SSLv23 or :SSLv3).
   # All others will be ignored. Any parameters not set will return +nil+ when
   # queried.
   class ConnectionParameters
