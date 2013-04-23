@@ -527,6 +527,21 @@ module T2Server
     end
 
     # :call-seq:
+    #   error? -> bool
+    #
+    # Are there errors in this run's outputs? Returns false if the run is not
+    # finished yet.
+    def error?
+      return false unless finished?
+
+      output_ports.values.each do |output|
+        return true if output.error?
+      end
+
+      false
+    end
+
+    # :call-seq:
     #   create_time -> string
     #
     # Get the creation time of this run as an instance of class Time.

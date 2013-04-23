@@ -375,9 +375,11 @@ class TestRun < Test::Unit::TestCase
   def test_errors
     T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
       run.start
+      assert(!run.error?)
       run.wait
       assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
+      assert(run.error?)
       assert(run.delete)
     end
   end
