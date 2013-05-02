@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -112,7 +112,7 @@ module T2Server
 
     # separate the creds if they are supplied in the uri
     def parse_address(address, creds)
-      if address == nil or address == ""
+      if address == nil || address == ""
         puts @opts
         exit 1
       end

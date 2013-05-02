@@ -147,7 +147,7 @@ module T2Server
     #
     # Has this port been set?
     def set?
-      !value.nil? or file? or baclava?
+      !value.nil? || file? || baclava?
     end
   end
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -59,7 +59,7 @@ module T2Server
       end
 
       # if we're given params they must be of the right type
-      if !params.nil? and !params.is_a? ConnectionParameters
+      if !params.nil? && !params.is_a?(ConnectionParameters)
         raise ArgumentError, "Parameters must be ConnectionParameters", caller
       end
 

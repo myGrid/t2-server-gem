@@ -221,7 +221,7 @@ module T2Server
     # Return a hash (name, port) of all the output ports this run has. Until
     # the run is finished this method will return _nil_.
     def output_ports
-      if finished? and @output_ports.nil?
+      if finished? && @output_ports.nil?
         @output_ports = _get_output_port_info
       end
 
