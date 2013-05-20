@@ -291,12 +291,12 @@ module T2Server
     private
 
     # Parse the XML port description into a raw data value structure.
-    def parse_data(node)
+    def parse_data(node, current_depth = 0)
       case xml_node_name(node)
       when 'list'
         data = []
         xml_children(node) do |child|
-          data << parse_data(child)
+          data << parse_data(child, current_depth + 1)
         end
         return data
       when 'value'
@@ -306,6 +306,12 @@ module T2Server
       when 'error'
         @error = true
         return PortValue.new(self, xml_node_attribute(node, 'href'), true)
+      when 'absent'
+        if current_depth == @depth
+          return PortValue.new(self, "", false, "application/x-empty")
+        else
+          return []
+        end
       end
     end
 
