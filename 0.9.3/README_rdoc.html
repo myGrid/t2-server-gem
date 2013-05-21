@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+<title>README -  Taverna 2 Server Ruby Interface Library version 0.9.3</title>
+
+<link type="text/css" media="screen" href="./rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script type="text/javascript" charset="utf-8" src="./js/jquery.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/navigation.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/search_index.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/search.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/searcher.js"></script>
+<script type="text/javascript" charset="utf-8" src="./js/darkfish.js"></script>
+
+
+<body class="file">
+<nav id="metadata">
+  <nav id="home-section" class="section">
+  <h3 class="section-header">
+    <a href="./index.html">Home</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </h3>
+</nav>
+
+
+  <nav id="search-section" class="section project-section" class="initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <h3 class="section-header">
+      <input type="text" name="search" placeholder="Search" id="search-field"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </h3>
+  </form>
+
+  <ul id="search-results" class="initially-hidden"></ul>
+</nav>
+
+
+  <div id="project-metadata">
+    <nav id="fileindex-section" class="section project-section">
+  <h3 class="section-header">Pages</h3>
+
+  <ul>
+  
+    <li class="file"><a href="./CHANGES_rdoc.html">CHANGES</a>
+  
+    <li class="file"><a href="./LICENCE_rdoc.html">LICENCE</a>
+  
+    <li class="file"><a href="./README_rdoc.html">README</a>
+  
+  </ul>
+</nav>
+
+    <nav id="classindex-section" class="section project-section">
+  <h3 class="section-header">Class and Module Index</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="./T2Server.html">T2Server</a>
+  
+    <li><a href="./T2Server/AccessForbiddenError.html">T2Server::AccessForbiddenError</a>
+  
+    <li><a href="./T2Server/Administrator.html">T2Server::Administrator</a>
+  
+    <li><a href="./T2Server/Administrator/AdminResource.html">T2Server::Administrator::AdminResource</a>
+  
+    <li><a href="./T2Server/AttributeNotFoundError.html">T2Server::AttributeNotFoundError</a>
+  
+    <li><a href="./T2Server/AuthorizationError.html">T2Server::AuthorizationError</a>
+  
+    <li><a href="./T2Server/ClientAuthSSLConnectionParameters.html">T2Server::ClientAuthSSLConnectionParameters</a>
+  
+    <li><a href="./T2Server/ConnectionError.html">T2Server::ConnectionError</a>
+  
+    <li><a href="./T2Server/ConnectionParameters.html">T2Server::ConnectionParameters</a>
+  
+    <li><a href="./T2Server/ConnectionRedirectError.html">T2Server::ConnectionRedirectError</a>
+  
+    <li><a href="./T2Server/CustomCASSLConnectionParameters.html">T2Server::CustomCASSLConnectionParameters</a>
+  
+    <li><a href="./T2Server/DefaultConnectionParameters.html">T2Server::DefaultConnectionParameters</a>
+  
+    <li><a href="./T2Server/InputPort.html">T2Server::InputPort</a>
+  
+    <li><a href="./T2Server/InsecureSSLConnectionParameters.html">T2Server::InsecureSSLConnectionParameters</a>
+  
+    <li><a href="./T2Server/OutputPort.html">T2Server::OutputPort</a>
+  
+    <li><a href="./T2Server/Port.html">T2Server::Port</a>
+  
+    <li><a href="./T2Server/PortValue.html">T2Server::PortValue</a>
+  
+    <li><a href="./T2Server/Run.html">T2Server::Run</a>
+  
+    <li><a href="./T2Server/RunNotFoundError.html">T2Server::RunNotFoundError</a>
+  
+    <li><a href="./T2Server/RunStateError.html">T2Server::RunStateError</a>
+  
+    <li><a href="./T2Server/Server.html">T2Server::Server</a>
+  
+    <li><a href="./T2Server/ServerAtCapacityError.html">T2Server::ServerAtCapacityError</a>
+  
+    <li><a href="./T2Server/T2ServerError.html">T2Server::T2ServerError</a>
+  
+    <li><a href="./T2Server/UnexpectedServerResponse.html">T2Server::UnexpectedServerResponse</a>
+  
+    <li><a href="./T2Server/Util.html">T2Server::Util</a>
+  
+    <li><a href="./T2Server/Version.html">T2Server::Version</a>
+  
+  </ul>
+</nav>
+
+  </div>
+</nav>
+
+<div id="documentation" class="description">
+  
+<h1 id="label-Taverna+2+Server+Interaction+Gem"><a href="http://www.taverna.org.uk/">Taverna</a> 2 Server Interaction Gem</h1>
+<dl class="rdoc-list note-list"><dt>Authors
+<dd>
+<p>Robert Haines</p>
+</dd><dt>Contact
+<dd>
+<p><a href="mailto:support@mygrid.org.uk">support@mygrid.org.uk</a></p>
+</dd><dt>URL
+<dd>
+<p><a href="http://www.taverna.org.uk/">www.taverna.org.uk/</a></p>
+</dd><dt>Licence
+<dd>
+<p>BSD (See <a href="LICENCE_rdoc.html">LICENCE</a> or <a
+href="http://www.opensource.org/licenses/bsd-license.php">www.opensource.org/licenses/bsd-license.php</a>)</p>
+</dd><dt>Copyright
+<dd>
+<p>© 2010-2012 The University of Manchester, UK</p>
+</dd></dl>
+
+<h2 id="label-Synopsis">Synopsis</h2>
+
+<p>This is a Ruby library to interface with the Taverna 2 Server REST API.</p>
+
+<h2 id="label-Installation">Installation</h2>
+
+<p>Ensure that gem itself is up to date:</p>
+
+<pre>[sudo] gem update --system</pre>
+
+<p>Then simply install as you would any other gem:</p>
+
+<pre>[sudo] gem install t2-server</pre>
+
+<p>In case of problems with the above the gem is available for download here:
+<a
+href="https://rubygems.org/gems/t2-server">rubygems.org/gems/t2-server</a></p>
+
+<p>You can also download the source code from here: <a
+href="https://github.com/myGrid/t2-server-gem">github.com/myGrid/t2-server-gem</a></p>
+
+<h2 id="label-Compatibility+with+Taverna+Server+versions">Compatibility with Taverna Server versions</h2>
+
+<p>From version 0.9.0 this library is compatible with Taverna Server 2.3
+onwards. It is not compatible with any earlier version of Taverna Server
+due to breaking changes in its REST interface. We strongly encourage all
+users to upgrade to the current version of Taverna Server, but if that is
+not possible right now then please continue to use version 0.6.1 of this
+library for the time being.</p>
+
+<p>This version of the library should be compatible with any Ruby code that
+you may have already written against earlier versions but you may see some
+warnings about API deprecations. These are clearly marked [DEPRECATION] and
+will appear on your console output. Anything marked as deprecated will be
+removed in version 1.0.0 (and are not guaranteed to continue working even
+until then) so you are advised to update your code at your earliest
+convenience.</p>
+
+<h2 id="label-Compatibility+with+Ruby+versions">Compatibility with Ruby versions</h2>
+
+<p>This library is known to work with the following versions of Ruby:</p>
+<ul><li>
+<p>1.8.7 *</p>
+</li><li>
+<p>1.9.2</p>
+</li><li>
+<p>1.9.3 *</p>
+</li><li>
+<p>jruby 1.6.4 (in Ruby 1.8 mode)</p>
+</li></ul>
+
+<p>Those marked with an asterisk (*) are supported and bugs found against them
+will be fixed. Other versions may work but are not tested or supported.</p>
+
+<h2 id="label-Usage">Usage</h2>
+
+<p>There are two entry points for the <a href="T2Server.html">T2Server</a>
+API:</p>
+<ul><li>
+<p><code>T2Server::Run</code> - Use this for running single jobs on a server.</p>
+</li><li>
+<p><code>T2Server::Server</code> - Use this if you are providing a web
+interface to one or more Taverna 2 Server instances.</p>
+</li></ul>
+
+<p>In both cases the gem should be initialized by requiring the top level ruby
+file:</p>
+
+<pre class="ruby"><span class="ruby-identifier">require</span> <span class="ruby-string">'t2-server'</span>
+</pre>
+
+<h3 id="label-Configuring+a+Server+connection">Configuring a Server connection</h3>
+
+<p>Setting up a connection to a secure server can be quite tricky and a secure
+Taverna Server is no different. To make things slightly easier this library
+provides some short cuts to providing various parameters for different
+types of connection.</p>
+
+<p>Connection configuration settings are passed in to various methods using
+the <code>ConnectionParameters</code> class. Parameters that can be set
+are:</p>
+<ul><li>
+<p><code>:ca_file</code> - A file to use as a Certificate Authority (CA) for
+self-signed server certificates.</p>
+</li><li>
+<p><code>:ca_path</code> - Path or list of paths to directories of CA
+certificates.</p>
+</li><li>
+<p><code>:verify_peer</code> - Use a CA to verify that the Taverna Server you
+are connecting to has a valid server certificate and that it is the correct
+one.</p>
+</li><li>
+<p><code>:client_certificate</code> - A certificate to use for client
+certificate authentication.</p>
+</li><li>
+<p><code>:client_password</code> - The password to unlock the private key of
+the client certificate.</p>
+</li></ul>
+
+<p>And can be set like this for a standard https connection:</p>
+
+<pre>conn_params = ConnectionParameters.new
+conn_params[:verify_peer] = true</pre>
+
+<p>This will ensure that the identity of the Taverna Server you are connecting
+to will be verified using the default set of certificates for your
+platform. <code>:ca_path</code> can also be set to a list of paths if
+required. You do not need to include your platform’s default certificate
+paths as these are included automatically.</p>
+
+<p>For convenience a number of standard sets of parameters have been defined.
+The above example is available as <code>DefaultConnectionParameters</code>.
+Others available are:</p>
+<ul><li>
+<p><code>InsecureSSLConnectionParameters</code> - to ignore SSL checks.</p>
+</li><li>
+<p><code>CustomCASSLConnectionParameters</code> - for custom (self-signed)
+CAs.</p>
+</li><li>
+<p><code>ClientAuthSSLConnectionParameters</code> - for client certificate
+authentication.</p>
+</li></ul>
+
+<p>See the rdoc for more details on these classes.</p>
+
+<h3 id="label-Authenticating+to+a+Taverna+Server">Authenticating to a Taverna Server</h3>
+
+<p>Some calls to a server require that a set of user credentials are provided.
+These are simple to set up:</p>
+
+<pre>credentials = T2Server::HttpBasic.new(&quot;username&quot;, &quot;password&quot;)</pre>
+
+<h3 id="label-Server+API+example">Server API example</h3>
+
+<p>The Server constructor can yield the newly created object. Simple supply a
+URI and a set of connection parameters to connect to a server:</p>
+
+<pre class="ruby"><span class="ruby-constant">T2Server</span><span class="ruby-operator">::</span><span class="ruby-constant">Server</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">conn_params</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">server</span><span class="ruby-operator">|</span>
+  <span class="ruby-operator">...</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>Note that credentials are not required by default to simply connect to a
+Taverna Server. Further operations (such as creating and starting runs) may
+require authorization depending on how your server has been set up.</p>
+
+<p>To create a Run on a Server simply pass the workflow you wish to run and
+your credentials:</p>
+
+<pre class="ruby"><span class="ruby-identifier">server</span>.<span class="ruby-identifier">create_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">run</span><span class="ruby-operator">|</span>
+  <span class="ruby-operator">...</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>An individual run can be deleted with its own <code>delete</code> method
+(see below) but all runs on a server can be deleted in one go:</p>
+
+<pre>server.delete_all_runs(credentials)</pre>
+
+<p>Note that you can only delete runs for which your credentials have delete
+authorization. See later for details.</p>
+
+<h3 id="label-Run+API+example">Run API example</h3>
+
+<p>You can bypass the Server API if you know you are only going to be dealing
+with a couple of runs directly:</p>
+
+<pre class="ruby"><span class="ruby-constant">T2Server</span><span class="ruby-operator">::</span><span class="ruby-constant">Run</span>.<span class="ruby-identifier">create</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span>, <span class="ruby-identifier">conn_params</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">run</span><span class="ruby-operator">|</span>
+  <span class="ruby-operator">...</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>Setting an input port to a run is very easy:</p>
+
+<pre>run.input_port(&quot;port_name&quot;).value = 1
+run.input_port(&quot;port_name&quot;).value = &quot;Hello!&quot;
+run.input_port(&quot;port_name&quot;).value = [&quot;list&quot;, &quot;of&quot;, &quot;values&quot;]</pre>
+
+<p>Or you can use a local file as input:</p>
+
+<pre>run.input_port(&quot;port_name&quot;).file = filename</pre>
+
+<p>Once all the inputs have been set the run can be started:</p>
+
+<pre>run.start</pre>
+
+<p>And monitored to see if it has finished:</p>
+
+<pre>run.finished?
+run.running?</pre>
+
+<p>Or just wait until the run has finished:</p>
+
+<pre>run.wait</pre>
+
+<p>Then the outputs can be collected:</p>
+
+<pre>result = run.output_port(&quot;port_name&quot;).value</pre>
+
+<p>If you have a lot of output you can grab the whole lot as a zip file:</p>
+
+<pre>zip_data = run.zip_output</pre>
+
+<p>Using baclava documents for setting inputs and collecting outputs is also
+supported:</p>
+
+<pre>run.baclava_input = filename</pre>
+
+<p>But make sure you request baclava output <strong>before</strong> starting
+the run:</p>
+
+<pre>run.request_baclava_output
+run.start
+run.wait
+output = run.baclava_output</pre>
+
+<p>A run can be deleted when no longer needed, like so:</p>
+
+<pre>run.delete</pre>
+
+<p>See the rdoc for more information. Many methods and classes have much more
+functionality than the defaults described above. Please note that anything
+which does not appear in the documentation is not intended to be part of
+the public API. Use of undocumented classes and methods is entirely at your
+own risk! Such things might not have consistent behaviour and might be
+removed at any time.</p>
+
+<h3 id="label-Example+scripts">Example scripts</h3>
+
+<p>As well as rdoc there are also a couple of example scripts which
+demonstrate good use of the <a href="T2Server.html">T2Server</a> API. These
+are available in the <code>bin</code> directory but are also installed with
+the library code when the gem is installed:</p>
+<ul><li>
+<p>t2-run-workflow</p>
+</li><li>
+<p>t2-server-info</p>
+</li><li>
+<p>t2-delete-runs</p>
+</li><li>
+<p>t2-get-output</p>
+</li><li>
+<p>t2-server-admin</p>
+</li></ul>
+
+<p>Running any of these scripts with a <code>-h</code> or <code>--help</code>
+switch will show how to use them, e.g.:</p>
+
+<pre>t2-run-workflow --help</pre>
+
+<h2 id="label-Interacting+with+secure+Web+Services">Interacting with secure Web Services</h2>
+
+<p>This library can be used to run workflows that contain secure services.
+Such services may be secured in a number of ways depending on how the
+credentials are passed and whether they are REST, SOAP or Rshell services.</p>
+
+<p>Running workflows that contain secure services requires that you pass your
+credentials to Taverna Server so that it can authenticate itself as you on
+your behalf.</p>
+
+<p><strong>It is essential that you trust the Taverna Server that you are
+using!</strong></p>
+
+<p><strong>Ideally, you should only pass sensitive information, such as
+passwords, via https so that you can be sure that it is not being read in
+transit.</strong></p>
+
+<h3 id="label-Username+and+password+credentials">Username and password credentials</h3>
+
+<h4 id="label-REST">REST</h4>
+
+<p>REST services are commonly secured via HTTP Basic or HTTP Digest
+authentication and Taverna treats these two schemes in the same way. Simply
+pass in your username and password with the <strong>host</strong> name of
+the server on which the service is running:</p>
+
+<pre>run.add_password_credential(&quot;https://example.com:8443/&quot;, &quot;username&quot;, &quot;password&quot;)</pre>
+
+<p>The above example shows a https server running on port 8443. If the service
+is on port 80 for http or port 443 for https then you don’t need to specify
+the port.</p>
+
+<p>If there are services on the same host that require different credentials
+then you will need to specify the realm for which each set of credentials
+applies. This is done by adding the name of the realm to the end of the
+host name with a # separating them:</p>
+
+<pre>run.add_password_credential(&quot;https://example.com:8443/#realm&quot;, &quot;username&quot;, &quot;password&quot;)</pre>
+
+<h4 id="label-SOAP">SOAP</h4>
+
+<p>SOAP services are commonly secured via WS-Security. Simply pass in the WSDL
+address of the service with your username and password:</p>
+
+<pre>run.add_password_credential(&quot;https://example.com:8443/services/MyService?wsdl&quot;, &quot;username&quot;, &quot;password&quot;)</pre>
+
+<h4 id="label-R+Servers+%28via+Rshells%29">R Servers (via Rshells)</h4>
+
+<p>You can authenticate to R Servers in almost exactly the same way as for
+REST services - only the protocol scheme is different. So instead of
+<code>http</code> or <code>https</code> it is <code>rserve</code>:</p>
+
+<pre>run.add_password_credential(&quot;rserve://example.com:6311&quot;, &quot;username&quot;, &quot;password&quot;)</pre>
+
+<h3 id="label-Keypair+%28certificate-based%29+credentials">Keypair (certificate-based) credentials</h3>
+
+<p>Some https servers authenticate clients using certificates. If you have
+services that require this type of authentication you can upload a keypair:</p>
+
+<pre>run.add_keypair_credential(&quot;https://example.com:8443/&quot;, &quot;certificate.p12&quot;, &quot;password&quot;)</pre>
+
+<h3 id="label-Trusts+%28peer+verification%29">Trusts (peer verification)</h3>
+
+<p>If the services in your workflows are on a https server then Taverna
+requires that it can verify that the server is the one you expect it to be.
+This is done by peer verification. In most cases this happens automatically
+and transparently but if the remote server has a non-standard or
+“self-signed” certificate then you will need to provide Taverna with the
+corresponding public key for verification to take place:</p>
+
+<pre>run.add_trust(&quot;public-key.pem&quot;)</pre>
+
+<h2 id="label-Interacting+with+other+Taverna+Server+users">Interacting with other Taverna Server users</h2>
+
+<p>Taverna Server is a multi-user system and as such insulates users from one
+another as much as possible. Each run that a user creates can only be
+accessed by that user by default. If you want to give another user
+permission to perform certain actions on a run then you can do so:</p>
+
+<pre>run.grant_permission(&quot;username&quot;, :permission)</pre>
+
+<p>Available permissions are:</p>
+<ul><li>
+<p><code>:none</code> - No permissions.</p>
+</li><li>
+<p><code>:read</code> - Read the state of the run and get its outputs.</p>
+</li><li>
+<p><code>:update</code> - Set the state of the run (e.g. start it).</p>
+</li><li>
+<p><code>:destroy</code> - Delete the run.</p>
+</li></ul>
+
+<p>Permissions are accumulative so giving a user the <code>:destroy</code>
+permission also allows that user to read and set the run’s state. Note that
+there is no way for any user other than the owner of a run to perform any
+security related actions on it. This means that only the owner may grant,
+query and revoke permissions and only the owner may add, query and delete
+trusts and credentials.</p>
+
+<p>You can revoke a user’s permission:</p>
+
+<pre>run.revoke_permission(&quot;username&quot;)</pre>
+
+<p>You can get a list of the permissions you have granted for a run:</p>
+
+<pre>run.permissions</pre>
+
+<p>And also see what permission you have granted a particular user:</p>
+
+<pre>run.permission(&quot;username&quot;)</pre>
+
+<h2 id="label-Support">Support</h2>
+
+<p>Please email <a
+href="mailto:support@mygrid.org.uk">support@mygrid.org.uk</a> for any
+questions relating to this Ruby gem.</p>
+
+<h2 id="label-References">References</h2>
+<dl class="rdoc-list note-list"><dt>Taverna 2 Server
+<dd>
+<p><a
+href="http://www.taverna.org.uk/documentation/taverna-2-x/server/">www.taverna.org.uk/documentation/taverna-2-x/server/</a></p>
+</dd><dt>REST API Documentation
+<dd>
+<p><a
+href="http://www.taverna.org.uk/documentation/taverna-2-x/server/rest-api/">www.taverna.org.uk/documentation/taverna-2-x/server/rest-api/</a></p>
+</dd></dl>
+
+</div>
+
+
+
+<footer id="validator-badges">
+  <p><a href="http://validator.w3.org/check/referer">[Validate]</a>
+  <p>Generated by <a href="https://github.com/rdoc/rdoc">RDoc</a> 3.12.
+  <p>Generated with the <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish Rdoc Generator</a> 3.
+</footer>
+
