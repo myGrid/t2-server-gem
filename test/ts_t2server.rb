@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -85,6 +85,7 @@ if address != ""
   $wkf_fail   = "test/workflows/always_fail.t2flow"
   $wkf_errors = "test/workflows/list_with_errors.t2flow"
   $wkf_no_io  = "test/workflows/no-ports.t2flow"
+  $wkf_miss_o = "test/workflows/missing_outputs.t2flow"
   $list_input = "test/workflows/empty_list_input.baclava"
   $file_input = "test/workflows/in.txt"
   $file_strs  = "test/workflows/strings.txt"
@@ -104,6 +105,7 @@ if address != ""
     require 'tc_run'
     require 'tc_admin'
     require 'tc_secure'
+    require 'tc_misc'
 
     # if we have two sets of credentials we can run permissions tests
     if $creds1
