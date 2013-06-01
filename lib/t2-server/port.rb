@@ -147,7 +147,7 @@ module T2Server
     #
     # Has this port been set?
     def set?
-      !value.nil? or file? or baclava?
+      !value.nil? || file? || baclava?
     end
   end
 
@@ -346,6 +346,39 @@ module T2Server
       end
     end
 
+    # :call-seq:
+    #   zip -> binary blob
+    #   zip(filename) -> Fixnum
+    #   zip(stream) -> Fixnum
+    #   zip {|chunk| ...}
+    #
+    # Get the data in this output port directly from the server in zip format.
+    #
+    # This method does not work with singleton ports. Taverna Server cannot
+    # currently return zip files of singleton ports on their own. If you wish
+    # to get a singleton port in a zip file then you can use Run#zip_output
+    # which will return all outputs in a single file.
+    #
+    # If this method is called on a singleton port it will return 0. Streaming
+    # from it will return nothing.
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # zipped data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the zip data directly to that object and return the number of
+    # bytes that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   port.zip do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def zip(param = nil, &block)
+      return 0 if depth == 0
+      @run.zip_output(param, name, &block)
+    end
+
     # :stopdoc:
     def download(uri, range = nil, &block)
       @run.download_output_data(uri, range, &block)
@@ -355,12 +388,12 @@ module T2Server
     private
 
     # Parse the XML port description into a raw data value structure.
-    def parse_data(node)
+    def parse_data(node, current_depth = 0)
       case xml_node_name(node)
       when 'list'
         data = []
         xml_children(node) do |child|
-          data << parse_data(child)
+          data << parse_data(child, current_depth + 1)
         end
         return data
       when 'value'
@@ -371,6 +404,12 @@ module T2Server
         @error = true
         return PortValue.new(self, xml_node_attribute(node, 'href'), true,
           xml_node_attribute(node, 'errorByteLength').to_i)
+      when 'absent'
+        if current_depth == @depth
+          return PortValue.new(self, "", false, 0, "application/x-empty")
+        else
+          return []
+        end
       end
     end
 

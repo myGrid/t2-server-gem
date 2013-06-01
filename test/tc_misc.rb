@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,61 +32,30 @@
 
 require 't2-server'
 
-class TestServer < Test::Unit::TestCase
+class TestMisc < Test::Unit::TestCase
 
-  def test_server_connection
-    assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Server.new($uri, $conn_params)
+  # Test a run with the missing output data bug to check that the library can
+  # workaround it ok. Bug is: http://dev.mygrid.org.uk/issues/browse/T2-2100
+  def test_missing_ports
+    T2Server::Run.create($uri, $wkf_miss_o, $creds, $conn_params) do |run|
+      assert_nothing_raised { run.start }
+      assert(run.running?)
+      run.wait
+
+      run.output_ports.each do |_, port|
+        # Check that outputs are the correct depth
+        assert_equal(port.depth, 2)
+
+        # Check that output lists are the correct length
+        assert_equal(port.value.length, 3)
+        assert_equal(port[0].length, 10)
+
+        # Check that there are empty lists in the correct places
+        assert_equal(port.value[1], [])
+      end
+
+      assert(run.delete)
     end
   end
 
-  def test_interaction_support
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised do
-        server.has_interaction_support?
-      end
-    end
-  end
-
-  def test_run_creation
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
-        run.delete
-      end
-    end
-  end
-
-  # Need to do these together so testing the limit is cleaned up!
-  def test_server_limits_delete_all
-    T2Server::Server.new($uri, $conn_params) do |server|
-      limit = server.run_limit($creds)
-      max_runs = 0
-      assert_instance_of(Fixnum, limit)
-      assert_raise(T2Server::ServerAtCapacityError) do
-        # Detect the concurrent run limit and
-        # add 1 just in case there are no runs at this point
-        more = true
-        (limit + 1).times do
-          run = server.create_run($wkf_pass, $creds)
-          if more
-            run.input_port("IN").value = "Hello"
-            more = run.start
-            if more
-              max_runs += 1
-              assert(run.running?)
-            else
-              assert(run.initialized?)
-            end
-          end
-        end
-      end
-
-      assert(max_runs <= limit)
-
-      assert_nothing_raised(T2Server::T2ServerError) do
-        server.delete_all_runs($creds)
-      end
-    end
-  end
 end

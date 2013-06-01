@@ -1,5 +1,9 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 0.9.3
+
+* Correctly handle missing values in output ports.
+
 == Version 0.9.2
 
 * Cleanup of the README and some delete additions.

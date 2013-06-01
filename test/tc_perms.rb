@@ -34,19 +34,27 @@ require 't2-server'
 
 class TestPermissions < Test::Unit::TestCase
 
-  def test_ownership
+  def test_ownership_and_revokation
     server = T2Server::Server.new($uri, $conn_params)
 
     server.create_run($wkf_pass, $creds) do |run|
       assert(run.owner?)
       assert_equal(run.owner, $creds.username)
 
+      assert_equal(run.permission($creds1.username), :none)
       run.grant_permission($creds1.username, :read)
+      assert_equal(run.permission($creds1.username), :read)
       run_id = run.identifier
       run1 = server.run(run_id, $creds1)
 
       assert(!run1.owner?)
       assert_not_equal(run1.owner, $creds1.username)
+
+      assert(run.revoke_permission($creds1.username))
+      assert_equal(run.permission($creds1.username), :none)
+      assert(run.revoke_permission($creds1.username))
+
+      assert(run.delete)
     end
   end
 
@@ -81,6 +89,10 @@ class TestPermissions < Test::Unit::TestCase
       assert_raise(T2Server::AccessForbiddenError) do
         run1.delete
       end
+
+      assert_nothing_raised(T2Server::AccessForbiddenError) do
+        run.delete
+      end
     end
   end
 
@@ -105,6 +117,10 @@ class TestPermissions < Test::Unit::TestCase
 
       assert_raise(T2Server::AccessForbiddenError) do
         run1.delete
+      end
+
+      assert_nothing_raised(T2Server::AccessForbiddenError) do
+        run.delete
       end
     end
   end

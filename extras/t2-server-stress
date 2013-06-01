@@ -142,7 +142,14 @@ puts "\nStarting runs with #{options[:backoff]} seconds back-off time between."
 
 w_start = Time.now
 runs.each do |run|
-  run.start
+  r_start = Time.now
+  while !run.start
+    puts "Server has reached configured maximum of concurrently running "\
+      "runs. Backing off for 10 seconds before retrying..."
+      sleep(10)
+  end
+  r_started = Time.now
+  puts "Run started at #{r_started} and took #{r_started - r_start} seconds to start."
   sleep options[:backoff] if options[:backoff] > 0  
 end
 

@@ -75,6 +75,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert_not_nil(run.output_port("out").value)
+      assert(run.delete)
     end
 
     # now test with no credential
@@ -84,6 +85,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert(run.output_port("out").error?)
+      assert(run.delete)
     end
   end
 
@@ -97,6 +99,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert_not_nil(run.output_port("out").value)
+      assert(run.delete)
     end
 
     # now test with no server public key
@@ -107,6 +110,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert(run.output_port("out").error?)
+      assert(run.delete)
     end
   end
 
@@ -119,6 +123,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert_not_nil(run.output_port("out").value)
+      assert(run.delete)
     end
   end
 
@@ -132,6 +137,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert_not_nil(run.output_port("out").value)
+      assert(run.delete)
     end
   end
 
@@ -152,6 +158,7 @@ class TestSecurity < Test::Unit::TestCase
         "Hello Alex!")
       assert_equal(run.output_port("out_digest_timestamp").value,
         "Hello David!")
+      assert(run.delete)
     end
   end
 
@@ -173,6 +180,7 @@ class TestSecurity < Test::Unit::TestCase
         "Hello Alex!")
       assert_equal(run.output_port("out_digest_timestamp").value,
         "Hello David!")
+      assert(run.delete)
     end
   end
 
@@ -186,6 +194,7 @@ class TestSecurity < Test::Unit::TestCase
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
       assert_not_nil(run.output_port("out").value)
+      assert(run.delete)
     end
   end
 end
