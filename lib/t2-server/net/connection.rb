@@ -126,7 +126,7 @@ module T2Server
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("GET", uri.path, response)
       end
     end
 
@@ -172,7 +172,7 @@ module T2Server
       when Net::HTTPServiceUnavailable
         raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("PUT", uri.path, response)
       end
     end
 
@@ -206,7 +206,7 @@ module T2Server
       when Net::HTTPServiceUnavailable
         raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("POST", uri.path, response)
       end
     end
 
@@ -231,7 +231,7 @@ module T2Server
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("DELETE", uri.path, response)
       end
     end
 
@@ -253,7 +253,7 @@ module T2Server
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("OPTIONS", uri.path, response)
       end
     end
 
