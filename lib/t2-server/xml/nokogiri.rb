@@ -50,7 +50,7 @@ module T2Server
       end
 
       def xml_children(doc, &block)
-        doc.children.each &block
+        doc.children.each(&block)
       end
 
       def xml_node_name(node)
