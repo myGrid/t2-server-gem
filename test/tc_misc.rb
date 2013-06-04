@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,57 +30,32 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
-require 'nokogiri'
+require 't2-server'
 
-module T2Server
-  module XML
+class TestMisc < Test::Unit::TestCase
 
-    module Methods
-      def xml_document(string)
-        Nokogiri::XML(string)
+  # Test a run with the missing output data bug to check that the library can
+  # workaround it ok. Bug is: http://dev.mygrid.org.uk/issues/browse/T2-2100
+  def test_missing_ports
+    T2Server::Run.create($uri, $wkf_miss_o, $creds, $conn_params) do |run|
+      assert_nothing_raised { run.start }
+      assert(run.running?)
+      run.wait
+
+      run.output_ports.each do |_, port|
+        # Check that outputs are the correct depth
+        assert_equal(port.depth, 2)
+
+        # Check that output lists are the correct length
+        assert_equal(port.value.length, 3)
+        assert_equal(port[0].length, 10)
+
+        # Check that there are empty lists in the correct places
+        assert_equal(port.value[1], [])
       end
 
-      def xml_text_node(text)
-        Nokogiri::XML::Text.new(text, Nokogiri::XML::Document.new).to_s
-      end
-
-      def xml_first_child(node)
-        node.first_element_child
-      end
-
-      def xml_children(doc, &block)
-        doc.children.each(&block)
-      end
-
-      def xml_node_name(node)
-        node.node_name
-      end
-
-      def xml_node_content(node)
-        node.content
-      end
-
-      def xml_node_attribute(node, attribute)
-        node[attribute]
-      end
-
-      def xpath_compile(xpath)
-        xpath
-      end
-
-      def xpath_find(doc, expr)
-        doc.xpath(expr, Namespaces::MAP)
-      end
-
-      def xpath_first(doc, expr)
-        doc.at_xpath(expr, Namespaces::MAP)
-      end
-
-      def xpath_attr(doc, expr, attribute)
-        node = xpath_first(doc, expr)
-        node.nil? ? nil : node[attribute]
-      end
+      assert(run.delete)
     end
   end
+
 end

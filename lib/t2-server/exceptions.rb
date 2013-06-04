@@ -83,12 +83,31 @@ module T2Server
   # not necessarily indicate a problem with the server.
   class UnexpectedServerResponse < T2ServerError
 
-    # Create a new UnexpectedServerResponse with the specified unexpected
+    # The method that was called to produce this error.
+    attr_reader :method
+
+    # The path of the URI that returned this error.
+    attr_reader :path
+
+    # The HTTP error code of this error.
+    attr_reader :code
+
+    # The response body of this error. If the server did not supply one then
+    # this will be "<none>".
+    attr_reader :body
+
+    # Create a new UnexpectedServerResponse with details of which HTTP method
+    # was called, the path that it was called on and the specified unexpected
     # response. The response to be passed in is that which was returned by a
     # call to Net::HTTP#request.
-    def initialize(response)
-      body = response.body ? "\n#{response.body}" : ""
-      super "Unexpected server response: #{response.code}\n#{body}"
+    def initialize(method, path, response)
+      @method = method
+      @path = path
+      @code = response.code
+      @body = response.body.empty? ? "<none>" : "#{response.body}"
+      message = "Unexpected server response:\n  Method: #{@method}\n  Path: "\
+        "#{@path}\n  Code: #{@code}\n  Body: #{@body}"
+      super message
     end
   end
 

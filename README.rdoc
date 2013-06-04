@@ -6,6 +6,7 @@ URL::         http://www.taverna.org.uk/
 Licence::     BSD (See LICENCE or http://www.opensource.org/licenses/bsd-license.php)
 Copyright::   (c) 2010-2013 The University of Manchester, UK
 
+{<img src="https://codeclimate.com/github/myGrid/t2-server-gem.png" />}[https://codeclimate.com/github/myGrid/t2-server-gem]
 
 == Synopsis
 
@@ -57,6 +58,7 @@ This library is known to work with the following versions of Ruby:
 * 1.8.7 *
 * 1.9.2
 * 1.9.3 *
+* 2.0.0
 * jruby 1.6.4 (in Ruby 1.8 mode)
 
 Those marked with an asterisk (*) are supported and bugs found against them

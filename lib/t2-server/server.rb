@@ -131,6 +131,10 @@ module T2Server
     # :stopdoc:
     # Create a run on this server using the specified _workflow_ and return
     # the URI to it.
+    #
+    # We need to catch AccessForbiddenError here to be compatible with Server
+    # versions pre 2.4.2. When we no longer support them we can remove the
+    # rescue clause of this method.
     def initialize_run(workflow, credentials = nil)
       # If workflow is a String, it might be a filename! If so, stream it.
       if (workflow.instance_of? String) && (File.file? workflow)
@@ -144,6 +148,14 @@ module T2Server
       # workflow or a File or IO object.
       create(links[:runs], workflow, "application/vnd.taverna.t2flow+xml",
         credentials)
+    rescue AccessForbiddenError => afe
+      (major, minor, patch) = version_components
+      if minor == 4 && patch >= 2
+        # Need to re-raise as it's a real error for later versions.
+        raise afe
+      else
+        raise ServerAtCapacityError.new
+      end
     end
     # :startdoc:
 
@@ -325,6 +337,13 @@ module T2Server
 
     def delete(uri, credentials = nil)
       @connection.DELETE(uri, credentials)
+    rescue AttributeNotFoundError => ane
+      # Ignore this. Delete is idempotent so deleting something that has
+      # already been deleted, or is for some other reason not there, should
+      # happen silently. Return true here because when deleting it's enough to
+      # know that it's no longer there rather than whether it was deleted
+      # *this time* or not.
+      true
     end
 
     def interaction_reader(run)
@@ -373,6 +392,13 @@ module T2Server
     def _get_server_links
       doc = _get_server_description
       links = get_uris_from_doc(doc, [:runs, :intfeed, :policy])
+
+      ###
+      ### MASSIVE HACK UNTIL TAVERNA SERVER IS FIXED!
+      ###
+      if links[:intfeed]
+        links[:intfeed] = Util.replace_uri_path(uri, links[:intfeed].path)
+      end
 
       doc = xml_document(read(links[:policy], "application/xml"))
       links.merge get_uris_from_doc(doc,

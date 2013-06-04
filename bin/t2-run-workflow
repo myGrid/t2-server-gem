@@ -33,25 +33,24 @@
 
 require 'rubygems'
 require 't2-server-cli'
-require 'launchy'
 
 include T2Server::CLI
 
 # set up options
 inputs  = {}
 files = {}
-options = {}
-conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
+options = {:screds => [], :interactions => :show}
+conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "server-address") do |opt|
   opt.separator "  Where server-address is the full URI of the server to"
   opt.separator "  connect to, e.g.: http://example.com:8080/taverna"
   opt.separator "  and [options] can be:"
-  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If " +
-    "this is not specified then the workflow is read from standard " +
+  opt.on("-w WORKFLOW", "--workflow=WORKFLOW", "The workflow to run. If "\
+    "this is not specified then the workflow is read from standard "\
     "input") do |val|
       options[:wkf_file] = val.chomp
   end
-  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to " +
+  opt.on("-i INPUT:VALUE", "--input=INPUT:VALUE", "Set input port INPUT to "\
     "VALUE") do |val|
       input, value = val.chomp.split(':', 2)
       inputs[input] = value
@@ -61,32 +60,50 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
       input, filename = val.chomp.split(':', 2)
       files[input] = filename
   end
-  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this " +
+  opt.on("-I LEVEL", "--interactions=LEVEL", "Show, open or ignore any "\
+    "workflow interactions. LEVEL can be 'show' (the default), which simply "\
+    "lists the interaction URI in the terminal; 'open', which will open the "\
+    "interaction in a Web browser; or 'none', which will not check for "\
+    "interactions from the workflow at all. This should only be set to "\
+    "'none' if you are sure the workflow has no interactions or if you will "\
+    "be handling them in some other way.") do |val|
+      levels = [:show, :open, :none]
+      level = val.downcase.to_sym
+      options[:interactions] = levels.include?(level) ? level : :show
+  end
+  opt.on("-e EXPIRY", "--expiry=EXPIRY", "Set the expiry date/time of this "\
     "run") do |val|
       options[:expiry] = Time.parse(val.chomp)
   end
-  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input " +
+  opt.on("-c URI::USER:PASS", "--credential=URI::USER:PASS",
+    "Provide a credential for a secure remote service. NOTE :: between URI "\
+    "and credential") do |val|
+      uri, cred = val.chomp.split('::', 2)
+      user, pass = cred.chomp.split(':', 2)
+      options[:screds] << [uri, user, pass]
+  end
+  opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input "\
     "port values") do |val|
       inputs[:baclava] = val
   end
-  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format." +
+  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format."\
     " A filename may be specified or 'out.xml' is used") do |val|
       options[:baclava_out] = val.chomp
   end
-  opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return " +
+  opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return "\
     "once it has started running") do |val|
       options[:no_wait] = true
   end
-  opt.on("-r", "--output-refs", "Return URIs that point to the data items " +
+  opt.on("-r", "--output-refs", "Return URIs that point to the data items "\
     "of the output rather than the data items themselves.") do |val|
       options[:output_refs] = val
   end
-  opt.on("-D", "--delete", "Delete the run from the server when it is " +
-    "complete. By default the run and its results are preserved. Note that " +
+  opt.on("-D", "--delete", "Delete the run from the server when it is "\
+    "complete. By default the run and its results are preserved. Note that "\
     "the run will still be deleted when its expiry time is reached") do |val|
       options[:delete] = val
   end
-  opt.on("-z", "--zip=FILE", "Get the entire working directory of the run " +
+  opt.on("-z", "--zip=FILE", "Get the entire working directory of the run "\
     "in zip format and save it to the provided filename.") do |val|
       options[:zip_out] = val.chomp
   end
@@ -98,6 +115,18 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] " +
   end
   opt.on("--stdout", 'Return the "standard out" output of the run.') do
     options[:stdout] = true
+  end
+end
+
+if options[:interactions] == :open
+  begin
+    require 'launchy'
+  rescue LoadError
+    puts "\n****\nTo support opening interactions in your Web browser the "\
+      "launchy gem must be installed:\n\n$ gem install launchy\n\n"\
+      "Interaction URIs will be listed here instead. Please copy and paste "\
+      "them into your Web browser to display them.\n****\n\n"
+    options[:interactions] = :show
   end
 end
 
@@ -145,22 +174,38 @@ begin
       end
     end
 
+    # set remote service credentials
+    options[:screds].each do |list|
+      run.add_password_credential(list[0], list[1], list[2])
+    end
+
     # output baclava?
     run.request_baclava_output if options[:baclava_out]
 
-    # start run and wait until it is finished
-    run.start
+    # try to start run
+    unless run.start
+      puts "Run could not be started because the server is already running "\
+        "its configured maximum number of runs. Please try again later."
+      run.delete
+      exit 1
+    end
     puts "Started at #{run.start_time}"
 
     # bail out if user doesn't want to wait
     exit 0 if options[:no_wait]
 
-    # otherwise wait, but open notifications in a web browser if there are any
-    print "Running. Please check your Web browser for notifications."
+    # otherwise wait, but list or open notifications if there are any
+    print "Running."
     until run.finished?
       sleep(1)
-      run.notifications.each do |note|
-        Launchy.open note.uri
+      unless options[:interactions] == :none
+        run.notifications.each do |note|
+          if options[:interactions] == :open
+            Launchy.open note.uri
+          else
+            puts "\n#{note.uri}\n"
+          end
+        end
       end
       print "."
       $stdout.flush

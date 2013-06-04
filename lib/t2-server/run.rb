@@ -111,6 +111,9 @@ module T2Server
 
       @credentials = credentials
 
+      # Has this Run object been deleted from the server?
+      @deleted = false
+
       # The following three fields hold cached data about the run that is only
       # downloaded the first time it is requested.
       @run_doc = nil
@@ -185,6 +188,15 @@ module T2Server
     # Delete this run from the server.
     def delete
       @server.delete(@uri, @credentials)
+      @deleted = true
+    end
+
+    # :call-seq:
+    #   deleted? -> boolean
+    #
+    # Has this run been deleted from the server?
+    def deleted?
+      @deleted
     end
 
     # :call-seq:
@@ -209,7 +221,7 @@ module T2Server
     # Return a hash (name, port) of all the output ports this run has. Until
     # the run is finished this method will return _nil_.
     def output_ports
-      if finished? and @output_ports.nil?
+      if finished? && @output_ports.nil?
         @output_ports = _get_output_port_info
       end
 
@@ -269,13 +281,15 @@ module T2Server
     # Get the status of this run. Status can be one of :initialized,
     # :running or :finished.
     def status
+      return :deleted if @deleted
       Status.to_sym(@server.read(links[:status], "text/plain", @credentials))
     end
 
     # :call-seq:
-    #   start
+    #   start -> boolean
     #
-    # Start this run on the server.
+    # Start this run on the server. Returns true if the run was started, false
+    # otherwise.
     #
     # Raises RunStateError if the run is not in the :initialized state.
     def start
@@ -285,8 +299,12 @@ module T2Server
       # set all the inputs
       _check_and_set_inputs unless baclava_input?
 
-      @server.update(links[:status], Status.to_text(:running), "text/plain",
-        @credentials)
+      begin
+        @server.update(links[:status], Status.to_text(:running), "text/plain",
+          @credentials)
+      rescue ServerAtCapacityError => sace
+        false
+      end
     end
 
     # :call-seq:
@@ -472,14 +490,15 @@ module T2Server
     #   end
     #
     # Raises RunStateError if the run has not finished running.
-    def zip_output(param = nil, &block)
+    def zip_output(param = nil, port = "", &block)
       raise ArgumentError,
         "both a parameter and block given for zip_output" if param && block
 
       state = status
       raise RunStateError.new(state, :finished) if state != :finished
 
-      output_uri = Util.append_to_uri_path(links[:wdir], "out")
+      path = port.empty? ? "out" : "out/#{port}"
+      output_uri = Util.append_to_uri_path(links[:wdir], path)
       download_or_stream(param, output_uri, "application/zip", &block)
     end
 
@@ -505,6 +524,21 @@ module T2Server
     # Is this run in the :finished state?
     def finished?
       status == :finished
+    end
+
+    # :call-seq:
+    #   error? -> bool
+    #
+    # Are there errors in this run's outputs? Returns false if the run is not
+    # finished yet.
+    def error?
+      return false unless finished?
+
+      output_ports.values.each do |output|
+        return true if output.error?
+      end
+
+      false
     end
 
     # :call-seq:
@@ -588,7 +622,7 @@ module T2Server
     def permission(username)
       return unless owner?
 
-      permissions[username]
+      permissions[username] || :none
     end
 
     # :call-seq:
@@ -986,7 +1020,8 @@ module T2Server
         :initialized => "Initialized",
         :running     => "Operating",
         :finished    => "Finished",
-        :stopped     => "Stopped"
+        :stopped     => "Stopped",
+        :deleted     => "Deleted"
       }
 
       TEXT2STATE = {

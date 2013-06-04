@@ -53,9 +53,17 @@ end
 class TestRun < Test::Unit::TestCase
 
   # Test run connection
-  def test_run_misc
+  def test_run_create_and_delete
     assert_nothing_raised(T2Server::ConnectionError) do
-      T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
+      run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
+      assert_equal(run.status, :initialized)
+      assert(run.delete)
+      assert(run.deleted?)
+      assert_equal(run.status, :deleted)
+      assert_nothing_raised(T2Server::AttributeNotFoundError) do
+        assert(run.delete) # Should still return true, not raise 404
+      end
+      assert(run.delete) # Should still return true
     end
   end
 
@@ -97,6 +105,15 @@ class TestRun < Test::Unit::TestCase
         assert_equal(zip_out, zip_cache.data)
       end
 
+      # show getting a zip file of a singleton port does nothing
+      assert_nothing_raised(T2Server::T2ServerError) do
+        assert_equal(run.output_port("OUT").zip, 0)
+
+        zip_cache = TestCache.new
+        run.output_port("OUT").zip(zip_cache)
+        assert_equal(zip_cache.data, "")
+      end
+
       # deletion
       assert(run.delete)
     end
@@ -112,6 +129,7 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       run.wait
       assert_nothing_raised { run.output_ports }
+      assert(run.delete)
     end
   end
 
@@ -130,6 +148,18 @@ class TestRun < Test::Unit::TestCase
 
       assert_equal(run.output_port("MANY").value, many)
       assert_equal(run.output_port("SINGLE").value, single_out)
+
+      # get zip file of a single port and test streaming
+      assert_nothing_raised(T2Server::T2ServerError) do
+        zip_out = run.output_port("MANY").zip
+        assert_not_equal(zip_out, "")
+
+        zip_cache = TestCache.new
+        run.output_port("MANY").zip(zip_cache)
+        assert_equal(zip_out, zip_cache.data)
+      end
+
+      assert(run.delete)
     end
   end
 
@@ -147,6 +177,7 @@ class TestRun < Test::Unit::TestCase
 
       assert_equal(run.output_port("list_out").value, list_out)
       assert_equal(run.output_port("singleton_out").value, "Hello, World!")
+      assert(run.delete)
     end
   end
 
@@ -159,6 +190,7 @@ class TestRun < Test::Unit::TestCase
       run.start
       run.wait
       assert_equal(run.output_port("nodes").value, ["hello", "world"])
+      assert(run.delete)
     end
   end
 
@@ -176,6 +208,7 @@ class TestRun < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_port("OUT").value, "Hello, World!")
+      assert(run.delete)
     end
 
     workflow.close
@@ -207,6 +240,7 @@ class TestRun < Test::Unit::TestCase
       assert(run.output_port("MANY")[1][0][0].empty?)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
+      assert(run.delete)
     end
   end
 
@@ -233,6 +267,8 @@ class TestRun < Test::Unit::TestCase
         end
         assert_equal(output, out_stream)
       end
+
+      assert(run.delete)
     end
   end
 
@@ -251,9 +287,6 @@ class TestRun < Test::Unit::TestCase
       assert_equal(run.output_port("OUT").total_size, 100)
       assert_equal(run.output_port("OUT").size, 100)
 
-      # Confirm no data has been downloaded yet.
-      assert(run.output_port("OUT").value(:debug).nil?)
-
       # Stream just the first 10 bytes.
       stream = ""
       run.output_port("OUT").value(0...10) do |chunk|
@@ -261,65 +294,33 @@ class TestRun < Test::Unit::TestCase
       end
       assert_equal(stream, "123456789\n")
 
-      # Confirm nothing cached.
-      assert(run.output_port("OUT").value(:debug).nil?)
-      
       # Get just the second 10 bytes.
       assert_equal(run.output_port("OUT").value(10...20),
         "223456789\n")
 
-      # Stream the first 20 bytes - this only needs to download the first 10,
-      # the rest should be cached, so there should be 2 chunks.
-      stream = []
+      # Stream the first 20 bytes.
+      stream = ""
       run.output_port("OUT").value(0...20) do |chunk|
-        stream << chunk
+        stream += chunk
       end
-      assert_equal(stream.size, 2)
-      assert_equal(stream.join, "123456789\n223456789\n")
+      assert_equal(stream, "123456789\n223456789\n")
 
       # Get a bad range - should return the first 10 bytes.
       assert_equal(run.output_port("OUT").value(-10...10),
         "123456789\n")
 
-      # Confirm only the first 20 bytes have been downloaded.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n")
-
-      # Ask for a separate 10 byte range.
-      assert_equal(run.output_port("OUT").value(30...40),
-        "423456789\n")
-
-      # Confirm that enough was downloaded to connect the two ranges.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n423456789\n")
-
-      # Ask for a range that we already have.
-      assert_equal(run.output_port("OUT").value(5..25),
-        "6789\n223456789\n323456")
-
-      # Stream a range we already have. There should be one chunk.
-      stream = []
-      run.output_port("OUT").value(5..25) do |chunk|
-        stream << chunk
-      end
-      assert_equal(stream.size, 1)
-      assert_equal(stream.join, "6789\n223456789\n323456")
-
-      # Confirm that no more has actually been downloaded.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n423456789\n")
-
       # Stream the lot and check total length. There should be two chunks.
-      stream = []
+      stream = ""
       run.output_port("OUT").value do |chunk|
-        stream << chunk
+        stream += chunk
       end
-      assert_equal(stream.length, 2)
-      assert_equal(stream.join.length, 100)
+      assert_equal(stream.length, 100)
 
       # Now get the lot and check its size.
       out = run.output_port("OUT").value
       assert_equal(out.length, 100)
+
+      assert(run.delete)
     end
   end
 
@@ -330,15 +331,19 @@ class TestRun < Test::Unit::TestCase
       run.wait
       assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
+      assert(run.delete)
     end
   end
 
   def test_errors
     T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
       run.start
+      assert(!run.error?)
       run.wait
       assert_not_nil(run.output_port("OUT").value)
       assert(run.output_port("OUT").error?)
+      assert(run.error?)
+      assert(run.delete)
     end
   end
 end

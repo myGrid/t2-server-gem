@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -71,6 +71,18 @@ module T2Server
           "verification.") do
             conn_params[:verify_peer] = false
         end
+        opt.on("-1", "--tlsv1", "Use TLS version 1 when negotiating with " +
+          "the remote Taverna Server server.") do
+            conn_params[:ssl_version] = :TLSv1
+        end
+        opt.on("-2", "--sslv2", "Use SSL version 2 when negotiating with " +
+          "the remote Taverna Server server.") do
+            conn_params[:ssl_version] = :SSLv23
+        end
+        opt.on("-3", "--sslv3", "Use SSL version 3 when negotiating with " +
+          "the remote Taverna Server server.") do
+            conn_params[:ssl_version] = :SSLv3
+        end
 
         # common options
         opt.on_tail("-u", "--username=USERNAME", "The username to use for " +
@@ -100,7 +112,7 @@ module T2Server
 
     # separate the creds if they are supplied in the uri
     def parse_address(address, creds)
-      if address == nil or address == ""
+      if address == nil || address == ""
         puts @opts
         exit 1
       end

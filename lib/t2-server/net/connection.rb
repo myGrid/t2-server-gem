@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -59,7 +59,7 @@ module T2Server
       end
 
       # if we're given params they must be of the right type
-      if !params.nil? and !params.is_a? ConnectionParameters
+      if !params.nil? && !params.is_a?(ConnectionParameters)
         raise ArgumentError, "Parameters must be ConnectionParameters", caller
       end
 
@@ -126,7 +126,7 @@ module T2Server
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("GET", uri.path, response)
       end
     end
 
@@ -169,8 +169,10 @@ module T2Server
         raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
+      when Net::HTTPServiceUnavailable
+        raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("PUT", uri.path, response)
       end
     end
 
@@ -198,15 +200,13 @@ module T2Server
       when Net::HTTPNotFound
         raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
-        if response.body.chomp.include? "server load exceeded"
-          raise ServerAtCapacityError.new
-        else
-          raise AccessForbiddenError.new("attribute #{uri.path}")
-        end
+        raise AccessForbiddenError.new("attribute #{uri.path}")
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
+      when Net::HTTPServiceUnavailable
+        raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("POST", uri.path, response)
       end
     end
 
@@ -225,13 +225,13 @@ module T2Server
         # Success, carry on...
         true
       when Net::HTTPNotFound
-        false
+        raise AttributeNotFoundError.new(uri.path)
       when Net::HTTPForbidden
         raise AccessForbiddenError.new(uri)
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("DELETE", uri.path, response)
       end
     end
 
@@ -253,7 +253,7 @@ module T2Server
       when Net::HTTPUnauthorized
         raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new(response)
+        raise UnexpectedServerResponse.new("OPTIONS", uri.path, response)
       end
     end
 
@@ -286,7 +286,7 @@ module T2Server
       response = nil
       begin
         @http.request(uri, request) do |r|
-          r.read_body &block
+          r.read_body(&block)
           response = r
         end
         response
@@ -310,6 +310,10 @@ module T2Server
     # Open a https connection to the Taverna Server at the uri supplied.
     def initialize(uri, params = nil)
       super(uri, params)
+
+      if OpenSSL::SSL::SSLContext::METHODS.include? params[:ssl_version]
+        @http.ssl_version = params[:ssl_version]
+      end
 
       # Peer verification
       if @params[:verify_peer]
