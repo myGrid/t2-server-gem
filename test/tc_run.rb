@@ -287,9 +287,6 @@ class TestRun < Test::Unit::TestCase
       assert_equal(run.output_port("OUT").total_size, 100)
       assert_equal(run.output_port("OUT").size, 100)
 
-      # Confirm no data has been downloaded yet.
-      assert(run.output_port("OUT").value(:debug).nil?)
-
       # Stream just the first 10 bytes.
       stream = ""
       run.output_port("OUT").value(0...10) do |chunk|
@@ -297,61 +294,27 @@ class TestRun < Test::Unit::TestCase
       end
       assert_equal(stream, "123456789\n")
 
-      # Confirm nothing cached.
-      assert(run.output_port("OUT").value(:debug).nil?)
-      
       # Get just the second 10 bytes.
       assert_equal(run.output_port("OUT").value(10...20),
         "223456789\n")
 
-      # Stream the first 20 bytes - this only needs to download the first 10,
-      # the rest should be cached, so there should be 2 chunks.
-      stream = []
+      # Stream the first 20 bytes.
+      stream = ""
       run.output_port("OUT").value(0...20) do |chunk|
-        stream << chunk
+        stream += chunk
       end
-      assert_equal(stream.size, 2)
-      assert_equal(stream.join, "123456789\n223456789\n")
+      assert_equal(stream, "123456789\n223456789\n")
 
       # Get a bad range - should return the first 10 bytes.
       assert_equal(run.output_port("OUT").value(-10...10),
         "123456789\n")
 
-      # Confirm only the first 20 bytes have been downloaded.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n")
-
-      # Ask for a separate 10 byte range.
-      assert_equal(run.output_port("OUT").value(30...40),
-        "423456789\n")
-
-      # Confirm that enough was downloaded to connect the two ranges.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n423456789\n")
-
-      # Ask for a range that we already have.
-      assert_equal(run.output_port("OUT").value(5..25),
-        "6789\n223456789\n323456")
-
-      # Stream a range we already have. There should be one chunk.
-      stream = []
-      run.output_port("OUT").value(5..25) do |chunk|
-        stream << chunk
-      end
-      assert_equal(stream.size, 1)
-      assert_equal(stream.join, "6789\n223456789\n323456")
-
-      # Confirm that no more has actually been downloaded.
-      assert_equal(run.output_port("OUT").value(:debug),
-        "123456789\n223456789\n323456789\n423456789\n")
-
       # Stream the lot and check total length. There should be two chunks.
-      stream = []
+      stream = ""
       run.output_port("OUT").value do |chunk|
-        stream << chunk
+        stream += chunk
       end
-      assert_equal(stream.length, 2)
-      assert_equal(stream.join.length, 100)
+      assert_equal(stream.length, 100)
 
       # Now get the lot and check its size.
       out = run.output_port("OUT").value

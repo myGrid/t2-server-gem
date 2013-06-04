@@ -456,8 +456,6 @@ module T2Server
       @reference = URI.parse(ref)
       @type = (error ? ERROR_TYPE : type)
       @size = size
-      @value = nil
-      @vgot = nil
       @error = error
     end
     # :startdoc:
@@ -471,20 +469,18 @@ module T2Server
     # Get the value of this port from the server.
     #
     # If no parameters are supplied then this method will simply download and
-    # return all the data. Supplying a Range will download and return the data
-    # in that range. In these two cases the data is downloaded into memory and
-    # cached.
+    # return all the data.
     #
-    # Passing in a block will allow access to the underlying data stream. The
-    # data is not stored in memory and it is not cached:
+    # Passing in a block will allow access to the underlying data stream so
+    # the data is not stored in memory:
     #   run.output_port("port") do |chunk|
     #     print chunk
     #   end
     #
-    # No data that has already been cached will be re-downloaded. No data that
-    # is streamed will be cached. When downloading port outputs that will not
-    # fit into memory, use the streaming versions of this method; do not use
-    # the caching versions.
+    # In both cases supplying a Range will download and return the data in
+    # that range.
+    #
+    # This method does not cache any data.
     #
     # If this port is an error then this value will be the error message.
     def value(range = 0...@size, &block)
@@ -492,78 +488,19 @@ module T2Server
       # to 2.4.1 and can be removed when support for those versions is no
       # longer required.
       if error? && @size == 0
-        @value = @port.download(@reference)
-        @size = @value.size
-        @vgot = 0...@size
-        return @value
+        value = @port.download(@reference)
+        @size = value.size
+        range = 0...@size if range.min.nil?
+        return value[range]
       end
 
       return "" if @type == EMPTY_TYPE
-      return @value if range == :debug
 
       # Check that the range provided is sensible
       range = 0..range.max if range.min < 0
       range = range.min...@size if range.max >= @size
 
-      need = fill(@vgot, range)
-      case need.length
-      when 0
-        # We already have all the data we need, just return or stream the
-        # right bit. @vgot cannot be nil here and must fully encompass range.
-        ret_range = (range.min - @vgot.min)..(range.max - @vgot.min)
-        if block_given?
-          yield @value[ret_range]
-        else
-          @value[ret_range]
-        end
-      when 1
-        # We either have some data, at one end of range or either side of it,
-        # or none. @vgot can be nil here. In both cases we download or stream
-        # what we need.
-        if @vgot.nil?
-          # We have no data, so download or stream it all.
-          if block_given?
-            @port.download(@reference, need[0], &block)
-          else
-            @vgot = range
-            @value = @port.download(@reference, need[0])
-          end
-        else
-          # Add the new data to the correct end of the data we have, then
-          # return or stream the range requested.
-          if range.max <= @vgot.max
-            if block_given?
-              @port.download(@reference, need[0], &block)
-              yield @value[0..(range.max - @vgot.min)]
-            else
-              @vgot = range.min..@vgot.max
-              @value = @port.download(@reference, need[0]) + @value
-              @value[0..range.max]
-            end
-          else
-            if block_given?
-              yield @value[(range.min - @vgot.min)..-1]
-              @port.download(@reference, need[0], &block)
-            else
-              @vgot = @vgot.min..range.max
-              @value = @value + @port.download(@reference, need[0])
-              @value[(range.min - @vgot.min)..@vgot.max]
-            end
-          end
-        end
-      when 2
-        # We definitely have some data and it is in the middle of the
-        # range requested. @vgot cannot be nil here.
-        if block_given?
-          @port.download(@reference, need[0], &block)
-          yield @value
-          @port.download(@reference, need[1], &block)
-        else
-          @vgot = range
-          @value = @port.download(@reference, need[0]) + @value +
-            @port.download(@reference, need[1])
-        end
-      end
+      @port.download(@reference, range, &block)
     end
 
     # :call-seq:
@@ -641,34 +578,5 @@ module T2Server
       }
     end
 
-    private
-    def fill(got, want)
-      return [want] if got.nil?
-
-      w_min = want.min
-      w_max = want.max
-      g_min = got.min
-      g_max = got.max
-
-      if got.member? w_min
-        if got.member? w_max
-          []
-        else
-          [(g_max + 1)..w_max]
-        end
-      else
-        if got.member? w_max
-          [w_min..(g_min - 1)]
-        else
-          if w_max < g_min
-            [w_min..(g_min - 1)]
-          elsif w_min > g_max
-            [(g_max + 1)..w_max]
-          else
-            [w_min..(g_min - 1), (g_max + 1)..w_max]
-          end
-        end
-      end
-    end
   end
 end
