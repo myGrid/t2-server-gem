@@ -50,39 +50,8 @@ module T2Server
         end
 
         # SSL options
-        opt.on("-E CERT_FILE:PASSWORD", "--cert=CERT_FILE:PASSWORD", "Use " +
-          "the specified certificate file for client authentication. If the " +
-          "optional password is not provided it will be asked for on the " +
-          "command line. Must be in PEM format.") do |val|
-            cert, cpass = val.chomp.split(":", 2)
-            conn_params[:client_certificate] = cert
-            conn_params[:client_password] = cpass if cpass
-        end
-        opt.on("--cacert=CERT_FILE", "Use the specified certificate file to " +
-          "verify the peer. Must be in PEM format.") do |val|
-            conn_params[:ca_file] = val.chomp
-        end
-        opt.on("--capath=CERTS_PATH", "Use the specified certificate " +
-          "directory to verify the peer. Certificates must be in PEM " +
-          "format") do |val|
-            conn_params[:ca_path] = val.chomp
-        end
-        opt.on("-k", "--insecure", "Allow insecure connections: no peer " +
-          "verification.") do
-            conn_params[:verify_peer] = false
-        end
-        opt.on("-1", "--tlsv1", "Use TLS version 1 when negotiating with " +
-          "the remote Taverna Server server.") do
-            conn_params[:ssl_version] = :TLSv1
-        end
-        opt.on("-2", "--sslv2", "Use SSL version 2 when negotiating with " +
-          "the remote Taverna Server server.") do
-            conn_params[:ssl_version] = :SSLv23
-        end
-        opt.on("-3", "--sslv3", "Use SSL version 3 when negotiating with " +
-          "the remote Taverna Server server.") do
-            conn_params[:ssl_version] = :SSLv3
-        end
+        ssl_auth_opts(opt, conn_params)
+        ssl_transport_opts(opt, conn_params)
 
         # common options
         opt.on_tail("-u", "--username=USERNAME", "The username to use for " +
@@ -124,5 +93,49 @@ module T2Server
     def opts
       @opts
     end
+
+    private
+
+    # The SSL authentication and peer verification options.
+    def ssl_auth_opts(opt, conn_params)
+      opt.on("-E CERT_FILE:PASSWORD", "--cert=CERT_FILE:PASSWORD", "Use " +
+        "the specified certificate file for client authentication. If the " +
+        "optional password is not provided it will be asked for on the " +
+        "command line. Must be in PEM format.") do |val|
+          cert, cpass = val.chomp.split(":", 2)
+          conn_params[:client_certificate] = cert
+          conn_params[:client_password] = cpass if cpass
+      end
+      opt.on("--cacert=CERT_FILE", "Use the specified certificate file to " +
+        "verify the peer. Must be in PEM format.") do |val|
+          conn_params[:ca_file] = val.chomp
+      end
+      opt.on("--capath=CERTS_PATH", "Use the specified certificate " +
+        "directory to verify the peer. Certificates must be in PEM " +
+        "format") do |val|
+          conn_params[:ca_path] = val.chomp
+      end
+      opt.on("-k", "--insecure", "Allow insecure connections: no peer " +
+        "verification.") do
+          conn_params[:verify_peer] = false
+      end
+    end
+
+    # The SSL transport options.
+    def ssl_transport_opts(opt, conn_params)
+      opt.on("-1", "--tlsv1", "Use TLS version 1 when negotiating with " +
+        "the remote Taverna Server server.") do
+          conn_params[:ssl_version] = :TLSv1
+      end
+      opt.on("-2", "--sslv2", "Use SSL version 2 when negotiating with " +
+        "the remote Taverna Server server.") do
+          conn_params[:ssl_version] = :SSLv23
+      end
+      opt.on("-3", "--sslv3", "Use SSL version 3 when negotiating with " +
+        "the remote Taverna Server server.") do
+          conn_params[:ssl_version] = :SSLv3
+      end
+    end
+
   end
 end
