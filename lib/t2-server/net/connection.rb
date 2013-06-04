@@ -119,14 +119,8 @@ module T2Server
       when Net::HTTPMovedTemporarily
         new_conn = redirect(response["location"])
         raise ConnectionRedirectError.new(new_conn)
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(uri.path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{uri.path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new("GET", uri.path, response)
+        report_error("GET", uri.path, response, credentials)
       end
     end
 
@@ -163,16 +157,10 @@ module T2Server
         # We've modified data so we get 204 back from the server. Return the
         # uri of the modified resource.
         uri
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(uri.path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{uri.path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
       when Net::HTTPServiceUnavailable
         raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new("PUT", uri.path, response)
+        report_error("PUT", uri.path, response, credentials)
       end
     end
 
@@ -197,16 +185,10 @@ module T2Server
       when Net::HTTPCreated
         # return the URI of the newly created item
         URI.parse(response['location'])
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(uri.path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("attribute #{uri.path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
       when Net::HTTPServiceUnavailable
         raise ServerAtCapacityError.new
       else
-        raise UnexpectedServerResponse.new("POST", uri.path, response)
+        report_error("POST", uri.path, response, credentials)
       end
     end
 
@@ -224,14 +206,8 @@ module T2Server
       when Net::HTTPNoContent
         # Success, carry on...
         true
-      when Net::HTTPNotFound
-        raise AttributeNotFoundError.new(uri.path)
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new(uri)
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new("DELETE", uri.path, response)
+        report_error("DELETE", uri.path, response, credentials)
       end
     end
 
@@ -248,16 +224,27 @@ module T2Server
       case response
       when Net::HTTPOK
         response.to_hash
-      when Net::HTTPForbidden
-        raise AccessForbiddenError.new("resource #{uri.path}")
-      when Net::HTTPUnauthorized
-        raise AuthorizationError.new(credentials)
       else
-        raise UnexpectedServerResponse.new("OPTIONS", uri.path, response)
+        report_error("OPTIONS", uri.path, response, credentials)
       end
     end
 
     private
+
+    # If one of the expected responses for a HTTP method is not received then
+    # handle the error condition here.
+    def report_error(method, path, response, credentials)
+      case response
+      when Net::HTTPNotFound
+        raise AttributeNotFoundError.new(path)
+      when Net::HTTPForbidden
+        raise AccessForbiddenError.new("resource #{path}")
+      when Net::HTTPUnauthorized
+        raise AuthorizationError.new(credentials)
+      else
+        raise UnexpectedServerResponse.new(method, path, response)
+      end
+    end
 
     # If we have a stream then we need to set body_stream and then either
     # supply a content length or set the transfer encoding to "chunked". A
