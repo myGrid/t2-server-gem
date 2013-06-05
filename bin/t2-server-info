@@ -63,13 +63,14 @@ begin
     runs = server.runs(creds)
     puts "No. of runs: #{runs.length}"
     if options[:list] && runs.length > 0
-      puts (Hirb::Helpers::ObjectTable.render runs,
-        :fields=>[:identifier, :status, :expiry],
-        :headers=>{:identifier=>'Run ID', :status=>'Status',
-          :expiry=>'Expiry time (local)'},
-        :filters=>{:expiry=>[:strftime, "%H:%M:%S %d/%m/%Y"]},
-        :max_fields=>{:expiry=>19},
-        :description=>false)
+      puts Hirb::Helpers::ObjectTable.render(runs,
+        :fields => [:identifier, :name, :status, :expiry],
+        :headers => {:identifier => 'Run ID', :name => "Name",
+          :status => 'Status', :expiry => 'Expiry time (local)'},
+        :filters => {:expiry => [:strftime, "%H:%M:%S %d/%m/%Y"]},
+        :max_fields => {:identifier => 11, :name => 25, :status => 11,
+          :expiry => 19},
+        :description => false)
     end
   end
 rescue RuntimeError => e
