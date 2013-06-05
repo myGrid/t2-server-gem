@@ -325,7 +325,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   exitcode -> integer
+    #   exitcode -> fixnum
     #
     # Get the return code of the run. Zero indicates success.
     def exitcode
@@ -436,8 +436,8 @@ module T2Server
 
     # :call-seq:
     #   baclava_output -> string
-    #   baclava_output(filename) -> Fixnum
-    #   baclava_output(stream) -> Fixnum
+    #   baclava_output(filename) -> fixnum
+    #   baclava_output(stream) -> fixnum
     #   baclava_output {|chunk| ...}
     #
     # Get the outputs of this run in baclava format. This can only be done if
@@ -471,8 +471,8 @@ module T2Server
 
     # :call-seq:
     #   zip_output -> binary blob
-    #   zip_output(filename) -> Fixnum
-    #   zip_output(stream) -> Fixnum
+    #   zip_output(filename) -> fixnum
+    #   zip_output(stream) -> fixnum
     #   zip_output {|chunk| ...}
     #
     # Get the working directory of this run directly from the server in zip

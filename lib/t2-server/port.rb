@@ -239,8 +239,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   stream_value(stream) -> Fixnum
-    #   stream_value(stream, range) -> Fixnum
+    #   stream_value(stream) -> fixnum
+    #   stream_value(stream, range) -> fixnum
     #
     # Stream a singleton port value directly to another stream and return the
     # number of bytes written. If a range is supplied then only that range of
@@ -265,8 +265,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   write_value_to_file(filename) -> Fixnum
-    #   write_value_to_file(filename, range) -> Fixnum
+    #   write_value_to_file(filename) -> fixnum
+    #   write_value_to_file(filename, range) -> fixnum
     #
     # Stream a singleton port value to a file and return the number of bytes
     # written. If a range is supplied then only that range of data is
@@ -311,7 +311,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   size -> int
+    #   size -> fixnum
     #   size -> array
     #
     # Get the data size of the data value in this output port.
@@ -333,7 +333,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   total_size -> int
+    #   total_size -> fixnum
     #
     # Return the total data size of all the data in this output port.
     def total_size
@@ -348,8 +348,8 @@ module T2Server
 
     # :call-seq:
     #   zip -> binary blob
-    #   zip(filename) -> Fixnum
-    #   zip(stream) -> Fixnum
+    #   zip(filename) -> fixnum
+    #   zip(stream) -> fixnum
     #   zip {|chunk| ...}
     #
     # Get the data in this output port directly from the server in zip format.
@@ -504,8 +504,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   stream_value(stream) -> Fixnum
-    #   stream_value(stream, range) -> Fixnum
+    #   stream_value(stream) -> fixnum
+    #   stream_value(stream, range) -> fixnum
     #
     # Stream this port value directly into another stream. The stream passed
     # in may be anything that provides a +write+ method; instances of IO and
@@ -527,8 +527,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   write_value_to_file(filename) -> Fixnum
-    #   write_value_to_file(filename, range) -> Fixnum
+    #   write_value_to_file(filename) -> fixnum
+    #   write_value_to_file(filename, range) -> fixnum
     #
     # Stream this port value directly to a file. If a range is supplied then
     # just that range of data is downloaded from the server. No data is cached

@@ -198,7 +198,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run_limit(credentials = nil) -> num
+    #   run_limit(credentials = nil) -> fixnum
     #
     # The maximum number of runs that this server will allow at any one time.
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted
