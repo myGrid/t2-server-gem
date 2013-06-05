@@ -53,6 +53,10 @@ conn_params, creds = register_options("Usage: t2-get-output [options] " +
     "are specified then list all the output ports.") do |val|
     ports << val.chomp
   end
+  opt.on("-N", "--name", "Return the name of the run. Supported in Taverna "\
+    "Server versions 2.5.0 and up.") do
+      options[:name] = true
+  end
   opt.on("-x", "--exitcode", "Return the exitcode of the run.") do
     options[:exitcode] = true
   end
@@ -94,6 +98,8 @@ end
 begin
   server = T2Server::Server.new(uri, conn_params)
   run = server.run(run_id, creds)
+
+  puts "Run name: #{run.name}" if options[:name]
 
   ports = run.output_ports.keys if ports.empty?
   ports.each do |p|
