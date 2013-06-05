@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # This class serves as a base class for concrete HTTP credential systems.
   #

@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # This call provides access to the administrative interface of a Taverna
   # Server instance.
