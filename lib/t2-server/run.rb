@@ -208,7 +208,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   input_port(port) -> Port
+    #   input_port(port) -> port
     #
     # Get _port_.
     def input_port(port)
@@ -229,7 +229,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   output_port(port) -> Port
+    #   output_port(port) -> port
     #
     # Get output port _port_.
     def output_port(port)
@@ -245,7 +245,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   expiry=(time) -> true or false
+    #   expiry = time -> true or false
     #
     # Set the expiry time of this run to _time_. _time_ should either be a Time
     # object or something that the Time class can parse. If the value given
@@ -389,7 +389,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava_input=(filename) -> true or false
+    #   baclava_input = filename -> true or false
     #
     # Use a baclava file for the workflow inputs.
     def baclava_input=(filename)
