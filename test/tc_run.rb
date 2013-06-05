@@ -126,9 +126,28 @@ class TestRun < Test::Unit::TestCase
       v250plus = vc[0] > 2 || (vc[0] == 2 && vc[1] >= 5)
       server.create_run($wkf_no_io, $creds) do |run|
         if v250plus
+          # Read initial name.
           assert(run.name.length > 0)
           assert_equal("Workflow1", run.name[0...9])
+
+          # Set a new name and test.
+          name = "No input or output"
+          assert(run.name = name)
+          assert(run.name.length == 18)
+          assert_equal(name, run.name)
+
+          # Set a name that is too long
+          long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
+          assert(run.name = long_name)
+          assert(run.name.length == 48)
+          assert_equal(long_name[0...48], run.name)
         else
+          # Read initial name.
+          assert(run.name.length == 0)
+          assert_equal("", run.name)
+
+          # "Set" a new name and test.
+          assert(run.name = "test")
           assert(run.name.length == 0)
           assert_equal("", run.name)
         end
