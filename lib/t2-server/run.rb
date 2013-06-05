@@ -192,7 +192,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   deleted? -> boolean
+    #   deleted? -> true or false
     #
     # Has this run been deleted from the server?
     def deleted?
@@ -245,7 +245,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   expiry=(time) -> bool
+    #   expiry=(time) -> true or false
     #
     # Set the expiry time of this run to _time_. _time_ should either be a Time
     # object or something that the Time class can parse. If the value given
@@ -286,7 +286,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   start -> boolean
+    #   start -> true or false
     #
     # Start this run on the server. Returns true if the run was started, false
     # otherwise.
@@ -349,7 +349,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   mkdir(dir) -> bool
+    #   mkdir(dir) -> true or false
     #
     # Create a directory in the run's working directory on the server. This
     # could be used to store input data.
@@ -378,7 +378,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   upload_data(data, remote_name, remote_directory = "") -> bool
+    #   upload_data(data, remote_name, remote_directory = "") -> true or false
     #
     # Upload data to the server and store it in <tt>remote_file</tt>. The
     # remote directory to put this file in can also be specified, but if it is
@@ -389,7 +389,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava_input=(filename) -> bool
+    #   baclava_input=(filename) -> true or false
     #
     # Use a baclava file for the workflow inputs.
     def baclava_input=(filename)
@@ -405,7 +405,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   request_baclava_output -> bool
+    #   request_baclava_output -> true or false
     #
     # Set the server to save the outputs of this run in baclava format. This
     # must be done before the run is started.
@@ -419,7 +419,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava_input? -> bool
+    #   baclava_input? -> true or false
     #
     # Have the inputs to this run been set by a baclava document?
     def baclava_input?
@@ -427,7 +427,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava_output? -> bool
+    #   baclava_output? -> true or false
     #
     # Has this run been set to return results in baclava format?
     def baclava_output?
@@ -503,7 +503,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   initialized? -> bool
+    #   initialized? -> true or false
     #
     # Is this run in the :initialized state?
     def initialized?
@@ -511,7 +511,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   running? -> bool
+    #   running? -> true or false
     #
     # Is this run in the :running state?
     def running?
@@ -519,7 +519,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   finished? -> bool
+    #   finished? -> true or false
     #
     # Is this run in the :finished state?
     def finished?
@@ -527,7 +527,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   error? -> bool
+    #   error? -> true or false
     #
     # Are there errors in this run's outputs? Returns false if the run is not
     # finished yet.
@@ -566,7 +566,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   owner? -> bool
+    #   owner? -> true or false
     #
     # Are the credentials being used to access this run those of the owner?
     # The owner of the run can give other users certain access rights to their
@@ -626,7 +626,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   revoke_permission(username) -> bool
+    #   revoke_permission(username) -> true or false
     #
     # Revoke whatever permissions that have been granted to the user. Only the
     # owner of a run may revoke permissions on it. +nil+ is returned if a user
@@ -728,7 +728,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   delete_credential(service_uri) -> bool
+    #   delete_credential(service_uri) -> true or false
     #
     # Delete the credential that has been provided for the specified service.
     # Only the owner of a run may delete its credentials. +nil+ is returned if
@@ -740,7 +740,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   delete_all_credentials -> bool
+    #   delete_all_credentials -> true or false
     #
     # Delete all credentials associated with this workflow run. Only the owner
     # of a run may delete its credentials. +nil+ is returned if a user other
@@ -792,7 +792,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   delete_trust(URI) -> bool
+    #   delete_trust(URI) -> true or false
     #
     # Delete the trust with the provided URI. Only the owner of a run may
     # delete its trusts. +nil+ is returned if a user other than the owner uses
@@ -804,7 +804,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   delete_all_trusts -> bool
+    #   delete_all_trusts -> true or false
     #
     # Delete all trusted identities associated with this workflow run. Only
     # the owner of a run may delete its trusts. +nil+ is returned if a user

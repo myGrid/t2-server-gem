@@ -128,7 +128,7 @@ module T2Server
       end
 
       # :call-seq:
-      #   writable? -> bool
+      #   writable? -> true or false
       #
       # Is this resource writable?
       def writable?

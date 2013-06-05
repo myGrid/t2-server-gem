@@ -91,7 +91,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   file? -> bool
+    #   file? -> true or false
     #
     # Is this port's data being supplied by a file? The file could be local or
     # remote (already on the server) for this to return true.
@@ -100,7 +100,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   remote_file? -> bool
+    #   remote_file? -> true or false
     #
     # Is this port's data being supplied by a remote (one that is already on
     # the server) file?
@@ -135,7 +135,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava? -> bool
+    #   baclava? -> true or false
     #
     # Has this port been set via a baclava document?
     def baclava?
@@ -143,7 +143,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   set? -> bool
+    #   set? -> true or false
     #
     # Has this port been set?
     def set?
@@ -173,7 +173,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   error? -> bool
+    #   error? -> true or false
     #
     # Is there an error associated with this output port?
     def error?
@@ -181,7 +181,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   empty? -> bool
+    #   empty? -> true or false
     #
     # Is this output port empty?
     #
@@ -540,7 +540,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   error? -> bool
+    #   error? -> true or false
     #
     # Does this port represent an error?
     def error?
@@ -548,7 +548,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   empty? -> bool
+    #   empty? -> true or false
     #
     # Is this port value empty?
     def empty?

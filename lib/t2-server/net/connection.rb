@@ -125,7 +125,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   PUT(uri, value, type, credentials) -> bool
+    #   PUT(uri, value, type, credentials) -> true or false
     #   PUT(uri, value, type, credentials) -> URI
     #   PUT(uri, stream, type, credentials) -> URI
     #
@@ -193,7 +193,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   DELETE(uri, credentials) -> bool
+    #   DELETE(uri, credentials) -> true or false
     #
     # Perform an HTTP DELETE on a _uri_ on the server. If successful true
     # is returned.

@@ -190,7 +190,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   has_interaction_support? -> Boolean
+    #   has_interaction_support? -> true or false
     #
     # Does this server support interactions and provide a feed for them?
     def has_interaction_support?
