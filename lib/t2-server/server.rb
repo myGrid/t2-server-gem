@@ -375,10 +375,9 @@ module T2Server
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
           "are no longer supported.")
       else
-        # Remove SNAPSHOT tag if it's there.
-        if version.end_with? "-SNAPSHOT"
-          version.gsub!("-SNAPSHOT", "")
-        end
+        # Remove extra version tags if present.
+        version.gsub!("-SNAPSHOT", "")
+        version.gsub!(/alpha[0-9]*/, "")
 
         # Add .0 if we only have a major and minor component.
         if version.split(".").length == 2
