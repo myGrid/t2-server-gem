@@ -214,7 +214,7 @@ module T2Server
     #   value(range) -> binary blob
     #   value {|chunk| ...}
     #   value(range) {|chunk| ...}
-    #   value -> Array
+    #   value -> array
     #
     # For singleton outputs download or stream the data (or part of it) held
     # by the output port. Please see the documentation for PortValue#value for
@@ -287,7 +287,7 @@ module T2Server
 
     # :call-seq:
     #   reference -> string
-    #   reference -> Array
+    #   reference -> array
     #
     # Get URI references to the data values of this output port as strings.
     #
@@ -300,7 +300,7 @@ module T2Server
 
     # :call-seq:
     #   type -> string
-    #   type -> Array
+    #   type -> array
     #
     # Get the mime type of the data value in this output port.
     #
@@ -312,7 +312,7 @@ module T2Server
 
     # :call-seq:
     #   size -> int
-    #   size -> Array
+    #   size -> array
     #
     # Get the data size of the data value in this output port.
     #

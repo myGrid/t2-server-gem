@@ -770,7 +770,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   trusts -> Array
+    #   trusts -> array
     #
     # Return a list of all the URIs of trusts that have been registered for
     # this run. At present there is no way to differentiate between trusts
@@ -826,7 +826,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   notifications -> Array
+    #   notifications -> array
     #
     # Get a list of notifications that are awaiting a response. Returns the
     # empty list if there are none, or if the server does not support the

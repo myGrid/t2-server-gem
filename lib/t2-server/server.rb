@@ -168,7 +168,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   version_components -> Array
+    #   version_components -> array
     #
     # An array of the major, minor and patch version components of the remote
     # Taverna Server.
