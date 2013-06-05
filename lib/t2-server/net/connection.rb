@@ -98,7 +98,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   GET(uri, type, range, credentials) -> String
+    #   GET(uri, type, range, credentials) -> string
     #
     # HTTP GET a resource at _uri_ of _type_ from the server. If successful
     # the body of the response is returned. A portion of the data can be

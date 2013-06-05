@@ -174,7 +174,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   owner -> String
+    #   owner -> string
     #
     # Get the username of the owner of this run. The owner is the user who
     # created the run on the server.

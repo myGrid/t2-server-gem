@@ -286,7 +286,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   reference -> String
+    #   reference -> string
     #   reference -> Array
     #
     # Get URI references to the data values of this output port as strings.
@@ -299,7 +299,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   type -> String
+    #   type -> string
     #   type -> Array
     #
     # Get the mime type of the data value in this output port.

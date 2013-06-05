@@ -160,7 +160,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   version -> String
+    #   version -> string
     #
     # The version string of the remote Taverna Server.
     def version

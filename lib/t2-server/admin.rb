@@ -116,7 +116,7 @@ module T2Server
       # :startdoc:
 
       # :call-seq:
-      #   value -> String
+      #   value -> string
       #   value=
       #
       # Get or set the value held by this resource. This call always queries
