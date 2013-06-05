@@ -212,7 +212,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   OPTIONS(uri, credentials) -> Hash
+    #   OPTIONS(uri, credentials) -> hash
     #
     # Perform the HTTP OPTIONS command on the given _uri_ and return a hash
     # of the headers returned.

@@ -200,7 +200,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   input_ports -> Hash
+    #   input_ports -> hash
     #
     # Return a hash (name, port) of all the input ports this run expects.
     def input_ports
@@ -216,7 +216,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   output_ports -> Hash
+    #   output_ports -> hash
     #
     # Return a hash (name, port) of all the output ports this run has. Until
     # the run is finished this method will return _nil_.
@@ -694,7 +694,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   credentials -> Hash
+    #   credentials -> hash
     #
     # Return a hash (service_uri => credential_uri) of all the credentials
     # provided for this run. Only the owner of a run may query its credentials.
