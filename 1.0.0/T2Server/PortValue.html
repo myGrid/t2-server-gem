@@ -288,7 +288,7 @@ simply an empty string. It is the complete absence of a value.</p>
 
           
           <div class="method-source-code" id="empty-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 611</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 554</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">empty?</span>
   <span class="ruby-ivar">@type</span> <span class="ruby-operator">==</span> <span class="ruby-constant">EMPTY_TYPE</span>
 <span class="ruby-keyword">end</span></pre>
@@ -323,7 +323,7 @@ simply an empty string. It is the complete absence of a value.</p>
 
           
           <div class="method-source-code" id="error-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 603</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 546</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">error?</span>
   <span class="ruby-ivar">@error</span>
 <span class="ruby-keyword">end</span></pre>
@@ -359,7 +359,7 @@ purposes.</p>
 
           
           <div class="method-source-code" id="inspect-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 632</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 575</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">inspect</span>
   <span class="ruby-identifier">@@to_s</span>.<span class="ruby-identifier">bind</span>(<span class="ruby-keyword">self</span>).<span class="ruby-identifier">call</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp">%r&gt;\z/</span>) { <span class="ruby-node">&quot; @value=#{value.inspect}, &quot;</span> <span class="ruby-operator">+</span>
     <span class="ruby-node">&quot;@type=#{type.inspect}, @size=#{size.inspect}&gt;&quot;</span>
@@ -407,7 +407,7 @@ and File, for example. No data is cached by this method.</p>
 
           
           <div class="method-source-code" id="stream_value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 572</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 515</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">stream</span>, <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>)
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>,
     <span class="ruby-string">&quot;Stream passed in must provide a write method&quot;</span> <span class="ruby-keyword">unless</span>
@@ -471,106 +471,45 @@ and File, for example. No data is cached by this method.</p>
           <p>Get the value of this port from the server.</p>
 
 <p>If no parameters are supplied then this method will simply download and
-return all the data. Supplying a Range will download and return the data in
-that range. In these two cases the data is downloaded into memory and
-cached.</p>
+return all the data.</p>
 
-<p>Passing in a block will allow access to the underlying data stream. The
-data is not stored in memory and it is not cached:</p>
+<p>Passing in a block will allow access to the underlying data stream so the
+data is not stored in memory:</p>
 
 <pre class="ruby"><span class="ruby-identifier">run</span>.<span class="ruby-identifier">output_port</span>(<span class="ruby-string">&quot;port&quot;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">chunk</span><span class="ruby-operator">|</span>
   <span class="ruby-identifier">print</span> <span class="ruby-identifier">chunk</span>
 <span class="ruby-keyword">end</span>
 </pre>
 
-<p>No data that has already been cached will be re-downloaded. No data that is
-streamed will be cached. When downloading port outputs that will not fit
-into memory, use the streaming versions of this method; do not use the
-caching versions.</p>
+<p>In both cases supplying a Range will download and return the data in that
+range.</p>
+
+<p>This method does not cache any data.</p>
 
 <p>If this port is an error then this value will be the error message.</p>
           
 
           
           <div class="method-source-code" id="value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 484</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 486</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">value</span>(<span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>, &amp;<span class="ruby-identifier">block</span>)
   <span class="ruby-comment"># The following block is a workaround for Taverna Server versions prior</span>
   <span class="ruby-comment"># to 2.4.1 and can be removed when support for those versions is no</span>
   <span class="ruby-comment"># longer required.</span>
   <span class="ruby-keyword">if</span> <span class="ruby-identifier">error?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@size</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
-    <span class="ruby-ivar">@value</span> = <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>)
-    <span class="ruby-ivar">@size</span> = <span class="ruby-ivar">@value</span>.<span class="ruby-identifier">size</span>
-    <span class="ruby-ivar">@vgot</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>
-    <span class="ruby-keyword">return</span> <span class="ruby-ivar">@value</span>
+    <span class="ruby-identifier">value</span> = <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>)
+    <span class="ruby-ivar">@size</span> = <span class="ruby-identifier">value</span>.<span class="ruby-identifier">size</span>
+    <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span>.<span class="ruby-identifier">nil?</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-identifier">value</span>[<span class="ruby-identifier">range</span>]
   <span class="ruby-keyword">end</span>
 
   <span class="ruby-keyword">return</span> <span class="ruby-string">&quot;&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@type</span> <span class="ruby-operator">==</span> <span class="ruby-constant">EMPTY_TYPE</span>
-  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@value</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span> <span class="ruby-operator">==</span> <span class="ruby-value">:debug</span>
 
   <span class="ruby-comment"># Check that the range provided is sensible</span>
   <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">..</span><span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span> <span class="ruby-operator">&lt;</span> <span class="ruby-value">0</span>
   <span class="ruby-identifier">range</span> = <span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-ivar">@size</span>
 
-  <span class="ruby-identifier">need</span> = <span class="ruby-identifier">fill</span>(<span class="ruby-ivar">@vgot</span>, <span class="ruby-identifier">range</span>)
-  <span class="ruby-keyword">case</span> <span class="ruby-identifier">need</span>.<span class="ruby-identifier">length</span>
-  <span class="ruby-keyword">when</span> <span class="ruby-value">0</span>
-    <span class="ruby-comment"># We already have all the data we need, just return or stream the</span>
-    <span class="ruby-comment"># right bit. @vgot cannot be nil here and must fully encompass range.</span>
-    <span class="ruby-identifier">ret_range</span> = (<span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span> <span class="ruby-operator">-</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span>)<span class="ruby-operator">..</span>(<span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span> <span class="ruby-operator">-</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span>)
-    <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
-      <span class="ruby-keyword">yield</span> <span class="ruby-ivar">@value</span>[<span class="ruby-identifier">ret_range</span>]
-    <span class="ruby-keyword">else</span>
-      <span class="ruby-ivar">@value</span>[<span class="ruby-identifier">ret_range</span>]
-    <span class="ruby-keyword">end</span>
-  <span class="ruby-keyword">when</span> <span class="ruby-value">1</span>
-    <span class="ruby-comment"># We either have some data, at one end of range or either side of it,</span>
-    <span class="ruby-comment"># or none. @vgot can be nil here. In both cases we download or stream</span>
-    <span class="ruby-comment"># what we need.</span>
-    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">nil?</span>
-      <span class="ruby-comment"># We have no data, so download or stream it all.</span>
-      <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
-        <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>], &amp;<span class="ruby-identifier">block</span>)
-      <span class="ruby-keyword">else</span>
-        <span class="ruby-ivar">@vgot</span> = <span class="ruby-identifier">range</span>
-        <span class="ruby-ivar">@value</span> = <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>])
-      <span class="ruby-keyword">end</span>
-    <span class="ruby-keyword">else</span>
-      <span class="ruby-comment"># Add the new data to the correct end of the data we have, then</span>
-      <span class="ruby-comment"># return or stream the range requested.</span>
-      <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">max</span>
-        <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
-          <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>], &amp;<span class="ruby-identifier">block</span>)
-          <span class="ruby-keyword">yield</span> <span class="ruby-ivar">@value</span>[<span class="ruby-value">0</span><span class="ruby-operator">..</span>(<span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span> <span class="ruby-operator">-</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span>)]
-        <span class="ruby-keyword">else</span>
-          <span class="ruby-ivar">@vgot</span> = <span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span><span class="ruby-operator">..</span><span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">max</span>
-          <span class="ruby-ivar">@value</span> = <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>]) <span class="ruby-operator">+</span> <span class="ruby-ivar">@value</span>
-          <span class="ruby-ivar">@value</span>[<span class="ruby-value">0</span><span class="ruby-operator">..</span><span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span>]
-        <span class="ruby-keyword">end</span>
-      <span class="ruby-keyword">else</span>
-        <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
-          <span class="ruby-keyword">yield</span> <span class="ruby-ivar">@value</span>[(<span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span> <span class="ruby-operator">-</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span>)<span class="ruby-operator">..</span><span class="ruby-value">-1</span>]
-          <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>], &amp;<span class="ruby-identifier">block</span>)
-        <span class="ruby-keyword">else</span>
-          <span class="ruby-ivar">@vgot</span> = <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span><span class="ruby-operator">..</span><span class="ruby-identifier">range</span>.<span class="ruby-identifier">max</span>
-          <span class="ruby-ivar">@value</span> = <span class="ruby-ivar">@value</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>])
-          <span class="ruby-ivar">@value</span>[(<span class="ruby-identifier">range</span>.<span class="ruby-identifier">min</span> <span class="ruby-operator">-</span> <span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">min</span>)<span class="ruby-operator">..</span><span class="ruby-ivar">@vgot</span>.<span class="ruby-identifier">max</span>]
-        <span class="ruby-keyword">end</span>
-      <span class="ruby-keyword">end</span>
-    <span class="ruby-keyword">end</span>
-  <span class="ruby-keyword">when</span> <span class="ruby-value">2</span>
-    <span class="ruby-comment"># We definitely have some data and it is in the middle of the</span>
-    <span class="ruby-comment"># range requested. @vgot cannot be nil here.</span>
-    <span class="ruby-keyword">if</span> <span class="ruby-identifier">block_given?</span>
-      <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>], &amp;<span class="ruby-identifier">block</span>)
-      <span class="ruby-keyword">yield</span> <span class="ruby-ivar">@value</span>
-      <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">1</span>], &amp;<span class="ruby-identifier">block</span>)
-    <span class="ruby-keyword">else</span>
-      <span class="ruby-ivar">@vgot</span> = <span class="ruby-identifier">range</span>
-      <span class="ruby-ivar">@value</span> = <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">0</span>]) <span class="ruby-operator">+</span> <span class="ruby-ivar">@value</span> <span class="ruby-operator">+</span>
-        <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">need</span>[<span class="ruby-value">1</span>])
-    <span class="ruby-keyword">end</span>
-  <span class="ruby-keyword">end</span>
+  <span class="ruby-ivar">@port</span>.<span class="ruby-identifier">download</span>(<span class="ruby-ivar">@reference</span>, <span class="ruby-identifier">range</span>, &amp;<span class="ruby-identifier">block</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- value-source -->
           
@@ -612,7 +551,7 @@ method.</p>
 
           
           <div class="method-source-code" id="write_value_to_file-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 593</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 536</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">write_value_to_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>)
   <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-string">&quot;wb&quot;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">file</span><span class="ruby-operator">|</span>
     <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">file</span>, <span class="ruby-identifier">range</span>)

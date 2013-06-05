@@ -447,7 +447,7 @@ server) file?</p>
           <div class="method-source-code" id="set-3F-source">
             <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 149</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">set?</span>
-  <span class="ruby-operator">!</span><span class="ruby-identifier">value</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">file?</span> <span class="ruby-keyword">or</span> <span class="ruby-identifier">baclava?</span>
+  <span class="ruby-operator">!</span><span class="ruby-identifier">value</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">file?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">baclava?</span>
 <span class="ruby-keyword">end</span></pre>
           </div><!-- set-3F-source -->
           

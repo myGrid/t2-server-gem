@@ -186,6 +186,66 @@ necessarily indicate a problem with the server.</p>
     
 
     
+    <!-- Attributes -->
+    <section id="attribute-method-details" class="method-section section">
+      <h3 class="section-header">Attributes</h3>
+
+      
+      <div id="attribute-i-body" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">body</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The response body of this error. If the server did not supply one then this
+will be “&lt;none&gt;”.</p>
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-code" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">code</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The HTTP error code of this error.</p>
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-method" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">method</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The method that was called to produce this error.</p>
+        
+        </div>
+      </div>
+      
+      <div id="attribute-i-path" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">path</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The path of the URI that returned this error.</p>
+        
+        </div>
+      </div>
+      
+    </section><!-- attribute-method-details -->
+    
 
     <!-- Methods -->
     
@@ -197,7 +257,7 @@ necessarily indicate a problem with the server.</p>
         
         <div class="method-heading">
           <span class="method-name">new</span><span
-            class="method-args">(response)</span>
+            class="method-args">(method, path, response)</span>
           <span class="method-click-advice">click to toggle source</span>
         </div>
         
@@ -205,17 +265,22 @@ necessarily indicate a problem with the server.</p>
         <div class="method-description">
           
           <p>Create a new <a
-href="UnexpectedServerResponse.html">UnexpectedServerResponse</a> with the
-specified unexpected response. The response to be passed in is that which
-was returned by a call to Net::HTTP#request.</p>
+href="UnexpectedServerResponse.html">UnexpectedServerResponse</a> with
+details of which HTTP method was called, the path that it was called on and
+the specified unexpected response. The response to be passed in is that
+which was returned by a call to Net::HTTP#request.</p>
           
 
           
           <div class="method-source-code" id="new-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/exceptions.rb, line 89</span>
-<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">response</span>)
-  <span class="ruby-identifier">body</span> = <span class="ruby-identifier">response</span>.<span class="ruby-identifier">body</span> <span class="ruby-operator">?</span> <span class="ruby-node">&quot;\n#{response.body}&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-string">&quot;&quot;</span>
-  <span class="ruby-keyword">super</span> <span class="ruby-node">&quot;Unexpected server response: #{response.code}\n#{body}&quot;</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/exceptions.rb, line 103</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">method</span>, <span class="ruby-identifier">path</span>, <span class="ruby-identifier">response</span>)
+  <span class="ruby-ivar">@method</span> = <span class="ruby-identifier">method</span>
+  <span class="ruby-ivar">@path</span> = <span class="ruby-identifier">path</span>
+  <span class="ruby-ivar">@code</span> = <span class="ruby-identifier">response</span>.<span class="ruby-identifier">code</span>
+  <span class="ruby-ivar">@body</span> = <span class="ruby-identifier">response</span>.<span class="ruby-identifier">body</span>.<span class="ruby-identifier">empty?</span> <span class="ruby-operator">?</span> <span class="ruby-string">&quot;&lt;none&gt;&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-node">&quot;#{response.body}&quot;</span>
+  <span class="ruby-identifier">message</span> = <span class="ruby-node">&quot;Unexpected server response:\n  Method: #{@method}\n  Path: &quot;</span>         <span class="ruby-node">&quot;#{@path}\n  Code: #{@code}\n  Body: #{@body}&quot;</span>
+  <span class="ruby-keyword">super</span> <span class="ruby-identifier">message</span>
 <span class="ruby-keyword">end</span></pre>
           </div><!-- new-source -->
           
