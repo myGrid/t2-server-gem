@@ -216,7 +216,7 @@ internally.</p>
 
           
           <div class="method-source-code" id="append_to_uri_path-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 75</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 79</span>
 <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">append_to_uri_path</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">path</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-identifier">uri</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">path</span> <span class="ruby-operator">==</span> <span class="ruby-string">&quot;&quot;</span>
 
@@ -240,7 +240,7 @@ internally.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            get_path_leaf_from_uri(uri) &rarr; String
+            get_path_leaf_from_uri(uri) &rarr; string
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -257,7 +257,7 @@ empty string (not <em>nil</em> ) if the URI does not have a path.</p>
 
           
           <div class="method-source-code" id="get_path_leaf_from_uri-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 101</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 105</span>
 <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">get_path_leaf_from_uri</span>(<span class="ruby-identifier">uri</span>)
   <span class="ruby-identifier">path</span> = <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">path</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;/&quot;</span>)[<span class="ruby-value">-1</span>]
 
@@ -295,7 +295,7 @@ absolute path (start with a slash).</p>
 
           
           <div class="method-source-code" id="replace_uri_path-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 89</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 93</span>
 <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">replace_uri_path</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">path</span>)
   <span class="ruby-identifier">new_uri</span> = <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">clone</span>
   <span class="ruby-identifier">new_uri</span>.<span class="ruby-identifier">path</span> = <span class="ruby-identifier">path</span>
@@ -317,7 +317,7 @@ absolute path (start with a slash).</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            strip_path_slashes(path) &rarr; String
+            strip_path_slashes(path) &rarr; string
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -334,7 +334,7 @@ the ends of <em>path</em> (if present).</p>
 
           
           <div class="method-source-code" id="strip_path_slashes-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 67</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 71</span>
 <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">strip_path_slashes</span>(<span class="ruby-identifier">path</span>)
   <span class="ruby-identifier">path</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp">%r^\//</span>, <span class="ruby-string">&quot;&quot;</span>).<span class="ruby-identifier">chomp</span>(<span class="ruby-string">&quot;/&quot;</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -371,7 +371,7 @@ href="HttpBasic.html">T2Server::HttpBasic</a> object.</p>
 
           
           <div class="method-source-code" id="strip_uri_credentials-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 45</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/util.rb, line 49</span>
 <span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">strip_uri_credentials</span>(<span class="ruby-identifier">uri</span>)
   <span class="ruby-comment"># we want to use URIs here but strings can be passed in</span>
   <span class="ruby-identifier">uri</span> = <span class="ruby-constant">URI</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-constant">Util</span>.<span class="ruby-identifier">strip_path_slashes</span>(<span class="ruby-identifier">uri</span>)) <span class="ruby-keyword">unless</span> <span class="ruby-identifier">uri</span>.<span class="ruby-identifier">is_a?</span> <span class="ruby-constant">URI</span>

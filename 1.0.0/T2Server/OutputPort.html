@@ -251,7 +251,7 @@ href="http://1">port</a>[<a href="http://1">0]</a>.value(10…100)</p>
 
           
           <div class="method-source-code" id="5B-5D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 207</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 211</span>
 <span class="ruby-keyword">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">i</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-ivar">@structure</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
   <span class="ruby-ivar">@structure</span>[<span class="ruby-identifier">i</span>]
@@ -271,7 +271,7 @@ href="http://1">port</a>[<a href="http://1">0]</a>.value(10…100)</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            empty? &rarr; bool
+            empty? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -292,7 +292,7 @@ list is empty or not.</p>
 
           
           <div class="method-source-code" id="empty-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 192</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 196</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">empty?</span>
   <span class="ruby-comment"># Funnily enough, an empty list does *not* make a port empty!</span>
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Array</span>
@@ -313,7 +313,7 @@ list is empty or not.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            error? &rarr; bool
+            error? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -329,7 +329,7 @@ list is empty or not.</p>
 
           
           <div class="method-source-code" id="error-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 179</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 183</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">error?</span>
   <span class="ruby-ivar">@error</span>
 <span class="ruby-keyword">end</span></pre>
@@ -348,7 +348,7 @@ list is empty or not.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            reference &rarr; String
+            reference &rarr; string
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -357,7 +357,7 @@ list is empty or not.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            reference &rarr; Array
+            reference &rarr; array
           </span>
           
         </div>
@@ -375,7 +375,7 @@ is returned. For an individual reference from a list use
 
           
           <div class="method-source-code" id="reference-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 297</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 301</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">reference</span>
   <span class="ruby-ivar">@refs</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:reference</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -394,7 +394,7 @@ is returned. For an individual reference from a list use
         
         <div class="method-heading">
           <span class="method-callseq">
-            size &rarr; int
+            size &rarr; fixnum
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -403,7 +403,7 @@ is returned. For an individual reference from a list use
         
         <div class="method-heading">
           <span class="method-callseq">
-            size &rarr; Array
+            size &rarr; array
           </span>
           
         </div>
@@ -420,7 +420,7 @@ sizes is returned. For an individual size from a list use ‘port[].size’.</p>
 
           
           <div class="method-source-code" id="size-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 321</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 325</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">size</span>
   <span class="ruby-ivar">@sizes</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:size</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -439,7 +439,7 @@ sizes is returned. For an individual size from a list use ‘port[].size’.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            stream_value(stream) &rarr; Fixnum
+            stream_value(stream) &rarr; fixnum
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -448,7 +448,7 @@ sizes is returned. For an individual size from a list use ‘port[].size’.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            stream_value(stream, range) &rarr; Fixnum
+            stream_value(stream, range) &rarr; fixnum
           </span>
           
         </div>
@@ -472,7 +472,7 @@ on the list item directly:</p>
 
           
           <div class="method-source-code" id="stream_value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 254</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 258</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">stream</span>, <span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>,
@@ -500,7 +500,7 @@ on the list item directly:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            total_size &rarr; int
+            total_size &rarr; fixnum
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -516,7 +516,7 @@ on the list item directly:</p>
 
           
           <div class="method-source-code" id="total_size-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 339</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 333</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">total_size</span>
   <span class="ruby-keyword">return</span> <span class="ruby-ivar">@total_size</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@total_size</span>
   <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Array</span>
@@ -541,7 +541,7 @@ on the list item directly:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            type &rarr; String
+            type &rarr; string
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -550,7 +550,7 @@ on the list item directly:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            type &rarr; Array
+            type &rarr; array
           </span>
           
         </div>
@@ -567,7 +567,7 @@ types is returned. For an individual type from a list use ‘port[].type’.</p>
 
           
           <div class="method-source-code" id="type-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 309</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 313</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">type</span>
   <span class="ruby-ivar">@types</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:type</span>)
 <span class="ruby-keyword">end</span></pre>
@@ -616,7 +616,7 @@ types is returned. For an individual type from a list use ‘port[].type’.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            value &rarr; Array
+            value &rarr; array
           </span>
           
         </div>
@@ -640,7 +640,7 @@ a value from a list use something like:</p>
 
           
           <div class="method-source-code" id="value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 228</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 232</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">value</span>(<span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>, &amp;<span class="ruby-identifier">block</span>)
   <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
     <span class="ruby-keyword">if</span> <span class="ruby-identifier">range</span>.<span class="ruby-identifier">nil?</span>
@@ -668,7 +668,7 @@ a value from a list use something like:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            write_value_to_file(filename) &rarr; Fixnum
+            write_value_to_file(filename) &rarr; fixnum
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -677,7 +677,7 @@ a value from a list use something like:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            write_value_to_file(filename, range) &rarr; Fixnum
+            write_value_to_file(filename, range) &rarr; fixnum
           </span>
           
         </div>
@@ -699,7 +699,7 @@ on the list item directly:</p>
 
           
           <div class="method-source-code" id="write_value_to_file-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 278</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 282</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">write_value_to_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
 
@@ -733,14 +733,14 @@ on the list item directly:</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            zip(filename) &rarr; Fixnum
+            zip(filename) &rarr; fixnum
           </span>
           
         </div>
         
         <div class="method-heading">
           <span class="method-callseq">
-            zip(stream) &rarr; Fixnum
+            zip(stream) &rarr; fixnum
           </span>
           
         </div>
@@ -765,8 +765,8 @@ file then you can use <a
 href="Run.html#method-i-zip_output">T2Server::Run#zip_output</a> which will
 return all outputs in a single file.</p>
 
-<p>If this method is called on a singleton port it will return 0. Streaming
-from it will return nothing.</p>
+<p>If this method is called on a singleton port it will return
+<code>nil</code> and streaming from it will return nothing.</p>
 
 <p>Calling this method with no parameters will simply return a blob of zipped
 data. Providing a filename will stream the data directly to that file and
@@ -787,9 +787,9 @@ finished running.</p>
 
           
           <div class="method-source-code" id="zip-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 377</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 371</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">zip</span>(<span class="ruby-identifier">param</span> = <span class="ruby-keyword">nil</span>, &amp;<span class="ruby-identifier">block</span>)
-  <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">nil</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
   <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">zip_output</span>(<span class="ruby-identifier">param</span>, <span class="ruby-identifier">name</span>, &amp;<span class="ruby-identifier">block</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- zip-source -->

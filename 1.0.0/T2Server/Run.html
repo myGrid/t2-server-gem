@@ -621,7 +621,7 @@ returned if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava_input=(filename) &rarr; bool
+            baclava_input = filename &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -664,7 +664,7 @@ returned if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava_input? &rarr; bool
+            baclava_input? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -708,14 +708,14 @@ returned if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava_output(filename) &rarr; Fixnum
+            baclava_output(filename) &rarr; fixnum
           </span>
           
         </div>
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava_output(stream) &rarr; Fixnum
+            baclava_output(stream) &rarr; fixnum
           </span>
           
         </div>
@@ -782,7 +782,7 @@ finished running.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava_output? &rarr; bool
+            baclava_output? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -891,7 +891,7 @@ if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            credentials &rarr; Hash
+            credentials &rarr; hash
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -977,7 +977,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            delete_all_credentials &rarr; bool
+            delete_all_credentials &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1016,7 +1016,7 @@ other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            delete_all_trusts &rarr; bool
+            delete_all_trusts &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1055,7 +1055,7 @@ user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            delete_credential(service_uri) &rarr; bool
+            delete_credential(service_uri) &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1094,7 +1094,7 @@ returned if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            delete_trust(URI) &rarr; bool
+            delete_trust(URI) &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1133,7 +1133,7 @@ uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            deleted? &rarr; boolean
+            deleted? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1168,7 +1168,7 @@ uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            error? &rarr; bool
+            error? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1210,7 +1210,7 @@ finished yet.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            exitcode &rarr; integer
+            exitcode &rarr; fixnum
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1280,7 +1280,7 @@ finished yet.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            expiry=(time) &rarr; bool
+            expiry = time &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1361,7 +1361,7 @@ time/date in the past is specified, the expiry time will not be changed.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            finished? &rarr; bool
+            finished? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1438,7 +1438,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            initialized? &rarr; bool
+            initialized? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1473,7 +1473,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            input_port(port) &rarr; Port
+            input_port(port) &rarr; port
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1508,7 +1508,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            input_ports &rarr; Hash
+            input_ports &rarr; hash
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1543,7 +1543,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            mkdir(dir) &rarr; bool
+            mkdir(dir) &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1581,7 +1581,7 @@ be used to store input data.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            notifications &rarr; Array
+            notifications &rarr; array
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1622,7 +1622,7 @@ href="Interaction.html">Interaction</a> Service.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            output_port(port) &rarr; Port
+            output_port(port) &rarr; port
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1657,7 +1657,7 @@ href="Interaction.html">Interaction</a> Service.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            output_ports &rarr; Hash
+            output_ports &rarr; hash
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1697,7 +1697,7 @@ run is finished this method will return <em>nil</em>.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            owner &rarr; String
+            owner &rarr; string
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1733,7 +1733,7 @@ created the run on the server.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            owner? &rarr; bool
+            owner? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1861,7 +1861,7 @@ method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            request_baclava_output &rarr; bool
+            request_baclava_output &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1902,7 +1902,7 @@ be done before the run is started.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            revoke_permission(username) &rarr; bool
+            revoke_permission(username) &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1942,7 +1942,7 @@ if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            running? &rarr; bool
+            running? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -1977,7 +1977,7 @@ if a user other than the owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            start &rarr; boolean
+            start &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -2169,7 +2169,7 @@ the :initialized state.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            trusts &rarr; Array
+            trusts &rarr; array
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -2218,7 +2218,7 @@ owner uses this method.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            upload_data(data, remote_name, remote_directory = &quot;&quot;) &rarr; bool
+            upload_data(data, remote_name, remote_directory = &quot;&quot;) &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -2399,14 +2399,14 @@ in the :initialised state.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            zip_output(filename) &rarr; Fixnum
+            zip_output(filename) &rarr; fixnum
           </span>
           
         </div>
         
         <div class="method-heading">
           <span class="method-callseq">
-            zip_output(stream) &rarr; Fixnum
+            zip_output(stream) &rarr; fixnum
           </span>
           
         </div>

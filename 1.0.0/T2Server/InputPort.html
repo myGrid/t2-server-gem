@@ -242,7 +242,7 @@
         
         <div class="method-heading">
           <span class="method-callseq">
-            baclava? &rarr; bool
+            baclava? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -258,7 +258,7 @@
 
           
           <div class="method-source-code" id="baclava-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 141</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 145</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">baclava?</span>
   <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">baclava_input?</span>
 <span class="ruby-keyword">end</span></pre>
@@ -295,7 +295,7 @@ running or finished.</p>
 
           
           <div class="method-source-code" id="file-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 130</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 134</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">file=</span>(<span class="ruby-identifier">filename</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">initialized?</span>
   <span class="ruby-ivar">@value</span> = <span class="ruby-keyword">nil</span>
@@ -317,7 +317,7 @@ running or finished.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            file? &rarr; bool
+            file? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -334,7 +334,7 @@ remote (already on the server) for this to return true.</p>
 
           
           <div class="method-source-code" id="file-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 98</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 102</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">file?</span>
   <span class="ruby-operator">!</span><span class="ruby-ivar">@file</span>.<span class="ruby-identifier">nil?</span>
 <span class="ruby-keyword">end</span></pre>
@@ -371,7 +371,7 @@ finished.</p>
 
           
           <div class="method-source-code" id="remote_file-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 117</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 121</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">remote_file=</span>(<span class="ruby-identifier">filename</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">initialized?</span>
   <span class="ruby-ivar">@value</span> = <span class="ruby-keyword">nil</span>
@@ -393,7 +393,7 @@ finished.</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            remote_file? &rarr; bool
+            remote_file? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -410,7 +410,7 @@ server) file?</p>
 
           
           <div class="method-source-code" id="remote_file-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 107</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 111</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">remote_file?</span>
   <span class="ruby-identifier">file?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-ivar">@remote_file</span>
 <span class="ruby-keyword">end</span></pre>
@@ -429,7 +429,7 @@ server) file?</p>
         
         <div class="method-heading">
           <span class="method-callseq">
-            set? &rarr; bool
+            set? &rarr; true or false
           </span>
           
           <span class="method-click-advice">click to toggle source</span>
@@ -445,7 +445,7 @@ server) file?</p>
 
           
           <div class="method-source-code" id="set-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 149</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 153</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">set?</span>
   <span class="ruby-operator">!</span><span class="ruby-identifier">value</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">file?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">baclava?</span>
 <span class="ruby-keyword">end</span></pre>
@@ -481,7 +481,7 @@ running or finished.</p>
 
           
           <div class="method-source-code" id="value-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 86</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 90</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">value=</span>(<span class="ruby-identifier">value</span>)
   <span class="ruby-keyword">return</span> <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">initialized?</span>
   <span class="ruby-ivar">@file</span> = <span class="ruby-keyword">nil</span>
