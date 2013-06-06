@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # Base class of InputPort and OutputPort
   class Port
@@ -91,7 +95,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   file? -> bool
+    #   file? -> true or false
     #
     # Is this port's data being supplied by a file? The file could be local or
     # remote (already on the server) for this to return true.
@@ -100,7 +104,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   remote_file? -> bool
+    #   remote_file? -> true or false
     #
     # Is this port's data being supplied by a remote (one that is already on
     # the server) file?
@@ -135,7 +139,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava? -> bool
+    #   baclava? -> true or false
     #
     # Has this port been set via a baclava document?
     def baclava?
@@ -143,7 +147,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   set? -> bool
+    #   set? -> true or false
     #
     # Has this port been set?
     def set?
@@ -173,7 +177,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   error? -> bool
+    #   error? -> true or false
     #
     # Is there an error associated with this output port?
     def error?
@@ -181,7 +185,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   empty? -> bool
+    #   empty? -> true or false
     #
     # Is this output port empty?
     #
@@ -214,7 +218,7 @@ module T2Server
     #   value(range) -> binary blob
     #   value {|chunk| ...}
     #   value(range) {|chunk| ...}
-    #   value -> Array
+    #   value -> array
     #
     # For singleton outputs download or stream the data (or part of it) held
     # by the output port. Please see the documentation for PortValue#value for
@@ -239,8 +243,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   stream_value(stream) -> Fixnum
-    #   stream_value(stream, range) -> Fixnum
+    #   stream_value(stream) -> fixnum
+    #   stream_value(stream, range) -> fixnum
     #
     # Stream a singleton port value directly to another stream and return the
     # number of bytes written. If a range is supplied then only that range of
@@ -265,8 +269,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   write_value_to_file(filename) -> Fixnum
-    #   write_value_to_file(filename, range) -> Fixnum
+    #   write_value_to_file(filename) -> fixnum
+    #   write_value_to_file(filename, range) -> fixnum
     #
     # Stream a singleton port value to a file and return the number of bytes
     # written. If a range is supplied then only that range of data is
@@ -286,8 +290,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   reference -> String
-    #   reference -> Array
+    #   reference -> string
+    #   reference -> array
     #
     # Get URI references to the data values of this output port as strings.
     #
@@ -299,8 +303,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   type -> String
-    #   type -> Array
+    #   type -> string
+    #   type -> array
     #
     # Get the mime type of the data value in this output port.
     #
@@ -311,8 +315,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   size -> int
-    #   size -> Array
+    #   size -> fixnum
+    #   size -> array
     #
     # Get the data size of the data value in this output port.
     #
@@ -333,7 +337,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   total_size -> int
+    #   total_size -> fixnum
     #
     # Return the total data size of all the data in this output port.
     def total_size
@@ -348,8 +352,8 @@ module T2Server
 
     # :call-seq:
     #   zip -> binary blob
-    #   zip(filename) -> Fixnum
-    #   zip(stream) -> Fixnum
+    #   zip(filename) -> fixnum
+    #   zip(stream) -> fixnum
     #   zip {|chunk| ...}
     #
     # Get the data in this output port directly from the server in zip format.
@@ -504,8 +508,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   stream_value(stream) -> Fixnum
-    #   stream_value(stream, range) -> Fixnum
+    #   stream_value(stream) -> fixnum
+    #   stream_value(stream, range) -> fixnum
     #
     # Stream this port value directly into another stream. The stream passed
     # in may be anything that provides a +write+ method; instances of IO and
@@ -527,8 +531,8 @@ module T2Server
     end
 
     # :call-seq:
-    #   write_value_to_file(filename) -> Fixnum
-    #   write_value_to_file(filename, range) -> Fixnum
+    #   write_value_to_file(filename) -> fixnum
+    #   write_value_to_file(filename, range) -> fixnum
     #
     # Stream this port value directly to a file. If a range is supplied then
     # just that range of data is downloaded from the server. No data is cached
@@ -540,7 +544,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   error? -> bool
+    #   error? -> true or false
     #
     # Does this port represent an error?
     def error?
@@ -548,7 +552,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   empty? -> bool
+    #   empty? -> true or false
     #
     # Is this port value empty?
     def empty?

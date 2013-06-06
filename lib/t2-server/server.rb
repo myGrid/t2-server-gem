@@ -160,7 +160,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   version -> String
+    #   version -> string
     #
     # The version string of the remote Taverna Server.
     def version
@@ -168,7 +168,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   version_components -> Array
+    #   version_components -> array
     #
     # An array of the major, minor and patch version components of the remote
     # Taverna Server.
@@ -190,7 +190,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   has_interaction_support? -> Boolean
+    #   has_interaction_support? -> true or false
     #
     # Does this server support interactions and provide a feed for them?
     def has_interaction_support?
@@ -198,7 +198,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   run_limit(credentials = nil) -> num
+    #   run_limit(credentials = nil) -> fixnum
     #
     # The maximum number of runs that this server will allow at any one time.
     # Runs in any state (+Initialized+, +Running+ and +Finished+) are counted

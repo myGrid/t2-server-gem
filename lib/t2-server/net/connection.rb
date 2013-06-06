@@ -98,7 +98,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   GET(uri, type, range, credentials) -> String
+    #   GET(uri, type, range, credentials) -> string
     #
     # HTTP GET a resource at _uri_ of _type_ from the server. If successful
     # the body of the response is returned. A portion of the data can be
@@ -125,7 +125,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   PUT(uri, value, type, credentials) -> bool
+    #   PUT(uri, value, type, credentials) -> true or false
     #   PUT(uri, value, type, credentials) -> URI
     #   PUT(uri, stream, type, credentials) -> URI
     #
@@ -193,7 +193,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   DELETE(uri, credentials) -> bool
+    #   DELETE(uri, credentials) -> true or false
     #
     # Perform an HTTP DELETE on a _uri_ on the server. If successful true
     # is returned.
@@ -212,7 +212,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   OPTIONS(uri, credentials) -> Hash
+    #   OPTIONS(uri, credentials) -> hash
     #
     # Perform the HTTP OPTIONS command on the given _uri_ and return a hash
     # of the headers returned.

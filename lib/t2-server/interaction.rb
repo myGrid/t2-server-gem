@@ -156,7 +156,7 @@ module T2Server
       # :startdoc:
 
       # :call-seq:
-      #   is_reply? -> Boolean
+      #   is_reply? -> true or false
       #
       # Is this notification a reply to another notification?
       def is_reply?
@@ -164,7 +164,7 @@ module T2Server
       end
 
       # :call-seq:
-      #   is_notification? -> Boolean
+      #   is_notification? -> true or false
       #
       # Is this notification a pure notification only? There is no user
       # response to a pure notification, it is for information only.
@@ -179,7 +179,7 @@ module T2Server
       # :startdoc:
 
       # :call-seq:
-      #   has_reply? -> Boolean
+      #   has_reply? -> true or false
       #
       # Does this notification have a reply? This only makes sense for
       # notifications that are not replies or pure notifications.

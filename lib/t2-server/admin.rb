@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # This call provides access to the administrative interface of a Taverna
   # Server instance.
@@ -116,7 +120,7 @@ module T2Server
       # :startdoc:
 
       # :call-seq:
-      #   value -> String
+      #   value -> string
       #   value=
       #
       # Get or set the value held by this resource. This call always queries
@@ -128,7 +132,7 @@ module T2Server
       end
 
       # :call-seq:
-      #   writable? -> bool
+      #   writable? -> true or false
       #
       # Is this resource writable?
       def writable?

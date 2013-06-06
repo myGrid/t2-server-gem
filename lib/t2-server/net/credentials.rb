@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # This class serves as a base class for concrete HTTP credential systems.
   #
@@ -49,7 +53,7 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   to_s -> String
+    #   to_s -> string
     #
     # Return a String representation of these credentials. Just the username
     # is returned; the password is kept hidden.
@@ -61,7 +65,7 @@ module T2Server
     @@to_s = Kernel.instance_method(:to_s)
 
     # :call-seq:
-    #   inspect -> String
+    #   inspect -> string
     #
     # Override the Kernel#inspect method so that the password is not exposed
     # when it is called.

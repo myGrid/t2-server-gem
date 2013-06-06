@@ -30,7 +30,11 @@
 #
 # Author: Robert Haines
 
+# :stopdoc:
+# This comment is needed to stop the above licence from being included in the
+# documentation multiple times. Sigh.
 module T2Server
+# :startdoc:
 
   # This module contains various utility methods that the library uses
   # internally.
@@ -60,7 +64,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   Util.strip_path_slashes(path) -> String
+    #   Util.strip_path_slashes(path) -> string
     #
     # Returns a new String with one leading and one trailing slash
     # removed from the ends of _path_ (if present).
@@ -94,7 +98,7 @@ module T2Server
     end
 
     # :call-seq:
-    #   Util.get_path_leaf_from_uri(uri) -> String
+    #   Util.get_path_leaf_from_uri(uri) -> string
     #
     # Get the final component from the path of a URI. This method returns the
     # empty string (not _nil_ ) if the URI does not have a path.
