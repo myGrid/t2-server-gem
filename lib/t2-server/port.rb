@@ -326,16 +326,6 @@ module T2Server
       @sizes ||= strip(:size)
     end
 
-    # :stopdoc:
-    def error
-      warn "[DEPRECATION] Using #error to get the error message is " +
-      "deprecated and will be removed in version 2.0.0. Please use #value " +
-      "instead."
-      return nil unless depth == 0
-      @structure.value
-    end
-    # :startdoc:
-
     # :call-seq:
     #   total_size -> fixnum
     #
@@ -558,15 +548,6 @@ module T2Server
     def empty?
       @type == EMPTY_TYPE
     end
-
-    # :stopdoc:
-    def error
-      warn "[DEPRECATION] Using #error to get the error message is " +
-        "deprecated and will be removed in version 2.0.0. Please use #value " +
-        "instead."
-      value
-    end
-    # :startdoc:
 
     # Used within #inspect, below to help override the built in version.
     @@to_s = Kernel.instance_method(:to_s)
