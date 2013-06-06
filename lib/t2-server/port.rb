@@ -359,8 +359,8 @@ module T2Server
     # to get a singleton port in a zip file then you can use Run#zip_output
     # which will return all outputs in a single file.
     #
-    # If this method is called on a singleton port it will return 0. Streaming
-    # from it will return nothing.
+    # If this method is called on a singleton port it will return +nil+ and
+    # streaming from it will return nothing.
     #
     # Calling this method with no parameters will simply return a blob of
     # zipped data. Providing a filename will stream the data directly to that
@@ -375,7 +375,7 @@ module T2Server
     #
     # Raises RunStateError if the run has not finished running.
     def zip(param = nil, &block)
-      return 0 if depth == 0
+      return nil if depth == 0
       @run.zip_output(param, name, &block)
     end
 

@@ -107,7 +107,7 @@ class TestRun < Test::Unit::TestCase
 
       # show getting a zip file of a singleton port does nothing
       assert_nothing_raised(T2Server::T2ServerError) do
-        assert_equal(run.output_port("OUT").zip, 0)
+        assert_nil(run.output_port("OUT").zip)
 
         zip_cache = TestCache.new
         run.output_port("OUT").zip(zip_cache)
