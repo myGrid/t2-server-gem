@@ -28,7 +28,9 @@ https://github.com/myGrid/t2-server-gem
 
 == Compatibility
 
-This gem follows the principles of {Semantic Versioning}[http://semver.org/].
+After the release of version 1.0.0 this gem will follow the principles of
+{Semantic Versioning}[http://semver.org/]. Until that point there may be
+breaking changes to the API, although these will be kept to a minimum.
 
 === Taverna Server
 
@@ -59,7 +61,6 @@ This library is known to work with the following versions of Ruby:
 * 1.9.2
 * 1.9.3 *
 * 2.0.0
-* jruby 1.6.4 (in Ruby 1.8 mode)
 
 Those marked with an asterisk (*) are supported and bugs found against them
 will be fixed. Other versions may work but are not tested or supported.
@@ -67,8 +68,8 @@ will be fixed. Other versions may work but are not tested or supported.
 == Usage
 
 There are two entry points for the T2Server API:
-* <tt>T2Server::Run</tt> - Use this for running single jobs on a server.
-* <tt>T2Server::Server</tt> - Use this if you are providing a web interface to
+* T2Server::Run - Use this for running single jobs on a server.
+* T2Server::Server - Use this if you are providing a web interface to
   one or more Taverna 2 Server instances.
 
 In both cases the gem should be initialized by requiring the top level ruby
@@ -89,6 +90,7 @@ Connection configuration settings are passed in to various methods using the
 * <tt>:verify_peer</tt> - Use a CA to verify that the Taverna Server you are connecting to has a valid server certificate and that it is the correct one.
 * <tt>:client_certificate</tt> - A certificate to use for client certificate authentication.
 * <tt>:client_password</tt> - The password to unlock the private key of the client certificate.
+* <tt>:ssl_version</tt> - The TLS/SSL version to use (<tt>:TLSv1</tt>, <tt>:SSLv23</tt> or <tt>:SSLv3</tt>)
 
 And can be set like this for a standard https connection:
 
@@ -104,9 +106,10 @@ automatically.
 For convenience a number of standard sets of parameters have been defined. The
 above example is available as +DefaultConnectionParameters+. Others available
 are:
-* +InsecureSSLConnectionParameters+ - to ignore SSL checks.
+* +InsecureSSLConnectionParameters+ - to ignore SSL checks. <b>Not recommended!</b>
 * +CustomCASSLConnectionParameters+ - for custom (self-signed) CAs.
 * +ClientAuthSSLConnectionParameters+ - for client certificate authentication.
+* +SSL3ConnectionParameters+ - uses SSLv3 as the default transport layer.
 
 See the rdoc for more details on these classes.
 
@@ -140,8 +143,8 @@ credentials:
 The +workflow+ parameter can be the workflow itself, a filename or a File or
 IO object.
 
-An individual run can be deleted with its own <tt>delete</tt> method (see below)
-but all runs on a server can be deleted in one go:
+An individual run can be deleted with its own <tt>delete</tt> method (see
+below) but all runs on a server can be deleted in one go:
 
   server.delete_all_runs(credentials)
 
