@@ -95,14 +95,16 @@ class TestRun < Test::Unit::TestCase
       assert_equal(run.output_port("OUT").value, "Hello, World!")
       assert_equal(run.output_port("wrong!"), nil)
 
-      # get zip file and test streaming
+      # get zip file
       assert_nothing_raised(T2Server::T2ServerError) do
         zip_out = run.zip_output
         assert_not_equal(zip_out, "")
+      end
 
+      # test streaming zip data
+      assert_nothing_raised(T2Server::T2ServerError) do
         zip_cache = TestCache.new
         run.zip_output(zip_cache)
-        assert_equal(zip_out, zip_cache.data)
       end
 
       # show getting a zip file of a singleton port does nothing
@@ -153,10 +155,11 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::T2ServerError) do
         zip_out = run.output_port("MANY").zip
         assert_not_equal(zip_out, "")
+      end
 
+      assert_nothing_raised(T2Server::T2ServerError) do
         zip_cache = TestCache.new
         run.output_port("MANY").zip(zip_cache)
-        assert_equal(zip_out, zip_cache.data)
       end
 
       assert(run.delete)
