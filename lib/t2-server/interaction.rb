@@ -47,25 +47,9 @@ module T2Server
     FEED_NS = "http://ns.taverna.org.uk/2012/interaction"
 
     class Feed
-      def initialize(uri)
-        @uri = uri
-      end
-
-      def entries(since, &block)
-        feed = Atom::Feed.load_feed(@uri)
-        read_time = Time.now
-        feed.each_entry(:paginate => true, :since => since, &block)
-
-        # Return the time that the entries were read.
-        read_time
-      end
-    end
-
-    class Reader
-      def initialize(feed, run)
-        @feed = feed
+      def initialize(run)
         @run = run
-        @last_read = run.start_time
+        @last_read = @run.start_time
         @cache = {:requests => {}, :replies => {}}
       end
 
@@ -80,6 +64,15 @@ module T2Server
 
       private
 
+      def entries(since, &block)
+        feed = Atom::Feed.load_feed(@run.interaction_feed)
+        read_time = Time.now
+        feed.each_entry(:paginate => true, :since => since, &block)
+
+        # Return the time that the entries were read.
+        read_time
+      end
+
       # Poll for all notification types and update the caches.
       #
       # Returns any new notifications, [] otherwise. If you are only
@@ -91,7 +84,7 @@ module T2Server
         requests = @cache[:requests]
         replies = @cache[:replies]
 
-        @last_read = @feed.entries(@last_read) do |entry|
+        @last_read = entries(@last_read) do |entry|
           entry_run_id = entry[FEED_NS, "run-id"]
           next if entry_run_id.empty?
           next unless entry_run_id[0] == @run.identifier

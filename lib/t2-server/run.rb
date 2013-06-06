@@ -78,6 +78,7 @@ module T2Server
       :baclava    => "//nsr:baclava",
       :inputexp   => "//nsr:expected",
       :name       => "//nsr:name",
+      :intfeed    => "//nsr:interaction",
 
       # Port descriptions XPath queries
       :port_in    => "//port:input",
@@ -858,6 +859,10 @@ module T2Server
       @server.read(uri, "application/octet-stream", range, @credentials,
         &block)
     end
+
+    def interaction_feed
+      @server.read(links[:intfeed], "application/atom+xml", @credentials)
+    end
     # :startdoc:
 
     # :call-seq:
@@ -867,9 +872,9 @@ module T2Server
     # empty list if there are none, or if the server does not support the
     # Interaction Service.
     def notifications
-      return [] unless server.has_interaction_support?
+      return [] if links[:intfeed].nil?
 
-      @interaction_reader ||= server.interaction_reader(self)
+      @interaction_reader ||= Interaction::Feed.new(self)
 
       @interaction_reader.new_notifications
     end
@@ -1012,7 +1017,7 @@ module T2Server
       # first parse out the basic stuff
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
-        :securectx, :listeners, :name])
+        :securectx, :listeners, :name, :intfeed])
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)
