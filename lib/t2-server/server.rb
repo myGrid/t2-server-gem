@@ -32,6 +32,7 @@
 
 require 'base64'
 require 'uri'
+require 't2-server/run-cache'
 
 module T2Server
 
@@ -89,8 +90,8 @@ module T2Server
       @interaction_feed = nil
       @links = nil
 
-      # initialize run object cache
-      @runs = {}
+      # Initialize the run object cache.
+      @run_cache = RunCache.new(self)
 
       yield(self) if block_given?
     end
@@ -121,8 +122,8 @@ module T2Server
       uri = initialize_run(workflow, credentials)
       run = Run.create(self, "", credentials, uri)
 
-      # cache newly created run object in the user's run cache
-      user_runs(credentials)[run.id] = run
+      # Add the newly created run object to the user's run cache
+      @run_cache.add_run(run, credentials)
 
       yield(run) if block_given?
       run
@@ -230,8 +231,9 @@ module T2Server
     # only those runs that the provided credentials have permission to delete
     # will be deleted.
     def delete_all_runs(credentials = nil)
-      # first refresh run list
+      # Refresh run list, delete everything, clear the user's run cache.
       runs(credentials).each {|run| run.delete}
+      @run_cache.clear!(credentials)
     end
 
     # :stopdoc:
@@ -417,27 +419,9 @@ module T2Server
         run_list[id] = uri
       end
 
-      # cache run objects in the user's run cache
-      runs_cache = user_runs(credentials)
-
-      # add new runs to the user cache
-      run_list.each_key do |id|
-        if !runs_cache.has_key? id
-          runs_cache[id] = Run.create(self, "", credentials, run_list[id])
-        end
-      end
-
-      # clear out the expired runs
-      if runs_cache.length > run_list.length
-        runs_cache.delete_if {|key, val| !run_list.member? key}
-      end
-
-      runs_cache
+      # Refresh the user's cache and return the runs in it.
+      @run_cache.refresh_all!(run_list, credentials)
     end
 
-    def user_runs(credentials = nil)
-      user = credentials.nil? ? :all : credentials.username
-      @runs[user] ||= {}
-    end
   end
 end
