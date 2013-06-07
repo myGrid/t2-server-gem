@@ -75,6 +75,10 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "run") do |val|
       options[:expiry] = Time.parse(val.chomp)
   end
+  opt.on("-N NAME", "--name=NAME", "Give this run a name. Supported in "\
+    "Taverna Server versions 2.5.0 and up") do |val|
+      options[:name] = val.chomp
+  end
   opt.on("-c URI::USER:PASS", "--credential=URI::USER:PASS",
     "Provide a credential for a secure remote service. NOTE :: between URI "\
     "and credential") do |val|
@@ -145,6 +149,12 @@ begin
   T2Server::Run.create(uri, wkf, creds, conn_params) do |run|
     puts "Created run with identifier: #{run.identifier}"
     puts "Created at #{run.create_time}"
+
+    # set run name
+    if options[:name]
+      run.name = options[:name]
+      puts "Run name set to '#{run.name}'"
+    end
 
     # set run expiry
     if options[:expiry]

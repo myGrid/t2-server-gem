@@ -145,9 +145,9 @@ module T2Server
       response = submit(put, uri, credentials)
 
       case response
-      when Net::HTTPOK
-        # We've set a parameter so we get 200 back from the server. Return
-        # true to indicate success.
+      when Net::HTTPOK, Net::HTTPAccepted
+        # We've either set a parameter or started a run so we get 200 or 202
+        # back from the server, respectively. Return true to indicate success.
         true
       when Net::HTTPCreated
         # We've uploaded data so we get 201 back from the server. Return the
@@ -298,8 +298,8 @@ module T2Server
     def initialize(uri, params = nil)
       super(uri, params)
 
-      if OpenSSL::SSL::SSLContext::METHODS.include? params[:ssl_version]
-        @http.ssl_version = params[:ssl_version]
+      if OpenSSL::SSL::SSLContext::METHODS.include? @params[:ssl_version]
+        @http.ssl_version = @params[:ssl_version]
       end
 
       # Peer verification

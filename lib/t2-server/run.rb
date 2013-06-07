@@ -77,6 +77,7 @@ module T2Server
       :listeners  => "//nsr:listeners",
       :baclava    => "//nsr:baclava",
       :inputexp   => "//nsr:expected",
+      :name       => "//nsr:name",
 
       # Port descriptions XPath queries
       :port_in    => "//port:input",
@@ -180,6 +181,40 @@ module T2Server
     # created the run on the server.
     def owner
       @owner ||= _get_run_owner
+    end
+
+    # :call-seq:
+    #   name -> String
+    #
+    # Get the name of this run.
+    #
+    # Initially this name is derived by Taverna Server from the name
+    # annotation in the workflow file and the time at which the run was
+    # initialized. It can be set with the <tt>name=</tt> method.
+    #
+    # For Taverna Server versions prior to version 2.5.0 this is a no-op and
+    # the empty string is returned for consistency.
+    def name
+      return "" if links[:name].nil?
+      @server.read(links[:name], "text/plain", @credentials)
+    end
+
+    # :call-seq:
+    #   name = new_name -> bool
+    #
+    # Set the name of this run. +true+ is returned upon success. The maximum
+    # length of names supported by the server is 48 characters. Anything
+    # longer than 48 characters will be truncated before upload.
+    #
+    # Initially this name is derived by Taverna Server from the name
+    # annotation in the workflow file and the time at which the run was
+    # initialized.
+    #
+    # For Taverna Server versions prior to version 2.5.0 this is a no-op but
+    # +true+ is still returned for consistency.
+    def name=(name)
+      return true if links[:name].nil?
+      @server.update(links[:name], name[0...48], "text/plain", @credentials)
     end
 
     # :call-seq:
@@ -977,7 +1012,7 @@ module T2Server
       # first parse out the basic stuff
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
-        :securectx, :listeners])
+        :securectx, :listeners, :name])
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)
