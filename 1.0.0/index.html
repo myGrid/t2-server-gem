@@ -178,10 +178,8 @@ href="https://github.com/myGrid/t2-server-gem">github.com/myGrid/t2-server-gem</
 
 <h2 id="label-Compatibility">Compatibility</h2>
 
-<p>After the release of version 1.0.0 this gem will follow the principles of
-<a href="http://semver.org/">Semantic Versioning</a>. Until that point
-there may be breaking changes to the API, although these will be kept to a
-minimum.</p>
+<p>This gem follows the principles of <a href="http://semver.org/">Semantic
+Versioning</a>.</p>
 
 <h3 id="label-Taverna+Server">Taverna Server</h3>
 
@@ -220,6 +218,8 @@ recommended version pairings:</p>
 <p>1.9.3 *</p>
 </li><li>
 <p>2.0.0</p>
+</li><li>
+<p>jruby 1.6.4 (in Ruby 1.8 mode)</p>
 </li></ul>
 
 <p>Those marked with an asterisk (*) are supported and bugs found against them
@@ -230,11 +230,10 @@ will be fixed. Other versions may work but are not tested or supported.</p>
 <p>There are two entry points for the <a href="T2Server.html">T2Server</a>
 API:</p>
 <ul><li>
-<p><a href="T2Server/Run.html">T2Server::Run</a> - Use this for running single
-jobs on a server.</p>
+<p><code>T2Server::Run</code> - Use this for running single jobs on a server.</p>
 </li><li>
-<p><a href="T2Server/Server.html">T2Server::Server</a> - Use this if you are
-providing a web interface to one or more Taverna 2 Server instances.</p>
+<p><code>T2Server::Server</code> - Use this if you are providing a web
+interface to one or more Taverna 2 Server instances.</p>
 </li></ul>
 
 <p>In both cases the gem should be initialized by requiring the top level ruby
@@ -269,9 +268,6 @@ certificate authentication.</p>
 </li><li>
 <p><code>:client_password</code> - The password to unlock the private key of
 the client certificate.</p>
-</li><li>
-<p><code>:ssl_version</code> - The TLS/SSL version to use
-(<code>:TLSv1</code>, <code>:SSLv23</code> or <code>:SSLv3</code>)</p>
 </li></ul>
 
 <p>And can be set like this for a standard https connection:</p>
@@ -289,17 +285,13 @@ paths as these are included automatically.</p>
 The above example is available as <code>DefaultConnectionParameters</code>.
 Others available are:</p>
 <ul><li>
-<p><code>InsecureSSLConnectionParameters</code> - to ignore SSL checks.
-<strong>Not recommended!</strong></p>
+<p><code>InsecureSSLConnectionParameters</code> - to ignore SSL checks.</p>
 </li><li>
 <p><code>CustomCASSLConnectionParameters</code> - for custom (self-signed)
 CAs.</p>
 </li><li>
 <p><code>ClientAuthSSLConnectionParameters</code> - for client certificate
 authentication.</p>
-</li><li>
-<p><code>SSL3ConnectionParameters</code> - uses SSLv3 as the default transport
-layer.</p>
 </li></ul>
 
 <p>See the rdoc for more details on these classes.</p>

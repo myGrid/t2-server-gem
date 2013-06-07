@@ -288,7 +288,7 @@ simply an empty string. It is the complete absence of a value.</p>
 
           
           <div class="method-source-code" id="empty-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 548</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 558</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">empty?</span>
   <span class="ruby-ivar">@type</span> <span class="ruby-operator">==</span> <span class="ruby-constant">EMPTY_TYPE</span>
 <span class="ruby-keyword">end</span></pre>
@@ -323,7 +323,7 @@ simply an empty string. It is the complete absence of a value.</p>
 
           
           <div class="method-source-code" id="error-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 540</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 550</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">error?</span>
   <span class="ruby-ivar">@error</span>
 <span class="ruby-keyword">end</span></pre>
@@ -359,7 +359,7 @@ purposes.</p>
 
           
           <div class="method-source-code" id="inspect-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 560</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 579</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">inspect</span>
   <span class="ruby-identifier">@@to_s</span>.<span class="ruby-identifier">bind</span>(<span class="ruby-keyword">self</span>).<span class="ruby-identifier">call</span>.<span class="ruby-identifier">sub!</span>(<span class="ruby-regexp">%r&gt;\z/</span>) { <span class="ruby-node">&quot; @value=#{value.inspect}, &quot;</span> <span class="ruby-operator">+</span>
     <span class="ruby-node">&quot;@type=#{type.inspect}, @size=#{size.inspect}&gt;&quot;</span>
@@ -407,7 +407,7 @@ and File, for example. No data is cached by this method.</p>
 
           
           <div class="method-source-code" id="stream_value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 509</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 519</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">stream</span>, <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>)
   <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>,
     <span class="ruby-string">&quot;Stream passed in must provide a write method&quot;</span> <span class="ruby-keyword">unless</span>
@@ -491,7 +491,7 @@ range.</p>
 
           
           <div class="method-source-code" id="value-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 480</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 490</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">value</span>(<span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>, &amp;<span class="ruby-identifier">block</span>)
   <span class="ruby-comment"># The following block is a workaround for Taverna Server versions prior</span>
   <span class="ruby-comment"># to 2.4.1 and can be removed when support for those versions is no</span>
@@ -551,7 +551,7 @@ method.</p>
 
           
           <div class="method-source-code" id="write_value_to_file-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 530</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 540</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">write_value_to_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">range</span> = <span class="ruby-value">0</span><span class="ruby-operator">...</span><span class="ruby-ivar">@size</span>)
   <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-string">&quot;wb&quot;</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">file</span><span class="ruby-operator">|</span>
     <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">file</span>, <span class="ruby-identifier">range</span>)
