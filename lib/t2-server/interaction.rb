@@ -49,7 +49,6 @@ module T2Server
     class Feed
       def initialize(run)
         @run = run
-        @last_read = @run.start_time
         @cache = {:requests => {}, :replies => {}}
       end
 
@@ -64,13 +63,9 @@ module T2Server
 
       private
 
-      def entries(since, &block)
+      def entries(&block)
         feed = Atom::Feed.load_feed(@run.interaction_feed)
-        read_time = Time.now
-        feed.each_entry(:paginate => true, :since => since, &block)
-
-        # Return the time that the entries were read.
-        read_time
+        feed.each_entry(:paginate => true, &block)
       end
 
       # Poll for all notification types and update the caches.
@@ -84,11 +79,7 @@ module T2Server
         requests = @cache[:requests]
         replies = @cache[:replies]
 
-        @last_read = entries(@last_read) do |entry|
-          entry_run_id = entry[FEED_NS, "run-id"]
-          next if entry_run_id.empty?
-          next unless entry_run_id[0] == @run.identifier
-
+        entries do |entry|
           # It's worth noting what happens here.
           #
           # This connection to a run's notification feed may not be the only
@@ -102,10 +93,12 @@ module T2Server
           # we may have seen the reply the previous time through the loop.
           note = Notification.new(entry)
           if note.is_reply?
+            next if replies.has_key? note.reply_to
             requests[note.reply_to].has_reply unless requests[note.reply_to].nil?
             replies[note.reply_to] = note
             updates << note if type == :replies || type == :all
           else
+            next if requests.has_key? note.id
             note.has_reply unless replies[note.id].nil?
             requests[note.id] = note
             updates << note if type == :requests || type == :all
