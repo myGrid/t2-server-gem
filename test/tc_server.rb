@@ -40,6 +40,12 @@ class TestServer < Test::Unit::TestCase
     end
   end
 
+  def test_server_connection_no_params
+    assert_nothing_raised(T2Server::ConnectionError) do
+      T2Server::Server.new($uri)
+    end
+  end
+
   def test_interaction_support
     T2Server::Server.new($uri, $conn_params) do |server|
       assert_nothing_raised do
