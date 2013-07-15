@@ -52,13 +52,25 @@ module T2Server
         @cache = {:requests => {}, :replies => {}}
       end
 
-      # Get all new notifications since they were last checked.
+      # Get all new notification requests since they were last checked.
       #
       # Here we really only want new unanswered notifications, but polling
       # returns all requests new to *us*, even those that have been replied to
       # elsewhere. Filter out answered requests here.
-      def new_notifications
+      def new_requests
         poll(:requests).select { |i| !i.has_reply? }
+      end
+
+      # Get all notifications, or all of a particular type.
+      def notifications(type = :all)
+        poll
+
+        case type
+        when :requests, :replies
+          @cache[type].values
+        else
+          @cache[:requests].values + @cache[:replies].values
+        end
       end
 
       private

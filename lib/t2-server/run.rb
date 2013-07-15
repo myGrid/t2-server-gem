@@ -866,17 +866,29 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   notifications -> array
+    #   notifications(type = :new_requests) -> array
     #
-    # Get a list of notifications that are awaiting a response. Returns the
+    # Poll the server for notifications and return them in a list. Returns the
     # empty list if there are none, or if the server does not support the
     # Interaction Service.
-    def notifications
+    #
+    # The +type+ parameter is used to select which types of notifications are
+    # returned as follows:
+    # * <tt>:requests</tt> - Interaction requests.
+    # * <tt>:replies</tt> - Interaction replies.
+    # * <tt>:new_requests</tt> - Interaction requests that are new since the
+    #   last time they were polled (default).
+    # * <tt>:all</tt> - All interaction requests and replies.
+    def notifications(type = :new_requests)
       return [] if links[:intfeed].nil?
 
       @interaction_reader ||= Interaction::Feed.new(self)
 
-      @interaction_reader.new_notifications
+      if type == :new_requests
+        @interaction_reader.new_requests
+      else
+        @interaction_reader.notifications(type)
+      end
     end
 
     private

@@ -209,7 +209,7 @@ begin
     until run.finished?
       sleep(1)
       unless options[:interactions] == :none
-        run.notifications.each do |note|
+        run.notifications(:new_requests).each do |note|
           if options[:interactions] == :open
             Launchy.open note.uri
           else
