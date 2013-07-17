@@ -863,6 +863,18 @@ module T2Server
     def interaction_feed
       @server.read(links[:intfeed], "application/atom+xml", @credentials)
     end
+
+    # This is a slightly unpleasant hack to help proxy notification
+    # communications through a third party.
+    def notifications_uri
+      links[:intfeed] || ""
+    end
+
+    # This is a slightly unpleasant hack to help proxy interaction
+    # communications through a third party.
+    def interactions_uri
+      links[:intdir] || ""
+    end
     # :startdoc:
 
     # :call-seq:
@@ -1030,6 +1042,11 @@ module T2Server
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
         :securectx, :listeners, :name, :intfeed])
+
+      # Interaction working directory, if we have a feed.
+      unless links[:intfeed].nil?
+        links[:intdir] = Util.append_to_uri_path(links[:wdir], "interactions")
+      end
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)
