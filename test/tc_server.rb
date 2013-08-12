@@ -46,14 +46,6 @@ class TestServer < Test::Unit::TestCase
     end
   end
 
-  def test_interaction_support
-    T2Server::Server.new($uri, $conn_params) do |server|
-      assert_nothing_raised do
-        server.has_interaction_support?
-      end
-    end
-  end
-
   def test_run_creation
     T2Server::Server.new($uri, $conn_params) do |server|
       assert_nothing_raised(T2Server::T2ServerError) do

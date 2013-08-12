@@ -52,7 +52,6 @@ module T2Server
       :policy   => "//nsr:policy",
       :run      => "//nsr:run",
       :runs     => "//nsr:runs",
-      :intfeed  => "//nsr:interactionFeed",
 
       # Server policy XPath queries
       :runlimit      => "//nsr:runLimit",
@@ -87,7 +86,6 @@ module T2Server
       @server_doc = nil
       @version = nil
       @version_components = nil
-      @interaction_feed = nil
       @links = nil
 
       # Initialize the run object cache.
@@ -188,14 +186,6 @@ module T2Server
     # The URI of the connection to the remote Taverna Server.
     def uri
       @connection.uri
-    end
-
-    # :call-seq:
-    #   has_interaction_support? -> true or false
-    #
-    # Does this server support interactions and provide a feed for them?
-    def has_interaction_support?
-      !links[:intfeed].nil?
     end
 
     # :call-seq:
@@ -347,12 +337,6 @@ module T2Server
       # *this time* or not.
       true
     end
-
-    def interaction_reader(run)
-      @interaction_feed ||= Interaction::Feed.new(links[:intfeed])
-
-      Interaction::Reader.new(@interaction_feed, run)
-    end
     # :startdoc:
 
     private
@@ -392,14 +376,7 @@ module T2Server
 
     def _get_server_links
       doc = _get_server_description
-      links = get_uris_from_doc(doc, [:runs, :intfeed, :policy])
-
-      ###
-      ### MASSIVE HACK UNTIL TAVERNA SERVER IS FIXED!
-      ###
-      if links[:intfeed]
-        links[:intfeed] = Util.replace_uri_path(uri, links[:intfeed].path)
-      end
+      links = get_uris_from_doc(doc, [:runs, :policy])
 
       doc = xml_document(read(links[:policy], "application/xml"))
       links.merge get_uris_from_doc(doc,

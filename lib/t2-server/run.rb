@@ -78,6 +78,7 @@ module T2Server
       :baclava    => "//nsr:baclava",
       :inputexp   => "//nsr:expected",
       :name       => "//nsr:name",
+      :intfeed    => "//nsr:interaction",
 
       # Port descriptions XPath queries
       :port_in    => "//port:input",
@@ -858,20 +859,48 @@ module T2Server
       @server.read(uri, "application/octet-stream", range, @credentials,
         &block)
     end
+
+    def interaction_feed
+      @server.read(links[:intfeed], "application/atom+xml", @credentials)
+    end
+
+    # This is a slightly unpleasant hack to help proxy notification
+    # communications through a third party.
+    def notifications_uri
+      links[:intfeed] || ""
+    end
+
+    # This is a slightly unpleasant hack to help proxy interaction
+    # communications through a third party.
+    def interactions_uri
+      links[:intdir] || ""
+    end
     # :startdoc:
 
     # :call-seq:
-    #   notifications -> array
+    #   notifications(type = :new_requests) -> array
     #
-    # Get a list of notifications that are awaiting a response. Returns the
+    # Poll the server for notifications and return them in a list. Returns the
     # empty list if there are none, or if the server does not support the
     # Interaction Service.
-    def notifications
-      return [] unless server.has_interaction_support?
+    #
+    # The +type+ parameter is used to select which types of notifications are
+    # returned as follows:
+    # * <tt>:requests</tt> - Interaction requests.
+    # * <tt>:replies</tt> - Interaction replies.
+    # * <tt>:new_requests</tt> - Interaction requests that are new since the
+    #   last time they were polled (default).
+    # * <tt>:all</tt> - All interaction requests and replies.
+    def notifications(type = :new_requests)
+      return [] if links[:intfeed].nil?
 
-      @interaction_reader ||= server.interaction_reader(self)
+      @interaction_reader ||= Interaction::Feed.new(self)
 
-      @interaction_reader.new_notifications
+      if type == :new_requests
+        @interaction_reader.new_requests
+      else
+        @interaction_reader.notifications(type)
+      end
     end
 
     private
@@ -1012,7 +1041,12 @@ module T2Server
       # first parse out the basic stuff
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
-        :securectx, :listeners, :name])
+        :securectx, :listeners, :name, :intfeed])
+
+      # Interaction working directory, if we have a feed.
+      unless links[:intfeed].nil?
+        links[:intdir] = Util.append_to_uri_path(links[:wdir], "interactions")
+      end
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)

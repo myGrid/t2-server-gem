@@ -59,7 +59,6 @@ begin
   T2Server::Server.new(uri, conn_params) do |server|
     puts "     Server: #{server.uri}"
     puts "    Version: #{server.version}"
-    puts "Interaction: #{server.has_interaction_support?}"
     puts "  Run limit: #{server.run_limit(creds)}"
     runs = server.runs(creds)
     puts "No. of runs: #{runs.length}"

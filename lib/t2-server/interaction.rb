@@ -47,38 +47,38 @@ module T2Server
     FEED_NS = "http://ns.taverna.org.uk/2012/interaction"
 
     class Feed
-      def initialize(uri)
-        @uri = uri
-      end
-
-      def entries(since, &block)
-        feed = Atom::Feed.load_feed(@uri)
-        read_time = Time.now
-        feed.each_entry(:paginate => true, :since => since, &block)
-
-        # Return the time that the entries were read.
-        read_time
-      end
-    end
-
-    class Reader
-      def initialize(feed, run)
-        @feed = feed
+      def initialize(run)
         @run = run
-        @last_read = run.start_time
         @cache = {:requests => {}, :replies => {}}
       end
 
-      # Get all new notifications since they were last checked.
+      # Get all new notification requests since they were last checked.
       #
       # Here we really only want new unanswered notifications, but polling
       # returns all requests new to *us*, even those that have been replied to
       # elsewhere. Filter out answered requests here.
-      def new_notifications
+      def new_requests
         poll(:requests).select { |i| !i.has_reply? }
       end
 
+      # Get all notifications, or all of a particular type.
+      def notifications(type = :all)
+        poll
+
+        case type
+        when :requests, :replies
+          @cache[type].values
+        else
+          @cache[:requests].values + @cache[:replies].values
+        end
+      end
+
       private
+
+      def entries(&block)
+        feed = Atom::Feed.load_feed(@run.interaction_feed)
+        feed.each_entry(:paginate => true, &block)
+      end
 
       # Poll for all notification types and update the caches.
       #
@@ -91,11 +91,7 @@ module T2Server
         requests = @cache[:requests]
         replies = @cache[:replies]
 
-        @last_read = @feed.entries(@last_read) do |entry|
-          entry_run_id = entry[FEED_NS, "run-id"]
-          next if entry_run_id.empty?
-          next unless entry_run_id[0] == @run.identifier
-
+        entries do |entry|
           # It's worth noting what happens here.
           #
           # This connection to a run's notification feed may not be the only
@@ -109,10 +105,12 @@ module T2Server
           # we may have seen the reply the previous time through the loop.
           note = Notification.new(entry)
           if note.is_reply?
+            next if replies.has_key? note.reply_to
             requests[note.reply_to].has_reply unless requests[note.reply_to].nil?
             replies[note.reply_to] = note
             updates << note if type == :replies || type == :all
           else
+            next if requests.has_key? note.id
             note.has_reply unless replies[note.id].nil?
             requests[note.id] = note
             updates << note if type == :requests || type == :all
