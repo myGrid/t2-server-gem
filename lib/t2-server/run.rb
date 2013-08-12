@@ -385,6 +385,31 @@ module T2Server
     end
 
     # :call-seq:
+    #   log -> string
+    #   log(filename) -> fixnum
+    #   log(stream) -> fixnum
+    #   log {|chunk| ...}
+    #
+    # Get the internal Taverna Server log from this run.
+    #
+    # Calling this method with no parameters will simply return a text string.
+    # Providing a filename will stream the data directly to that file and
+    # return the number of bytes written. Passing in an object that has a
+    # +write+ method (for example, an instance of File or IO) will stream the
+    # text directly to that object and return the number of bytes that were
+    # streamed. Passing in a block will allow access to the underlying data
+    # stream:
+    #   run.log do |chunk|
+    #     print chunk
+    #   end
+    def log(param = nil, &block)
+      raise ArgumentError,
+        'both a parameter and block given for baclava_output' if param && block
+
+      download_or_stream(param, links[:logfile], "text/plain", &block)
+    end
+
+    # :call-seq:
     #   mkdir(dir) -> true or false
     #
     # Create a directory in the run's working directory on the server. This
@@ -1043,10 +1068,8 @@ module T2Server
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
         :securectx, :listeners, :name, :intfeed])
 
-      # Interaction working directory, if we have a feed.
-      unless links[:intfeed].nil?
-        links[:intdir] = Util.append_to_uri_path(links[:wdir], "interactions")
-      end
+      # Working dir links
+      _get_wdir_links(links)
 
       # get inputs
       inputs = @server.read(links[:inputs], "application/xml",@credentials)
@@ -1071,6 +1094,19 @@ module T2Server
       end
 
       links
+    end
+
+    def _get_wdir_links(links)
+      # Logs directory
+      links[:logdir] = Util.append_to_uri_path(links[:wdir], "logs")
+
+      # Log file
+      links[:logfile] = Util.append_to_uri_path(links[:logdir], "detail.log")
+
+      # Interaction working directory, if we have a feed.
+      unless links[:intfeed].nil?
+        links[:intdir] = Util.append_to_uri_path(links[:wdir], "interactions")
+      end
     end
 
     def download_or_stream(param, uri, type, &block)
