@@ -216,6 +216,18 @@ class TestRun < Test::Unit::TestCase
 
       assert_equal(run.output_port("list_out").value, list_out)
       assert_equal(run.output_port("singleton_out").value, "Hello, World!")
+
+      # Get the log file
+      assert_nothing_raised(T2Server::T2ServerError) do
+        assert_not_equal(run.log, "")
+      end
+
+      assert_nothing_raised(T2Server::T2ServerError) do
+        log_cache = TestCache.new
+        run.log(log_cache)
+        assert_not_equal(log_cache.size, 0)
+      end
+
       assert(run.delete)
     end
   end
