@@ -45,6 +45,8 @@ module T2Server
   # * :client_certificate - File with the client's certificate and private key.
   # * :client_password - The password to unlock the client's private key.
   # * :ssl_version - The TLS/SSL version to use (:TLSv1, :SSLv23 or :SSLv3).
+  # * :open_timeout - The number of seconds to wait while opening a connection.
+  # * :read_timeout - The number of seconds to wait while reading from a connection.
   # All others will be ignored. Any parameters not set will return +nil+ when
   # queried.
   class ConnectionParameters
@@ -55,7 +57,9 @@ module T2Server
       :verify_peer,
       :client_certificate,
       :client_password,
-      :ssl_version
+      :ssl_version,
+      :open_timeout,
+      :read_timeout
     ]
     # :startdoc:
 

@@ -91,6 +91,8 @@ Connection configuration settings are passed in to various methods using the
 * <tt>:client_certificate</tt> - A certificate to use for client certificate authentication.
 * <tt>:client_password</tt> - The password to unlock the private key of the client certificate.
 * <tt>:ssl_version</tt> - The TLS/SSL version to use (<tt>:TLSv1</tt>, <tt>:SSLv23</tt> or <tt>:SSLv3</tt>)
+* <tt>:open_timeout</tt> - The number of seconds to wait while opening a connection.
+* <tt>:read_timeout</tt> - The number of seconds to wait while reading from a connection.
 
 And can be set like this for a standard https connection:
 

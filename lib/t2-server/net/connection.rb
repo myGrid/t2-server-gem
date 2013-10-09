@@ -93,8 +93,12 @@ module T2Server
       @uri = uri
       @params = params || DefaultConnectionParameters.new
 
-      # set up persistent http connection
+      # Open a persistent HTTP connection.
       @http = Net::HTTP::Persistent.new("Taverna_Server_Ruby_Client")
+
+      # Set timeouts if specified.
+      @http.open_timeout = @params[:open_timeout] if @params[:open_timeout]
+      @http.read_timeout = @params[:read_timeout] if @params[:read_timeout]
     end
 
     # :call-seq:
