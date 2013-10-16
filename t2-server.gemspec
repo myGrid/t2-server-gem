@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.version = "1.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Robert Haines"]
-  s.date = "2013-06-07"
+  s.authors = ["Robert Haines", "Finn Bacall"]
+  s.date = "2013-10-16"
   s.description = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
   s.email = ["rhaines@manchester.ac.uk"]
   s.executables = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output", "t2-server-admin"]
@@ -98,7 +98,7 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<launchy>, ["~> 2.2.0"])
       s.add_runtime_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_runtime_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
-      s.add_runtime_dependency(%q<ratom>, ["~> 0.7.2"])
+      s.add_runtime_dependency(%q<ratom>, ["~> 0.8.2"])
       s.add_runtime_dependency(%q<hirb>, [">= 0.4.0"])
     else
       s.add_dependency(%q<rake>, ["~> 0.9.2"])
@@ -109,7 +109,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<launchy>, ["~> 2.2.0"])
       s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
       s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
-      s.add_dependency(%q<ratom>, ["~> 0.7.2"])
+      s.add_dependency(%q<ratom>, ["~> 0.8.2"])
       s.add_dependency(%q<hirb>, [">= 0.4.0"])
     end
   else
@@ -121,7 +121,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<launchy>, ["~> 2.2.0"])
     s.add_dependency(%q<net-http-persistent>, ["~> 2.6"])
     s.add_dependency(%q<taverna-baclava>, ["~> 1.0.0"])
-    s.add_dependency(%q<ratom>, ["~> 0.7.2"])
+    s.add_dependency(%q<ratom>, ["~> 0.8.2"])
     s.add_dependency(%q<hirb>, [">= 0.4.0"])
   end
 end

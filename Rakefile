@@ -46,7 +46,7 @@ task :default => [:test]
 Jeweler::Tasks.new do |s|
   s.name             = "t2-server"
   s.version          = T2Server::Version::STRING
-  s.authors          = ["Robert Haines"]
+  s.authors          = ["Robert Haines", "Finn Bacall"]
   s.email            = ["rhaines@manchester.ac.uk"]
   s.homepage         = "http://www.taverna.org.uk/"
   s.platform         = Gem::Platform::RUBY
@@ -69,7 +69,7 @@ Jeweler::Tasks.new do |s|
   s.add_development_dependency('launchy', '~> 2.2.0')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
-  s.add_runtime_dependency('ratom', '~> 0.7.2')
+  s.add_runtime_dependency('ratom', '~> 0.8.2')
   s.add_runtime_dependency('hirb', '>= 0.4.0')
 end
 
