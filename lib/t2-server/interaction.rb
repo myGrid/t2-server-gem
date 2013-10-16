@@ -76,7 +76,7 @@ module T2Server
       private
 
       def entries(&block)
-        feed = Atom::Feed.load_feed(@run.interaction_feed)
+        feed = Atom::Feed.load_feed(@run.read_notification_feed)
         feed.each_entry(:paginate => true, &block)
       end
 
@@ -103,7 +103,7 @@ module T2Server
           # request before setting the request to "replied". And if we see a
           # request we should check to see if we have a reply for it already;
           # we may have seen the reply the previous time through the loop.
-          note = Notification.new(entry)
+          note = Notification.new(entry, @run)
           if note.is_reply?
             next if replies.has_key? note.reply_to
             requests[note.reply_to].has_reply unless requests[note.reply_to].nil?
@@ -137,7 +137,8 @@ module T2Server
       attr_reader :uri
 
       # :stopdoc:
-      def initialize(entry)
+      def initialize(entry, run)
+        @run = run
         reply_to = entry[FEED_NS, "in-reply-to"]
         if reply_to.empty?
           @is_reply = false
@@ -183,6 +184,27 @@ module T2Server
       # notifications that are not replies or pure notifications.
       def has_reply?
         @has_reply
+      end
+
+      # :call-seq:
+      #   reply(status, data)
+      #
+      # Given a status and some data this method uploads the data and
+      # publishes am interaction reply on the run's notification feed.
+      def reply(status, data)
+        data_name = "interaction#{@id}OutputData.json"
+
+        notification = Atom::Entry.new do |entry|
+          entry.title = "A reply to #{@id}"
+          entry.id = "#{@id}reply"
+          entry.content = ""
+          entry[FEED_NS, "run-id"] << @run.id
+          entry[FEED_NS, "in-reply-to"] << @id
+          entry[FEED_NS, "result-status"] << status
+        end.to_xml
+
+        @run.write_interaction_data(data_name, data)
+        @run.write_notification(notification)
       end
 
       private

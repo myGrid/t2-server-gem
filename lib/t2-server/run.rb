@@ -78,7 +78,7 @@ module T2Server
       :baclava    => "//nsr:baclava",
       :inputexp   => "//nsr:expected",
       :name       => "//nsr:name",
-      :intfeed    => "//nsr:interaction",
+      :feed       => "//nsr:interaction",
 
       # Port descriptions XPath queries
       :port_in    => "//port:input",
@@ -885,20 +885,32 @@ module T2Server
         &block)
     end
 
-    def interaction_feed
-      @server.read(links[:intfeed], "application/atom+xml", @credentials)
+    # Read from the run's notification feed.
+    def read_notification_feed
+      @server.read(links[:feed], "application/atom+xml", @credentials)
+    end
+
+    # Write to the run's notification feed.
+    def write_notification(entry)
+      @server.create(links[:feed], entry, "application/atom+xml", @credentials)
+    end
+
+    # Write a file to the interactions directory for this run on the server.
+    def write_interaction_data(name, data)
+      uri = Util.append_to_uri_path(links[:feeddir], name)
+      @server.update(uri, data, "*/*", @credentials)
     end
 
     # This is a slightly unpleasant hack to help proxy notification
     # communications through a third party.
     def notifications_uri
-      links[:intfeed] || ""
+      links[:feed] || ""
     end
 
     # This is a slightly unpleasant hack to help proxy interaction
     # communications through a third party.
     def interactions_uri
-      links[:intdir] || ""
+      links[:feeddir] || ""
     end
     # :startdoc:
 
@@ -917,7 +929,7 @@ module T2Server
     #   last time they were polled (default).
     # * <tt>:all</tt> - All interaction requests and replies.
     def notifications(type = :new_requests)
-      return [] if links[:intfeed].nil?
+      return [] if links[:feed].nil?
 
       @interaction_reader ||= Interaction::Feed.new(self)
 
@@ -1066,7 +1078,7 @@ module T2Server
       # first parse out the basic stuff
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
-        :securectx, :listeners, :name, :intfeed])
+        :securectx, :listeners, :name, :feed])
 
       # Working dir links
       _get_wdir_links(links)
@@ -1104,8 +1116,8 @@ module T2Server
       links[:logfile] = Util.append_to_uri_path(links[:logdir], "detail.log")
 
       # Interaction working directory, if we have a feed.
-      unless links[:intfeed].nil?
-        links[:intdir] = Util.append_to_uri_path(links[:wdir], "interactions")
+      unless links[:feed].nil?
+        links[:feeddir] = Util.append_to_uri_path(links[:wdir], "interactions")
       end
     end
 
