@@ -136,6 +136,10 @@ module T2Server
       # The URI of the notification page to show.
       attr_reader :uri
 
+      # The serial number of a notification. This identifies a notification
+      # within a workflow.
+      attr_reader :serial
+
       # :stopdoc:
       def initialize(entry, run)
         @run = run
@@ -146,6 +150,7 @@ module T2Server
           @id = entry[FEED_NS, "id"][0]
           @is_notification = entry[FEED_NS, "progress"].empty? ? false : true
           @uri = get_link(entry.links)
+          @serial = "#{entry[FEED_NS, 'path'][0]}-#{entry[FEED_NS, 'count'][0]}"
         else
           @is_reply = true
           @is_notification = false
