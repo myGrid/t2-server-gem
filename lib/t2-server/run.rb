@@ -895,6 +895,12 @@ module T2Server
       @server.create(links[:feed], entry, "application/atom+xml", @credentials)
     end
 
+    # Read a file from the interactions directory for this run on the server.
+    def read_interaction_data(name)
+      uri = Util.append_to_uri_path(links[:feeddir], name)
+      @server.read(uri, "*/*", @credentials)
+    end
+
     # Write a file to the interactions directory for this run on the server.
     def write_interaction_data(name, data)
       uri = Util.append_to_uri_path(links[:feeddir], name)

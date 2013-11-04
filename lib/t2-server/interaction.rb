@@ -192,6 +192,21 @@ module T2Server
       end
 
       # :call-seq:
+      #   input_data -> data
+      #
+      # Get the input data associated with this notification. Returns an empty
+      # string if this notification is a reply.
+      def input_data
+        return "" if is_reply?
+
+        data_name = "interaction#{@id}InputData.json"
+        @run.read_interaction_data(data_name)
+      rescue AttributeNotFoundError
+        # It does not matter if the file doesn't exist.
+        ""
+      end
+
+      # :call-seq:
       #   reply(status, data)
       #
       # Given a status and some data this method uploads the data and
