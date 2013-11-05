@@ -210,7 +210,7 @@ module T2Server
       #   reply(status, data)
       #
       # Given a status and some data this method uploads the data and
-      # publishes am interaction reply on the run's notification feed.
+      # publishes an interaction reply on the run's notification feed.
       def reply(status, data)
         data_name = "interaction#{@id}OutputData.json"
 

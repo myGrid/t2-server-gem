@@ -349,7 +349,7 @@ module T2Server
     # Wait (block) for this run to finish. How often (in seconds) the run is
     # tested for completion can be specified with check_interval.
     #
-    # Raises RunStateError if the run is still in the :initialised state.
+    # Raises RunStateError if the run is still in the :initialized state.
     def wait(interval = 1)
       state = status
       raise RunStateError.new(state, :running) if state == :initialized
