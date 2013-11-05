@@ -34,7 +34,7 @@ breaking changes to the API, although these will be kept to a minimum.
 
 === Taverna Server
 
-From version 0.9.0 this library is compatible with Taverna Server 2.3 onwards.
+Versions 0.9.x of this library are compatible with Taverna Server 2.3 and 2.4.
 It is not compatible with any earlier version of Taverna Server due to breaking
 changes in its REST interface.
 
@@ -44,20 +44,20 @@ at any time.
 
 Version 1.0.0 of this library saw the removal of older methods that were
 previously deprecated. If your code no longer works with this version then
-please re-test it with version 0.9.2 and check for deprecation messages before
+please re-test it with version 0.9.3 and check for deprecation messages before
 reporting bugs.
 
 We strongly encourage all users to upgrade to the current version of Taverna
 Server, but if that is not possible right now then these are the recommended
 version pairings:
 * pre Taverna Server 2.3, use version 0.6.1 of the gem
-* 2.3, use version 0.9.2
+* 2.3, use version 0.9.3
 * 2.4 and up, use version 1.0.0
 
 === Ruby
 
 This library is known to work with the following versions of Ruby:
-* 1.8.7 *
+* 1.8.7
 * 1.9.2
 * 1.9.3 *
 * 2.0.0
@@ -239,8 +239,14 @@ output can be downloaded into memory or saved directly to a file.
   output = run.baclava_output                    # download to memory
   run.baclava_output("/path/to/output.baclava")  # save to a file
 
+The log from Taverna Server can be downloaded in a similar way to zip files or
+Baclava documents.
+
+  log = run.log                # download to memory
+  run.log("/path/to/log.txt")  # save to a file
+
 When downloading outputs the underlying stream can be accessed by supplying a
-block to the value, zip_output or baclava_output methods:
+block to the value, zip_output, baclava_output or log methods:
 
   run.output_port("port_name").value do |data|
     print data
