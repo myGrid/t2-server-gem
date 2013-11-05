@@ -47,7 +47,7 @@ Jeweler::Tasks.new do |s|
   s.name             = "t2-server"
   s.version          = T2Server::Version::STRING
   s.authors          = ["Robert Haines", "Finn Bacall"]
-  s.email            = ["rhaines@manchester.ac.uk"]
+  s.email            = ["support@mygrid.org.uk"]
   s.homepage         = "http://www.taverna.org.uk/"
   s.platform         = Gem::Platform::RUBY
   s.summary          = "Support for interacting with Taverna 2 Server."

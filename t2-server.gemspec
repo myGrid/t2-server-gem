@@ -9,9 +9,9 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Robert Haines", "Finn Bacall"]
-  s.date = "2013-10-16"
+  s.date = "2013-11-05"
   s.description = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
-  s.email = ["rhaines@manchester.ac.uk"]
+  s.email = ["support@mygrid.org.uk"]
   s.executables = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output", "t2-server-admin"]
   s.extra_rdoc_files = [
     "CHANGES.rdoc",
