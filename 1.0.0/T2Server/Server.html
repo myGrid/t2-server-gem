@@ -90,8 +90,6 @@
     
     <li><a href="#method-i-delete_all_runs">#delete_all_runs</a>
     
-    <li><a href="#method-i-has_interaction_support-3F">#has_interaction_support?</a>
-    
     <li><a href="#method-i-run">#run</a>
     
     <li><a href="#method-i-run_limit">#run_limit</a>
@@ -257,7 +255,7 @@ they will be used to set up the network connection to the server.</p>
 
           
           <div class="method-source-code" id="new-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 77</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 76</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">uri</span>, <span class="ruby-identifier">params</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-comment"># Convert strings to URIs and strip any credentials that have been given</span>
   <span class="ruby-comment"># in the URI. We do not want to store credentials in this class.</span>
@@ -271,7 +269,6 @@ they will be used to set up the network connection to the server.</p>
   <span class="ruby-ivar">@server_doc</span> = <span class="ruby-keyword">nil</span>
   <span class="ruby-ivar">@version</span> = <span class="ruby-keyword">nil</span>
   <span class="ruby-ivar">@version_components</span> = <span class="ruby-keyword">nil</span>
-  <span class="ruby-ivar">@interaction_feed</span> = <span class="ruby-keyword">nil</span>
   <span class="ruby-ivar">@links</span> = <span class="ruby-keyword">nil</span>
 
   <span class="ruby-comment"># Initialize the run object cache.</span>
@@ -325,7 +322,7 @@ administrator if a block is given.</p>
 
           
           <div class="method-source-code" id="administrator-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 105</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 103</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">administrator</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-identifier">admin</span> = <span class="ruby-constant">Administrator</span>.<span class="ruby-identifier">new</span>(<span class="ruby-keyword">self</span>, <span class="ruby-identifier">credentials</span>)
 
@@ -375,7 +372,7 @@ a File or IO object.</p>
 
           
           <div class="method-source-code" id="create_run-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 121</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 119</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">create_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-identifier">uri</span> = <span class="ruby-identifier">initialize_run</span>(<span class="ruby-identifier">workflow</span>, <span class="ruby-identifier">credentials</span>)
   <span class="ruby-identifier">run</span> = <span class="ruby-constant">Run</span>.<span class="ruby-identifier">create</span>(<span class="ruby-keyword">self</span>, <span class="ruby-string">&quot;&quot;</span>, <span class="ruby-identifier">credentials</span>, <span class="ruby-identifier">uri</span>)
@@ -419,7 +416,7 @@ will be deleted.</p>
 
           
           <div class="method-source-code" id="delete_all_runs-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 233</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 223</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">delete_all_runs</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-comment"># Refresh run list, delete everything, clear the user's run cache.</span>
   <span class="ruby-identifier">runs</span>(<span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">each</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">run</span><span class="ruby-operator">|</span> <span class="ruby-identifier">run</span>.<span class="ruby-identifier">delete</span>}
@@ -433,41 +430,6 @@ will be deleted.</p>
 
         
       </div><!-- delete_all_runs-method -->
-
-    
-      <div id="method-i-has_interaction_support-3F" class="method-detail ">
-        
-        
-        <div class="method-heading">
-          <span class="method-callseq">
-            has_interaction_support? &rarr; true or false
-          </span>
-          
-          <span class="method-click-advice">click to toggle source</span>
-          
-        </div>
-        
-        
-
-        <div class="method-description">
-          
-          <p>Does this server support interactions and provide a feed for them?</p>
-          
-
-          
-          <div class="method-source-code" id="has_interaction_support-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 197</span>
-<span class="ruby-keyword">def</span> <span class="ruby-identifier">has_interaction_support?</span>
-  <span class="ruby-operator">!</span><span class="ruby-identifier">links</span>[<span class="ruby-value">:intfeed</span>].<span class="ruby-identifier">nil?</span>
-<span class="ruby-keyword">end</span></pre>
-          </div><!-- has_interaction_support-3F-source -->
-          
-        </div>
-
-        
-
-        
-      </div><!-- has_interaction_support-3F-method -->
 
     
       <div id="method-i-run" class="method-detail ">
@@ -491,7 +453,7 @@ will be deleted.</p>
 
           
           <div class="method-source-code" id="run-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 223</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 213</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">run</span>(<span class="ruby-identifier">identifier</span>, <span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-identifier">get_runs</span>(<span class="ruby-identifier">credentials</span>)[<span class="ruby-identifier">identifier</span>]
 <span class="ruby-keyword">end</span></pre>
@@ -528,7 +490,7 @@ Runs in any state (<code>Initialized</code>, <code>Running</code> and
 
           
           <div class="method-source-code" id="run_limit-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 207</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 197</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">run_limit</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-identifier">read</span>(<span class="ruby-identifier">links</span>[<span class="ruby-value">:runlimit</span>], <span class="ruby-string">&quot;text/plain&quot;</span>, <span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">to_i</span>
 <span class="ruby-keyword">end</span></pre>
@@ -563,7 +525,7 @@ Runs in any state (<code>Initialized</code>, <code>Running</code> and
 
           
           <div class="method-source-code" id="runs-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 215</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 205</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">runs</span>(<span class="ruby-identifier">credentials</span> = <span class="ruby-keyword">nil</span>)
   <span class="ruby-identifier">get_runs</span>(<span class="ruby-identifier">credentials</span>).<span class="ruby-identifier">values</span>
 <span class="ruby-keyword">end</span></pre>
@@ -599,7 +561,7 @@ href="Server.html">Server</a>.</p>
 
           
           <div class="method-source-code" id="uri-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 189</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 187</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">uri</span>
   <span class="ruby-ivar">@connection</span>.<span class="ruby-identifier">uri</span>
 <span class="ruby-keyword">end</span></pre>
@@ -634,7 +596,7 @@ href="Server.html">Server</a>.</p>
 
           
           <div class="method-source-code" id="version-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 167</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 165</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">version</span>
   <span class="ruby-ivar">@version</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">_get_version</span>
 <span class="ruby-keyword">end</span></pre>
@@ -670,7 +632,7 @@ Taverna <a href="Server.html">Server</a>.</p>
 
           
           <div class="method-source-code" id="version_components-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 176</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/server.rb, line 174</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">version_components</span>
   <span class="ruby-keyword">if</span> <span class="ruby-ivar">@version_components</span>.<span class="ruby-identifier">nil?</span>
     <span class="ruby-identifier">comps</span> = <span class="ruby-identifier">version</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;.&quot;</span>)

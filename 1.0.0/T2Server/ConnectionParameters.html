@@ -189,6 +189,11 @@ stored.</p>
 <p>:client_password - The password to unlock the client’s private key.</p>
 </li><li>
 <p>:ssl_version - The TLS/SSL version to use (:TLSv1, :SSLv23 or :SSLv3).</p>
+</li><li>
+<p>:open_timeout - The number of seconds to wait while opening a connection.</p>
+</li><li>
+<p>:read_timeout - The number of seconds to wait while reading from a
+connection.</p>
 </li></ul>
 
 <p>All others will be ignored. Any parameters not set will return
@@ -230,7 +235,7 @@ stored.</p>
 
           
           <div class="method-source-code" id="new-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/net/parameters.rb, line 66</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/net/parameters.rb, line 70</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>
   <span class="ruby-ivar">@params</span> = {}
 <span class="ruby-keyword">end</span></pre>
@@ -272,7 +277,7 @@ description.</p>
 
           
           <div class="method-source-code" id="5B-5D-3D-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/net/parameters.rb, line 75</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/net/parameters.rb, line 79</span>
 <span class="ruby-keyword">def</span> <span class="ruby-operator">[]=</span>(<span class="ruby-identifier">param</span>, <span class="ruby-identifier">value</span>)
   <span class="ruby-ivar">@params</span>[<span class="ruby-identifier">param</span>] = <span class="ruby-identifier">value</span> <span class="ruby-keyword">if</span> <span class="ruby-constant">ALLOWED_PARAMS</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">param</span>)
 <span class="ruby-keyword">end</span></pre>

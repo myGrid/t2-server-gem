@@ -72,9 +72,13 @@
     
     <li><a href="#method-i-has_reply-3F">#has_reply?</a>
     
+    <li><a href="#method-i-input_data">#input_data</a>
+    
     <li><a href="#method-i-is_notification-3F">#is_notification?</a>
     
     <li><a href="#method-i-is_reply-3F">#is_reply?</a>
+    
+    <li><a href="#method-i-reply">#reply</a>
     
   </ul>
 </nav>
@@ -221,6 +225,20 @@ notification that it is a reply to.</p>
         </div>
       </div>
       
+      <div id="attribute-i-serial" class="method-detail">
+        <div class="method-heading attribute-method-heading">
+          <span class="method-name">serial</span><span
+            class="attribute-access-type">[R]</span>
+        </div>
+
+        <div class="method-description">
+        
+        <p>The serial number of a notification. This identifies a notification within
+a workflow.</p>
+        
+        </div>
+      </div>
+      
       <div id="attribute-i-uri" class="method-detail">
         <div class="method-heading attribute-method-heading">
           <span class="method-name">uri</span><span
@@ -265,7 +283,7 @@ notifications that are not replies or pure notifications.</p>
 
           
           <div class="method-source-code" id="has_reply-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 186</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 190</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">has_reply?</span>
   <span class="ruby-ivar">@has_reply</span>
 <span class="ruby-keyword">end</span></pre>
@@ -277,6 +295,48 @@ notifications that are not replies or pure notifications.</p>
 
         
       </div><!-- has_reply-3F-method -->
+
+    
+      <div id="method-i-input_data" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            input_data &rarr; data
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get the input data associated with this notification. Returns an empty
+string if this notification is a reply.</p>
+          
+
+          
+          <div class="method-source-code" id="input_data-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 199</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">input_data</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-string">&quot;&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">is_reply?</span>
+
+  <span class="ruby-identifier">data_name</span> = <span class="ruby-node">&quot;interaction#{@id}InputData.json&quot;</span>
+  <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">read_interaction_data</span>(<span class="ruby-identifier">data_name</span>)
+<span class="ruby-keyword">rescue</span> <span class="ruby-constant">AttributeNotFoundError</span>
+  <span class="ruby-comment"># It does not matter if the file doesn't exist.</span>
+  <span class="ruby-string">&quot;&quot;</span>
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- input_data-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- input_data-method -->
 
     
       <div id="method-i-is_notification-3F" class="method-detail ">
@@ -301,7 +361,7 @@ a pure notification, it is for information only.</p>
 
           
           <div class="method-source-code" id="is_notification-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 171</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 175</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_notification?</span>
   <span class="ruby-ivar">@is_notification</span>
 <span class="ruby-keyword">end</span></pre>
@@ -336,7 +396,7 @@ a pure notification, it is for information only.</p>
 
           
           <div class="method-source-code" id="is_reply-3F-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 162</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 166</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">is_reply?</span>
   <span class="ruby-ivar">@is_reply</span>
 <span class="ruby-keyword">end</span></pre>
@@ -348,6 +408,54 @@ a pure notification, it is for information only.</p>
 
         
       </div><!-- is_reply-3F-method -->
+
+    
+      <div id="method-i-reply" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            reply(status, data)
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Given a status and some data this method uploads the data and publishes an
+interaction reply on the run’s notification feed.</p>
+          
+
+          
+          <div class="method-source-code" id="reply-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/interaction.rb, line 214</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">reply</span>(<span class="ruby-identifier">status</span>, <span class="ruby-identifier">data</span>)
+  <span class="ruby-identifier">data_name</span> = <span class="ruby-node">&quot;interaction#{@id}OutputData.json&quot;</span>
+
+  <span class="ruby-identifier">notification</span> = <span class="ruby-constant">Atom</span><span class="ruby-operator">::</span><span class="ruby-constant">Entry</span>.<span class="ruby-identifier">new</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">entry</span><span class="ruby-operator">|</span>
+    <span class="ruby-identifier">entry</span>.<span class="ruby-identifier">title</span> = <span class="ruby-node">&quot;A reply to #{@id}&quot;</span>
+    <span class="ruby-identifier">entry</span>.<span class="ruby-identifier">id</span> = <span class="ruby-node">&quot;#{@id}reply&quot;</span>
+    <span class="ruby-identifier">entry</span>.<span class="ruby-identifier">content</span> = <span class="ruby-string">&quot;&quot;</span>
+    <span class="ruby-identifier">entry</span>[<span class="ruby-constant">FEED_NS</span>, <span class="ruby-string">&quot;run-id&quot;</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">id</span>
+    <span class="ruby-identifier">entry</span>[<span class="ruby-constant">FEED_NS</span>, <span class="ruby-string">&quot;in-reply-to&quot;</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-ivar">@id</span>
+    <span class="ruby-identifier">entry</span>[<span class="ruby-constant">FEED_NS</span>, <span class="ruby-string">&quot;result-status&quot;</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">status</span>
+  <span class="ruby-keyword">end</span>.<span class="ruby-identifier">to_xml</span>
+
+  <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">write_interaction_data</span>(<span class="ruby-identifier">data_name</span>, <span class="ruby-identifier">data</span>)
+  <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">write_notification</span>(<span class="ruby-identifier">notification</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div><!-- reply-source -->
+          
+        </div>
+
+        
+
+        
+      </div><!-- reply-method -->
 
     
     </section><!-- public-instance-method-details -->

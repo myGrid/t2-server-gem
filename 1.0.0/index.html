@@ -178,14 +178,16 @@ href="https://github.com/myGrid/t2-server-gem">github.com/myGrid/t2-server-gem</
 
 <h2 id="label-Compatibility">Compatibility</h2>
 
-<p>This gem follows the principles of <a href="http://semver.org/">Semantic
-Versioning</a>.</p>
+<p>After the release of version 1.0.0 this gem will follow the principles of
+<a href="http://semver.org/">Semantic Versioning</a>. Until that point
+there may be breaking changes to the API, although these will be kept to a
+minimum.</p>
 
 <h3 id="label-Taverna+Server">Taverna Server</h3>
 
-<p>From version 0.9.0 this library is compatible with Taverna Server 2.3
-onwards. It is not compatible with any earlier version of Taverna Server
-due to breaking changes in its REST interface.</p>
+<p>Versions 0.9.x of this library are compatible with Taverna Server 2.3 and
+2.4. It is not compatible with any earlier version of Taverna Server due to
+breaking changes in its REST interface.</p>
 
 <p>From version 1.0.0 this library is not guaranteed to be compatible with
 Taverna Server 2.3. It might work but it is not supported, and may stop
@@ -193,7 +195,7 @@ working at any time.</p>
 
 <p>Version 1.0.0 of this library saw the removal of older methods that were
 previously deprecated. If your code no longer works with this version then
-please re-test it with version 0.9.2 and check for deprecation messages
+please re-test it with version 0.9.3 and check for deprecation messages
 before reporting bugs.</p>
 
 <p>We strongly encourage all users to upgrade to the current version of
@@ -202,7 +204,7 @@ recommended version pairings:</p>
 <ul><li>
 <p>pre Taverna Server 2.3, use version 0.6.1 of the gem</p>
 </li><li>
-<p>2.3, use version 0.9.2</p>
+<p>2.3, use version 0.9.3</p>
 </li><li>
 <p>2.4 and up, use version 1.0.0</p>
 </li></ul>
@@ -211,15 +213,13 @@ recommended version pairings:</p>
 
 <p>This library is known to work with the following versions of Ruby:</p>
 <ul><li>
-<p>1.8.7 *</p>
+<p>1.8.7</p>
 </li><li>
 <p>1.9.2</p>
 </li><li>
 <p>1.9.3 *</p>
 </li><li>
 <p>2.0.0</p>
-</li><li>
-<p>jruby 1.6.4 (in Ruby 1.8 mode)</p>
 </li></ul>
 
 <p>Those marked with an asterisk (*) are supported and bugs found against them
@@ -230,10 +230,11 @@ will be fixed. Other versions may work but are not tested or supported.</p>
 <p>There are two entry points for the <a href="T2Server.html">T2Server</a>
 API:</p>
 <ul><li>
-<p><code>T2Server::Run</code> - Use this for running single jobs on a server.</p>
+<p><a href="T2Server/Run.html">T2Server::Run</a> - Use this for running single
+jobs on a server.</p>
 </li><li>
-<p><code>T2Server::Server</code> - Use this if you are providing a web
-interface to one or more Taverna 2 Server instances.</p>
+<p><a href="T2Server/Server.html">T2Server::Server</a> - Use this if you are
+providing a web interface to one or more Taverna 2 Server instances.</p>
 </li></ul>
 
 <p>In both cases the gem should be initialized by requiring the top level ruby
@@ -268,6 +269,15 @@ certificate authentication.</p>
 </li><li>
 <p><code>:client_password</code> - The password to unlock the private key of
 the client certificate.</p>
+</li><li>
+<p><code>:ssl_version</code> - The TLS/SSL version to use
+(<code>:TLSv1</code>, <code>:SSLv23</code> or <code>:SSLv3</code>)</p>
+</li><li>
+<p><code>:open_timeout</code> - The number of seconds to wait while opening a
+connection.</p>
+</li><li>
+<p><code>:read_timeout</code> - The number of seconds to wait while reading
+from a connection.</p>
 </li></ul>
 
 <p>And can be set like this for a standard https connection:</p>
@@ -285,13 +295,17 @@ paths as these are included automatically.</p>
 The above example is available as <code>DefaultConnectionParameters</code>.
 Others available are:</p>
 <ul><li>
-<p><code>InsecureSSLConnectionParameters</code> - to ignore SSL checks.</p>
+<p><code>InsecureSSLConnectionParameters</code> - to ignore SSL checks.
+<strong>Not recommended!</strong></p>
 </li><li>
 <p><code>CustomCASSLConnectionParameters</code> - for custom (self-signed)
 CAs.</p>
 </li><li>
 <p><code>ClientAuthSSLConnectionParameters</code> - for client certificate
 authentication.</p>
+</li><li>
+<p><code>SSL3ConnectionParameters</code> - uses SSLv3 as the default transport
+layer.</p>
 </li></ul>
 
 <p>See the rdoc for more details on these classes.</p>
@@ -426,8 +440,14 @@ run.wait
 output = run.baclava_output                    # download to memory
 run.baclava_output(&quot;/path/to/output.baclava&quot;)  # save to a file</pre>
 
+<p>The log from Taverna Server can be downloaded in a similar way to zip files
+or Baclava documents.</p>
+
+<pre>log = run.log                # download to memory
+run.log(&quot;/path/to/log.txt&quot;)  # save to a file</pre>
+
 <p>When downloading outputs the underlying stream can be accessed by supplying
-a block to the value, zip_output or baclava_output methods:</p>
+a block to the value, zip_output, baclava_output or log methods:</p>
 
 <pre class="ruby"><span class="ruby-identifier">run</span>.<span class="ruby-identifier">output_port</span>(<span class="ruby-string">&quot;port_name&quot;</span>).<span class="ruby-identifier">value</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">data</span><span class="ruby-operator">|</span>
   <span class="ruby-identifier">print</span> <span class="ruby-identifier">data</span>

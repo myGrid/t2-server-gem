@@ -516,7 +516,7 @@ on the list item directly:</p>
 
           
           <div class="method-source-code" id="total_size-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 343</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 333</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">total_size</span>
   <span class="ruby-keyword">return</span> <span class="ruby-ivar">@total_size</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@total_size</span>
   <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Array</span>
@@ -765,8 +765,8 @@ file then you can use <a
 href="Run.html#method-i-zip_output">T2Server::Run#zip_output</a> which will
 return all outputs in a single file.</p>
 
-<p>If this method is called on a singleton port it will return 0. Streaming
-from it will return nothing.</p>
+<p>If this method is called on a singleton port it will return
+<code>nil</code> and streaming from it will return nothing.</p>
 
 <p>Calling this method with no parameters will simply return a blob of zipped
 data. Providing a filename will stream the data directly to that file and
@@ -787,9 +787,9 @@ finished running.</p>
 
           
           <div class="method-source-code" id="zip-source">
-            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 381</span>
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 371</span>
 <span class="ruby-keyword">def</span> <span class="ruby-identifier">zip</span>(<span class="ruby-identifier">param</span> = <span class="ruby-keyword">nil</span>, &amp;<span class="ruby-identifier">block</span>)
-  <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">nil</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
   <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">zip_output</span>(<span class="ruby-identifier">param</span>, <span class="ruby-identifier">name</span>, &amp;<span class="ruby-identifier">block</span>)
 <span class="ruby-keyword">end</span></pre>
           </div><!-- zip-source -->

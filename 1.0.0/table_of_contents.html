@@ -31,6 +31,7 @@
     <img class="toc-toggle" src="images/transparent.png" alt="" title="toggle headings">
     <ul class="initially-hidden">
       <li><a href="CHANGES_rdoc.html#label-Changes+log+for+the+T2+Ruby+Gem">Changes log for the T2 Ruby Gem</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+1.0.0">Version 1.0.0</a>
       <li><a href="CHANGES_rdoc.html#label-Version+0.9.3">Version 0.9.3</a>
       <li><a href="CHANGES_rdoc.html#label-Version+0.9.2">Version 0.9.2</a>
       <li><a href="CHANGES_rdoc.html#label-Version+0.9.1">Version 0.9.1</a>
@@ -194,7 +195,7 @@
   
     <li class="method"><a href="T2Server/Util.html#method-c-get_path_leaf_from_uri">::get_path_leaf_from_uri &mdash; T2Server::Util</a>
   
-    <li class="method"><a href="T2Server/AccessForbiddenError.html#method-c-new">::new &mdash; T2Server::AccessForbiddenError</a>
+    <li class="method"><a href="T2Server/ServerAtCapacityError.html#method-c-new">::new &mdash; T2Server::ServerAtCapacityError</a>
   
     <li class="method"><a href="T2Server/CustomCASSLConnectionParameters.html#method-c-new">::new &mdash; T2Server::CustomCASSLConnectionParameters</a>
   
@@ -216,6 +217,8 @@
   
     <li class="method"><a href="T2Server/AuthorizationError.html#method-c-new">::new &mdash; T2Server::AuthorizationError</a>
   
+    <li class="method"><a href="T2Server/AccessForbiddenError.html#method-c-new">::new &mdash; T2Server::AccessForbiddenError</a>
+  
     <li class="method"><a href="T2Server/ConnectionError.html#method-c-new">::new &mdash; T2Server::ConnectionError</a>
   
     <li class="method"><a href="T2Server/UnexpectedServerResponse.html#method-c-new">::new &mdash; T2Server::UnexpectedServerResponse</a>
@@ -223,8 +226,6 @@
     <li class="method"><a href="T2Server/RunNotFoundError.html#method-c-new">::new &mdash; T2Server::RunNotFoundError</a>
   
     <li class="method"><a href="T2Server/AttributeNotFoundError.html#method-c-new">::new &mdash; T2Server::AttributeNotFoundError</a>
-  
-    <li class="method"><a href="T2Server/ServerAtCapacityError.html#method-c-new">::new &mdash; T2Server::ServerAtCapacityError</a>
   
     <li class="method"><a href="T2Server/Server.html#method-c-new">::new &mdash; T2Server::Server</a>
   
@@ -306,11 +307,11 @@
   
     <li class="method"><a href="T2Server/Run.html#method-i-grant_permission">#grant_permission &mdash; T2Server::Run</a>
   
-    <li class="method"><a href="T2Server/Server.html#method-i-has_interaction_support-3F">#has_interaction_support? &mdash; T2Server::Server</a>
-  
     <li class="method"><a href="T2Server/Interaction/Notification.html#method-i-has_reply-3F">#has_reply? &mdash; T2Server::Interaction::Notification</a>
   
     <li class="method"><a href="T2Server/Run.html#method-i-initialized-3F">#initialized? &mdash; T2Server::Run</a>
+  
+    <li class="method"><a href="T2Server/Interaction/Notification.html#method-i-input_data">#input_data &mdash; T2Server::Interaction::Notification</a>
   
     <li class="method"><a href="T2Server/Run.html#method-i-input_port">#input_port &mdash; T2Server::Run</a>
   
@@ -323,6 +324,8 @@
     <li class="method"><a href="T2Server/Interaction/Notification.html#method-i-is_notification-3F">#is_notification? &mdash; T2Server::Interaction::Notification</a>
   
     <li class="method"><a href="T2Server/Interaction/Notification.html#method-i-is_reply-3F">#is_reply? &mdash; T2Server::Interaction::Notification</a>
+  
+    <li class="method"><a href="T2Server/Run.html#method-i-log">#log &mdash; T2Server::Run</a>
   
     <li class="method"><a href="T2Server/Run.html#method-i-mkdir">#mkdir &mdash; T2Server::Run</a>
   
@@ -350,6 +353,8 @@
   
     <li class="method"><a href="T2Server/InputPort.html#method-i-remote_file-3F">#remote_file? &mdash; T2Server::InputPort</a>
   
+    <li class="method"><a href="T2Server/Interaction/Notification.html#method-i-reply">#reply &mdash; T2Server::Interaction::Notification</a>
+  
     <li class="method"><a href="T2Server/Run.html#method-i-request_baclava_output">#request_baclava_output &mdash; T2Server::Run</a>
   
     <li class="method"><a href="T2Server/Run.html#method-i-revoke_permission">#revoke_permission &mdash; T2Server::Run</a>
@@ -376,9 +381,9 @@
   
     <li class="method"><a href="T2Server/Run.html#method-i-stdout">#stdout &mdash; T2Server::Run</a>
   
-    <li class="method"><a href="T2Server/PortValue.html#method-i-stream_value">#stream_value &mdash; T2Server::PortValue</a>
-  
     <li class="method"><a href="T2Server/OutputPort.html#method-i-stream_value">#stream_value &mdash; T2Server::OutputPort</a>
+  
+    <li class="method"><a href="T2Server/PortValue.html#method-i-stream_value">#stream_value &mdash; T2Server::PortValue</a>
   
     <li class="method"><a href="T2Server/HttpCredentials.html#method-i-to_s">#to_s &mdash; T2Server::HttpCredentials</a>
   
@@ -394,11 +399,11 @@
   
     <li class="method"><a href="T2Server/Server.html#method-i-uri">#uri &mdash; T2Server::Server</a>
   
-    <li class="method"><a href="T2Server/OutputPort.html#method-i-value">#value &mdash; T2Server::OutputPort</a>
+    <li class="method"><a href="T2Server/Administrator/AdminResource.html#method-i-value">#value &mdash; T2Server::Administrator::AdminResource</a>
   
     <li class="method"><a href="T2Server/PortValue.html#method-i-value">#value &mdash; T2Server::PortValue</a>
   
-    <li class="method"><a href="T2Server/Administrator/AdminResource.html#method-i-value">#value &mdash; T2Server::Administrator::AdminResource</a>
+    <li class="method"><a href="T2Server/OutputPort.html#method-i-value">#value &mdash; T2Server::OutputPort</a>
   
     <li class="method"><a href="T2Server/InputPort.html#method-i-value-3D">#value= &mdash; T2Server::InputPort</a>
   
@@ -412,9 +417,9 @@
   
     <li class="method"><a href="T2Server/Administrator/AdminResource.html#method-i-writable-3F">#writable? &mdash; T2Server::Administrator::AdminResource</a>
   
-    <li class="method"><a href="T2Server/OutputPort.html#method-i-write_value_to_file">#write_value_to_file &mdash; T2Server::OutputPort</a>
-  
     <li class="method"><a href="T2Server/PortValue.html#method-i-write_value_to_file">#write_value_to_file &mdash; T2Server::PortValue</a>
+  
+    <li class="method"><a href="T2Server/OutputPort.html#method-i-write_value_to_file">#write_value_to_file &mdash; T2Server::OutputPort</a>
   
     <li class="method"><a href="T2Server/OutputPort.html#method-i-zip">#zip &mdash; T2Server::OutputPort</a>
   
