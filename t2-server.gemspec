@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "t2-server"
-  s.version = "1.0.0"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Robert Haines", "Finn Bacall"]
-  s.date = "2013-11-05"
+  s.date = "2013-11-06"
   s.description = "This gem provides access to the Taverna 2 Server REST interface from Ruby."
   s.email = ["support@mygrid.org.uk"]
   s.executables = ["t2-delete-runs", "t2-run-workflow", "t2-server-info", "t2-get-output", "t2-server-admin"]
