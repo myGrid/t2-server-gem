@@ -94,7 +94,7 @@ begin
   server.administrator(creds) do |admin|
     # list and exit?
     if options[:list]
-      puts (Hirb::Helpers::ObjectTable.render admin.resources.values,
+      puts Hirb::Helpers::ObjectTable.render(admin.resources.values,
               :fields=>[:name, :writable?],
               :headers=>{:name => 'Resource name', :writable? => 'Access'},
               :filters=>{:writable? => :access},
