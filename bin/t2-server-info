@@ -33,7 +33,6 @@
 
 require 'rubygems'
 require 't2-server-cli'
-require 'hirb'
 
 include T2Server::CLI
 
@@ -48,6 +47,17 @@ conn_params, creds = register_options("Usage: t2-server-info [options] " +
   opt.on("-l", "--list", "List details for the runs on this server. Repeat "\
     "(e.g. -ll or -lll) to increase the amount of detail shown.") do
     options[:list] += 1
+  end
+end
+
+if options[:list] > 0
+  begin
+    require 'hirb'
+  rescue LoadError
+    puts "\n****\nTo tabulate run information in your terminal the hirb gem "\
+      "must be installed:\n\n$ gem install hirb\n\nRun information will not "\
+      "be shown this time, sorry.\n****\n\n"
+    options[:list] = 0
   end
 end
 

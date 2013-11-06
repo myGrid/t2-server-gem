@@ -67,10 +67,10 @@ Jeweler::Tasks.new do |s|
   s.add_development_dependency('rdoc', '>= 3.9.4')
   s.add_development_dependency('jeweler', '~> 1.8.3')
   s.add_development_dependency('launchy', '~> 2.2.0')
+  s.add_development_dependency('hirb', '~> 0.7.1')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
   s.add_runtime_dependency('ratom', '~> 0.8.2')
-  s.add_runtime_dependency('hirb', '>= 0.4.0')
 end
 
 # This test task does not use the standard Rake::TestTask class as we need to

@@ -33,7 +33,6 @@
 
 require 'rubygems'
 require 't2-server-cli'
-require 'hirb'
 
 include T2Server::CLI
 
@@ -55,6 +54,17 @@ conn_params, creds = register_options("Usage: t2-server-admin [options] " +
     "Set admin resource RESOURCE to VALUE.") do |val|
       resource, value = val.chomp.split(':', 2)
       set[resource.downcase] = value
+  end
+end
+
+if options[:list]
+  begin
+    require 'hirb'
+  rescue LoadError
+    puts "\n****\nTo list administrative resources in your terminal the "\
+      "hirb gem must be installed:\n\n$ gem install hirb\n\nThis information "\
+      "will not be shown this time, sorry.\n****\n\n"
+    options[:list] = false
   end
 end
 
