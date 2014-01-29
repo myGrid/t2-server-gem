@@ -54,14 +54,14 @@ Gem::Specification.new do |s|
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
-  s.add_development_dependency('rake', '~> 0.9.2')
+  s.add_development_dependency('rake', '~> 10.0')
   s.add_development_dependency('bundler', '~> 1.5')
-  s.add_development_dependency('libxml-ruby', '>= 1.1.4')
-  s.add_development_dependency('nokogiri', '>= 1.5.0')
-  s.add_development_dependency('rdoc', '>= 3.9.4')
-  s.add_development_dependency('launchy', '~> 2.2.0')
-  s.add_development_dependency('hirb', '~> 0.7.1')
+  s.add_development_dependency('libxml-ruby', '~> 2.6.0')
+  s.add_development_dependency('nokogiri', '~> 1.5')
+  s.add_development_dependency('rdoc', '~> 4.1')
+  s.add_development_dependency('launchy', '~> 2.2')
+  s.add_development_dependency('hirb', '~> 0.7')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
-  s.add_runtime_dependency('taverna-baclava', '~> 1.0.0')
-  s.add_runtime_dependency('ratom', '~> 0.8.2')
+  s.add_runtime_dependency('taverna-baclava', '~> 1.0')
+  s.add_runtime_dependency('ratom', '~> 0.8')
 end
