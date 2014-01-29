@@ -53,8 +53,8 @@ if ARGV.size != 0
 
   # Clear the commandline arguments so that we don't confuse runit.
   ARGV.clear
-else
-  # get a server address to test - 30 second timeout
+elsif !ENV["TRAVIS"]
+  # get a server address to test if not in travis - 30 second timeout
   print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
     "these tests will fully load the server and then delete all the runs " +
     "that it has permission to do so - if you are not using security ALL " +
@@ -62,16 +62,16 @@ else
   $stdout.flush
   if select([$stdin], [], [], 30)
     address = $stdin.gets.chomp
-  else
-    puts "\nSkipping tests that require a Taverna 2 Server instance..."
-    address = ""
   end
 end
+
+# If address is still unset then set it to something.
+address ||= ""
 
 # the testcases to run
 require 'tc_util'
 require 'tc_params'
-if address != ""
+unless address == ""
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
   # override creds if passed in on the command line
