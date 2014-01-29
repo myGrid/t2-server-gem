@@ -30,24 +30,17 @@
 #
 # Author: Robert Haines
 
-require 't2-server/version'
-require 't2-server/util'
-require 't2-server/xml/xml'
-require 't2-server/exceptions'
-require 't2-server/net/credentials'
-require 't2-server/net/connection'
-require 't2-server/net/parameters'
-require 't2-server/port'
-require 't2-server/interaction'
-require 't2-server/server'
-require 't2-server/run'
-require 't2-server/admin'
+require 'yaml'
 
-# This is a Ruby library to interface with the Taverna 2 Server REST API.
-#
-# There are two API entry points:
-# * T2Server::Run - Use this for running single jobs on a server.
-# * T2Server::Server - Use this if you are providing a web interface to a
-#   Taverna 2 Server instance.
 module T2Server
+
+  # Library version information.
+  module Version
+    # Version information in a Hash
+    INFO = YAML.load_file(File.join(File.dirname(__FILE__), "..", "..",
+      "version.yml"))
+
+    # Version number as a String
+    STRING = [:major, :minor, :patch].map {|d| INFO[d]}.compact.join('.')
+  end
 end
