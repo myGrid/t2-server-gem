@@ -5,3 +5,4 @@ html/
 .project
 .idea
 .rvmrc
+Gemfile.lock

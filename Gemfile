@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014 The University of Manchester, UK.
+# Copyright (c) 2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,44 +30,6 @@
 #
 # Author: Robert Haines
 
-require "bundler/gem_tasks"
-require "rake/testtask"
-require "rdoc/task"
+source "https://rubygems.org"
 
-task :default => [:test]
-
-# This test task does not use the standard Rake::TestTask class as we need to
-# be able to supply an argument to the test. This is so that the test can be
-# run with a server address from a CI server. The equivalent TestTask would be
-# something like this:
-#
-#  Rake::TestTask.new do |t|
-#    t.libs << "test"
-#    t.test_files = FileList['test/ts_t2server.rb']
-#    t.verbose = true
-#  end
-task :test, [:server, :user1, :user2] do |t, args|
-  args.with_defaults(:server => "", :user1 => "", :user2 => "")
-  RakeFileUtils.verbose(true) do
-    server_arg = ""
-    if args[:server] != ""
-      server_arg = "#{args[:server]} #{args[:user1]} #{args[:user2]}"
-    end
-    ruby "-I\"lib:test\" test/ts_t2server.rb " + server_arg
-  end
-end
-
-RDoc::Task.new do |r|
-  r.main = "README.rdoc"
-  lib = Dir.glob("lib/**/*.rb").delete_if do |item|
-    item.include?("/xml/") or
-    item.include?("run-cache.rb") or
-    item.include?("connection.rb") or
-    item.include?("t2-server-cli.rb")
-  end
-  r.rdoc_files.include("README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc", lib)
-  r.options << "-t Taverna 2 Server Ruby Interface Library version " +
-    "#{T2Server::Version::STRING}"
-  r.options << "-N"
-  r.options << "--tab-width=2"
-end
+gemspec
