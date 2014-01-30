@@ -57,7 +57,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rake', '~> 10.0')
   s.add_development_dependency('bundler', '~> 1.5')
   s.add_development_dependency('libxml-ruby', '~> 2.6.0')
-  s.add_development_dependency('nokogiri', '~> 1.5')
   s.add_development_dependency('rdoc', '~> 4.1')
   s.add_development_dependency('launchy', '~> 2.2')
   s.add_development_dependency('hirb', '~> 0.7')

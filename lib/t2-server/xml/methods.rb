@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -82,6 +82,19 @@ module T2Server
       def xpath_attr(doc, expr, attribute)
         node = xpath_first(doc, expr)
         node.nil? ? nil : node.attributes[attribute]
+      end
+
+      # Given a list of xpath keys, extract the href URIs from those elements.
+      def get_uris_from_doc(doc, keys)
+        cache = XPathCache.instance
+        uris = {}
+
+        keys.each do |key|
+          uri = xpath_attr(doc, cache[key], "href")
+          uris[key] = uri.nil? ? nil : URI.parse(uri)
+        end
+
+        uris
       end
     end
   end

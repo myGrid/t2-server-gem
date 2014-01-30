@@ -32,7 +32,7 @@
 
 require 't2-server/version'
 require 't2-server/util'
-require 't2-server/xml/xml'
+require 't2-server/xml'
 require 't2-server/exceptions'
 require 't2-server/net/credentials'
 require 't2-server/net/connection'

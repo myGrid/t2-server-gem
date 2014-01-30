@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,34 +30,8 @@
 #
 # Author: Robert Haines
 
-begin
-  require 't2-server/xml/libxml'
-rescue LoadError
-  begin
-    require 't2-server/xml/nokogiri'
-  rescue LoadError
-    require 't2-server/xml/rexml'
-  end
-end
-require 't2-server/xml/xpath_cache'
-
 module T2Server
   module XML
-
-    module Namespaces
-      SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
-      REST   = SERVER + "rest/"
-      ADMIN  = SERVER + "admin/"
-      PORT   = "http://ns.taverna.org.uk/2010/port/"
-
-      MAP    = {
-        "nss"  => Namespaces::SERVER,
-        "nsr"  => Namespaces::REST,
-        "nsa"  => Namespaces::ADMIN,
-        "port" => Namespaces::PORT
-      }
-    end
-
     module Fragments
       WORKFLOW      = "<t2s:workflow xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
                         "  %s\n</t2s:workflow>"
@@ -99,24 +73,6 @@ module T2Server
                         "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n"\
                         "  <t2s:fileType>%s</t2s:fileType>\n"\
                         "</t2s:trustedIdentity>"
-    end
-
-    module Methods
-      # Most methods in this module are provided by the particular XML
-      # library selected above.
-
-      # Given a list of xpath keys, extract the href URIs from those elements.
-      def get_uris_from_doc(doc, keys)
-        cache = XPathCache.instance
-        uris = {}
-
-        keys.each do |key|
-          uri = xpath_attr(doc, cache[key], "href")
-          uris[key] = uri.nil? ? nil : URI.parse(uri)
-        end
-
-        uris
-      end
     end
   end
 end
