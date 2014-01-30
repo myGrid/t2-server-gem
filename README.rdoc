@@ -57,7 +57,6 @@ version pairings:
 === Ruby
 
 This library is known to work with the following versions of Ruby:
-* 1.8.7
 * 1.9.2 +
 * 1.9.3 +*
 * 2.0.0 +*
@@ -67,6 +66,9 @@ them will be fixed. Other versions may work but are not tested or supported.
 
 Those marked with a plus (+) are tested in
 {https://travis-ci.org/myGrid/t2-server-gem}[Travis].
+
+Ruby 1.8.7 is no longer supported as it reached its end of life at the end of
+June 2013.
 
 == Usage
 
