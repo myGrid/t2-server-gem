@@ -29,9 +29,7 @@ https://github.com/myGrid/t2-server-gem
 
 == Compatibility
 
-After the release of version 1.0.0 this gem will follow the principles of
-{Semantic Versioning}[http://semver.org/]. Until that point there may be
-breaking changes to the API, although these will be kept to a minimum.
+This gem uses {Semantic Versioning}[http://semver.org/].
 
 === Taverna Server
 
