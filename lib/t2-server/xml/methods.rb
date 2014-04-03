@@ -30,7 +30,6 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
 require 'libxml'
 
 module T2Server

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,7 +30,6 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
 require 'atom'
 require 'uri'
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,7 +32,6 @@
 
 require 'base64'
 require 'time'
-require 'rubygems'
 require 'taverna-baclava'
 
 module T2Server

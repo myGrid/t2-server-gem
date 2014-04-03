@@ -30,6 +30,9 @@
 #
 # Author: Robert Haines
 
+require 'rubygems'
+require 'bundler/setup'
+
 require 't2-server/version'
 require 't2-server/util'
 require 't2-server/xml'
