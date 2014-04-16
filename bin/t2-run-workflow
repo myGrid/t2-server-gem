@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -90,9 +90,9 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
     "port values") do |val|
       inputs[:baclava] = val
   end
-  opt.on("-o", "--baclava-out=BACLAVA", "Return outputs in baclava format."\
+  opt.on("-o [FILE]", "--baclava-out", "Return outputs in baclava format."\
     " A filename may be specified or 'out.xml' is used") do |val|
-      options[:baclava_out] = val.chomp
+      options[:baclava_out] = (val || "out.xml").chomp
   end
   opt.on("-n", "--no-wait", "Do not wait for workflow to finish, return "\
     "once it has started running") do |val|
