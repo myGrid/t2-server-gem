@@ -86,6 +86,12 @@ conn_params, creds = register_options("Usage: t2-run-workflow [options] "\
       user, pass = cred.chomp.split(':', 2)
       options[:screds] << [uri, user, pass]
   end
+  opt.on("-P [FILE]", "--provenance", "Generate provenance for the run and "\
+    "save it to a file. A filename may be specified or 'provenance.zip' "\
+    "will be used. Getting outputs in baclava format overrides this "\
+    "option.") do |val|
+      options[:provenance] = (val || "provenance.zip").chomp
+    end
   opt.on("-b BACLAVA", "--baclava-in=BACLAVA", "Set baclava file for input "\
     "port values") do |val|
       inputs[:baclava] = val
@@ -189,6 +195,9 @@ begin
       run.add_password_credential(list[0], list[1], list[2])
     end
 
+    # generate provenance?
+    run.generate_provenance if options[:provenance]
+
     # output baclava?
     run.request_baclava_output if options[:baclava_out]
 
@@ -250,6 +259,12 @@ begin
           end
         end
       end
+
+      if options[:provenance]
+        run.provenance(options[:provenance])
+        puts "Provenance file written to '#{options[:provenance]}'"
+      end
+
     end
 
     # delete run?

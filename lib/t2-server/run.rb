@@ -78,6 +78,8 @@ module T2Server
       :inputexp   => "//nsr:expected",
       :name       => "//nsr:name",
       :feed       => "//nsr:interaction",
+      :gen_prov   => "//nsr:generate-provenance",
+      :run_bundle => "//nsr:run-bundle",
 
       # Port descriptions XPath queries
       :port_in    => "//port:input",
@@ -109,6 +111,7 @@ module T2Server
       @workflow = ""
       @baclava_in = false
       @baclava_out = false
+      @provenance = false
 
       @credentials = credentials
 
@@ -527,6 +530,62 @@ module T2Server
 
       baclava_uri = Util.append_to_uri_path(links[:wdir], BACLAVA_FILE)
       download_or_stream(param, baclava_uri, "*/*", &block)
+    end
+
+    # :call-seq:
+    #   generate_provenance -> true or false
+    #
+    # Turn on the generation of provenance for this run. This must be done
+    # before the run is started. Once the run has completed provenance can be
+    # retrieved with Run#provenance.
+    #
+    # Requesting baclava output for a run will override this setting.
+    def generate_provenance
+      return if @provenance
+      state = status
+      raise RunStateError.new(state, :initialized) if state != :initialized
+
+      @provenance = @server.update(links[:gen_prov], "true", "text/plain",
+        @credentials)
+    end
+
+    # :call-seq:
+    #   generate_provenance? -> true or false
+    #
+    # Has this run been set to generate provenance output?
+    def generate_provenance?
+      @provenance
+    end
+
+    # :call-seq:
+    #   provenance -> binary blob
+    #   provenance(filename) -> fixnum
+    #   provenance(stream) -> fixnum
+    #   provenance {|chunk| ...}
+    #
+    # Get the provenance of this run from the server in zip format.
+    #
+    # Calling this method with no parameters will simply return a blob of
+    # zipped data. Providing a filename will stream the data directly to that
+    # file and return the number of bytes written. Passing in an object that
+    # has a +write+ method (for example, an instance of File or IO) will
+    # stream the data directly to that object and return the number of bytes
+    # that were streamed. Passing in a block will allow access to the
+    # underlying data stream:
+    #   run.provenance do |chunk|
+    #     print chunk
+    #   end
+    #
+    # Raises RunStateError if the run has not finished running.
+    def provenance(param = nil, &block)
+      raise ArgumentError,
+        'both a parameter and block given for provenance' if param && block
+
+      state = status
+      raise RunStateError.new(state, :finished) if state != :finished
+
+      raise AccessForbiddenError.new("provenance") unless @provenance
+      download_or_stream(param, links[:run_bundle], "*/*", &block)
     end
 
     # :call-seq:
@@ -1083,7 +1142,7 @@ module T2Server
       # first parse out the basic stuff
       links = get_uris_from_doc(doc, [:expiry, :workflow, :status,
         :createtime, :starttime, :finishtime, :wdir, :inputs, :output,
-        :securectx, :listeners, :name, :feed])
+        :securectx, :listeners, :name, :feed, :gen_prov, :run_bundle])
 
       # Working dir links
       _get_wdir_links(links)
