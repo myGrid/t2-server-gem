@@ -249,7 +249,8 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test run with file input. Also pass workflow as File object.
+  # Test run with file input. Also pass workflow as File object. Also test
+  # toggling provenance on and then off again.
   def test_run_file_input
     workflow = File.open($wkf_pass, "r")
 
@@ -257,12 +258,20 @@ class TestRun < Test::Unit::TestCase
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.input_port("IN").file = $file_input
+        run.generate_provenance
+        run.generate_provenance(false)
       end
+      refute run.generate_provenance?
 
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_port("OUT").value, "Hello, World!")
+
+      assert_raise(T2Server::AccessForbiddenError) do
+        run.provenance
+      end
+
       assert(run.delete)
     end
 
@@ -343,7 +352,7 @@ class TestRun < Test::Unit::TestCase
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         file = run.upload_file($file_strs)
         run.input_port("IN").remote_file = file
-        run.generate_provenance
+        run.generate_provenance(true)
       end
       assert(run.generate_provenance?)
 

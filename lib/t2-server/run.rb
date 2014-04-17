@@ -533,20 +533,24 @@ module T2Server
     end
 
     # :call-seq:
-    #   generate_provenance -> true or false
+    #   generate_provenance(toggle = true) -> true or false
     #
-    # Turn on the generation of provenance for this run. This must be done
-    # before the run is started. Once the run has completed provenance can be
-    # retrieved with Run#provenance.
+    # Toggle the generation of provenance for this run on or off. This must be
+    # done before the run is started. Once the run has completed provenance
+    # can be retrieved with Run#provenance.
     #
     # Requesting baclava output for a run will override this setting.
-    def generate_provenance
-      return if @provenance
+    def generate_provenance(toggle = true)
+      return @provenance if @provenance == toggle
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 
-      @provenance = @server.update(links[:gen_prov], "true", "text/plain",
+      result = @server.update(links[:gen_prov], toggle.to_s, "text/plain",
         @credentials)
+
+      # If changing the setting worked then return the new setting, otherwise
+      # return the old one.
+      @provenance = result ? toggle : @provenance
     end
 
     # :call-seq:
