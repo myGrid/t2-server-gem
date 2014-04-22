@@ -124,10 +124,8 @@ class TestRun < Test::Unit::TestCase
   # Test run naming. This is different for different versions of server.
   def test_run_naming
     T2Server::Server.new($uri, $conn_params) do |server|
-      vc = server.version_components
-      v250plus = vc[0] > 2 || (vc[0] == 2 && vc[1] >= 5)
       server.create_run($wkf_no_io, $creds) do |run|
-        if v250plus
+        if server.version >= "2.5.0"
           # Read initial name.
           assert(run.name.length > 0)
           assert_equal("Workflow1", run.name[0...9])

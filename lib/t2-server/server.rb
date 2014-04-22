@@ -148,8 +148,7 @@ module T2Server
       create(links[:runs], workflow, "application/vnd.taverna.t2flow+xml",
         credentials)
     rescue AccessForbiddenError => afe
-      (major, minor, patch) = version_components
-      if minor == 4 && patch >= 2
+      if version >= "2.4.2"
         # Need to re-raise as it's a real error for later versions.
         raise afe
       else
@@ -159,9 +158,9 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   version -> string
+    #   version -> Server::Version
     #
-    # The version string of the remote Taverna Server.
+    # An object representing the version of the remote Taverna Server.
     def version
       @version ||= _get_version
     end
@@ -172,12 +171,11 @@ module T2Server
     # An array of the major, minor and patch version components of the remote
     # Taverna Server.
     def version_components
-      if @version_components.nil?
-        comps = version.split(".")
-        @version_components = comps.map { |v| v.to_i }
-      end
+      warn "[DEPRECATED] Server#version_components is deprecated and will "\
+        "be removed in the next major release. Please use "\
+        "Server#version.to_a instead."
 
-      @version_components
+      version.to_a
     end
 
     # :call-seq:
@@ -233,12 +231,10 @@ module T2Server
     end
 
     def upload_file(filename, uri, remote_name, credentials = nil)
-      # Different Server versions support different upload methods
-      (major, minor, patch) = version_components
-
       remote_name = filename.split('/')[-1] if remote_name == ""
 
-      if minor == 4 && patch >= 1
+      # Different Server versions support different upload methods
+      if version >= "2.4.1"
         File.open(filename, "rb") do |file|
           upload_data(file, remote_name, uri, credentials)
         end
@@ -250,9 +246,7 @@ module T2Server
 
     def upload_data(data, remote_name, uri, credentials = nil)
       # Different Server versions support different upload methods
-      (major, minor, patch) = version_components
-
-      if minor == 4 && patch >= 1
+      if version >= "2.4.1"
         put_uri = Util.append_to_uri_path(uri, remote_name)
         @connection.PUT(put_uri, data, "application/octet-stream", credentials)
       else
