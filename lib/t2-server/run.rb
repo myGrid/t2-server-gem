@@ -541,7 +541,7 @@ module T2Server
     #
     # Requesting baclava output for a run will override this setting.
     def generate_provenance(toggle = true)
-      return @provenance if @provenance == toggle
+      return @provenance if @provenance == toggle || links[:gen_prov].nil?
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
 

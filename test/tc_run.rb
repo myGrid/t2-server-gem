@@ -284,7 +284,12 @@ class TestRun < Test::Unit::TestCase
         run.baclava_input = $list_input
         run.generate_provenance
       end
-      assert(run.generate_provenance?)
+
+      if run.server.version >= "2.5.3"
+        assert(run.generate_provenance?)
+      else
+        refute(run.generate_provenance?)
+      end
 
       assert_equal(run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
       assert_equal(run.input_port("MANY_IN").depth, 3)
@@ -307,9 +312,16 @@ class TestRun < Test::Unit::TestCase
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
 
       # Grab provenance
-      assert_nothing_raised(T2Server::AccessForbiddenError) do
-        prov = run.provenance
-        assert_not_equal(prov, "")
+      if run.server.version >= "2.5.3"
+        assert_nothing_raised(T2Server::AccessForbiddenError) do
+          prov = run.provenance
+          assert_not_equal(prov, "")
+        end
+      else
+        assert_raise(T2Server::AccessForbiddenError) do
+          prov = run.provenance
+          assert_equal(prov, "")
+        end
       end
 
       assert(run.delete)
@@ -352,7 +364,12 @@ class TestRun < Test::Unit::TestCase
         run.input_port("IN").remote_file = file
         run.generate_provenance(true)
       end
-      assert(run.generate_provenance?)
+
+      if run.server.version >= "2.5.3"
+        assert(run.generate_provenance?)
+      else
+        refute(run.generate_provenance?)
+      end
 
       run.start
       run.wait
@@ -395,11 +412,20 @@ class TestRun < Test::Unit::TestCase
       assert_equal(out.length, 100)
 
       # test streaming provenance data
-      assert_nothing_raised(T2Server::AccessForbiddenError) do
-        prov_cache = TestCache.new
-        prov_size = run.zip_output(prov_cache)
-        assert_not_equal(prov_size, 0)
-        assert_not_equal(prov_cache.data, "")
+      if run.server.version >= "2.5.3"
+        assert_nothing_raised(T2Server::AccessForbiddenError) do
+          prov_cache = TestCache.new
+          prov_size = run.provenance(prov_cache)
+          assert_not_equal(prov_size, 0)
+          assert_not_equal(prov_cache.data, "")
+        end
+      else
+        assert_raise(T2Server::AccessForbiddenError) do
+          prov_cache = TestCache.new
+          prov_size = run.provenance(prov_cache)
+          assert_equal(prov_size, 0)
+          assert_equal(prov_cache.data, "")
+        end
       end
 
       assert(run.delete)
