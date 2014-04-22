@@ -386,19 +386,42 @@ module T2Server
       @run_cache.refresh_all!(run_list, credentials)
     end
 
-    # :stopdoc:
+    # Represents a Taverna Server version number in a way that can be compared
+    # to other version numbers or strings.
+    #
+    # This class mixes in Comparable so all the usual comparison operators
+    # work as expected.
     class Version
       include Comparable
 
+      # :call-seq:
+      #   new(version_string) -> Version
+      #
+      # Create a new Version object from the supplied version string.
       def initialize(version)
         @string = parse_version(version)
         @array = []
       end
 
+      # :call-seq:
+      #   to_s -> String
+      #
+      # Convert this Version object back into a String.
       def to_s
         @string
       end
 
+      # :call-seq:
+      #   to_a -> Array
+      #
+      # Convert this Version object into an array of numbers representing the
+      # components of the version number. The order of the components is:
+      # * Major
+      # * Minor
+      # * Patch
+      #
+      # For example:
+      #   Version.new("2.5.1").to_a == [2, 5, 1]
       def to_a
         if @array.empty?
           comps = @string.split(".")
@@ -408,6 +431,13 @@ module T2Server
         @array
       end
 
+      # :call-seq:
+      #   version <=> other -> -1, 0 or +1
+      #
+      # Returns -1, 0 or +1 depending of whether +version+ is less than,
+      # equal to or greater than +other+.
+      #
+      # This is the basis for the tests in Comparable.
       def <=>(other)
         other = Version.new(other) if other.instance_of?(String)
         self.to_a.zip(other.to_a).each do |c|
@@ -434,7 +464,6 @@ module T2Server
         version
       end
     end
-    # :startdoc:
 
   end
 end
