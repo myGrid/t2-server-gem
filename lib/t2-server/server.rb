@@ -357,21 +357,13 @@ module T2Server
     def _get_version
       doc = _get_server_description
       version = xpath_attr(doc, @@xpaths[:server], "serverVersion")
-      if version == nil
+
+      if version.nil?
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
           "are no longer supported.")
-      else
-        # Remove extra version tags if present.
-        version.gsub!("-SNAPSHOT", "")
-        version.gsub!(/alpha[0-9]*/, "")
-
-        # Add .0 if we only have a major and minor component.
-        if version.split(".").length == 2
-          version += ".0"
-        end
-
-        return version
       end
+
+      Version.new(version)
     end
 
     def _get_server_links
@@ -399,6 +391,56 @@ module T2Server
       # Refresh the user's cache and return the runs in it.
       @run_cache.refresh_all!(run_list, credentials)
     end
+
+    # :stopdoc:
+    class Version
+      include Comparable
+
+      def initialize(version)
+        @string = parse_version(version)
+        @array = []
+      end
+
+      def to_s
+        @string
+      end
+
+      def to_a
+        if @array.empty?
+          comps = @string.split(".")
+          @array = comps.map { |v| v.to_i }
+        end
+
+        @array
+      end
+
+      def <=>(other)
+        other = Version.new(other) if other.instance_of?(String)
+        self.to_a.zip(other.to_a).each do |c|
+          comp = c[0] <=> c[1]
+          return comp unless comp == 0
+        end
+
+        # If we get here then we know we have equal version numbers.
+        0
+      end
+
+      private
+
+      def parse_version(version)
+        # Remove extra version tags if present.
+        version.gsub!("-SNAPSHOT", "")
+        version.gsub!(/alpha[0-9]*/, "")
+
+        # Add .0 if we only have a major and minor component.
+        if version.split(".").length == 2
+          version += ".0"
+        end
+
+        version
+      end
+    end
+    # :startdoc:
 
   end
 end
