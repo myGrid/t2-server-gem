@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,57 +30,7 @@
 #
 # Author: Robert Haines
 
-require 'rexml/document'
-require 'rexml/text'
-
-module T2Server
-  module XML
-
-    module Methods
-      def xml_document(string)
-        REXML::Document.new(string)
-      end
-
-      def xml_text_node(text)
-        REXML::Text.new(text).to_s
-      end
-
-      def xml_first_child(node)
-        node.first
-      end
-
-      def xml_children(doc, &block)
-        doc.each { |node| yield node }
-      end
-
-      def xml_node_name(node)
-        node.name
-      end
-
-      def xml_node_content(node)
-        node.text
-      end
-
-      def xml_node_attribute(node, attribute)
-        node.attributes[attribute]
-      end
-
-      def xpath_compile(xpath)
-        xpath
-      end
-
-      def xpath_find(doc, expr)
-        REXML::XPath.each(doc, expr, Namespaces::MAP)
-      end
-
-      def xpath_first(doc, expr)
-        REXML::XPath.first(doc, expr, Namespaces::MAP)
-      end
-
-      def xpath_attr(doc, expr, attribute)
-        node = xpath_first(doc, expr)
-        node.nil? ? nil : node.attributes[attribute]
-      end
-    end
-  end
-end
+require_relative 'xml/namespaces'
+require_relative 'xml/fragments'
+require_relative 'xml/methods'
+require_relative 'xml/xpath_cache'

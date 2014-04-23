@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,57 +30,20 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
-require 'nokogiri'
-
 module T2Server
   module XML
+    module Namespaces
+      SERVER = "http://ns.taverna.org.uk/2010/xml/server/"
+      REST   = SERVER + "rest/"
+      ADMIN  = SERVER + "admin/"
+      PORT   = "http://ns.taverna.org.uk/2010/port/"
 
-    module Methods
-      def xml_document(string)
-        Nokogiri::XML(string)
-      end
-
-      def xml_text_node(text)
-        Nokogiri::XML::Text.new(text, Nokogiri::XML::Document.new).to_s
-      end
-
-      def xml_first_child(node)
-        node.first_element_child
-      end
-
-      def xml_children(doc, &block)
-        doc.children.each(&block)
-      end
-
-      def xml_node_name(node)
-        node.node_name
-      end
-
-      def xml_node_content(node)
-        node.content
-      end
-
-      def xml_node_attribute(node, attribute)
-        node[attribute]
-      end
-
-      def xpath_compile(xpath)
-        xpath
-      end
-
-      def xpath_find(doc, expr)
-        doc.xpath(expr, Namespaces::MAP)
-      end
-
-      def xpath_first(doc, expr)
-        doc.at_xpath(expr, Namespaces::MAP)
-      end
-
-      def xpath_attr(doc, expr, attribute)
-        node = xpath_first(doc, expr)
-        node.nil? ? nil : node[attribute]
-      end
+      MAP    = {
+        "nss"  => Namespaces::SERVER,
+        "nsr"  => Namespaces::REST,
+        "nsa"  => Namespaces::ADMIN,
+        "port" => Namespaces::PORT
+      }
     end
   end
 end

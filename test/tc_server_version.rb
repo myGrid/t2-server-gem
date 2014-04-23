@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013 The University of Manchester, UK.
+# Copyright (c) 2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,59 +30,53 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
-require 'libxml'
+require 't2-server'
 
-module T2Server
-  module XML
-    # Shut the libxml error handler up
-    LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
+class TestServerVersion < Test::Unit::TestCase
 
-    module Methods
-      def xml_document(string)
-        LibXML::XML::Document.string(string)
-      end
+  TWO_FOUR = "2.4"
+  TWO_FOUR_ZERO = "2.4.0"
+  TWO_FOUR_ONE = "2.4.1"
+  TWO_FIVE_ZERO = "2.5.0"
+  TWO_FIVE_ONE = "2.5.1"
 
-      def xml_text_node(text)
-        LibXML::XML::Node.new_text(text)
-      end
+  TWO_FOUR_ZERO_SNAP = "2.4.0-SNAPSHOT"
+  TWO_FOUR_ZERO_ALPHA = "2.4.0alpha99"
 
-      def xml_first_child(node)
-        node.first
-      end
+  def setup
+    @v24 = T2Server::Server::Version.new(TWO_FOUR)
+    @v240 = T2Server::Server::Version.new(TWO_FOUR_ZERO)
+    @v241 = T2Server::Server::Version.new(TWO_FOUR_ONE)
+    @v250 = T2Server::Server::Version.new(TWO_FIVE_ZERO)
+    @v251 = T2Server::Server::Version.new(TWO_FIVE_ONE)
 
-      def xml_children(doc, &block)
-        doc.each { |node| yield node }
-      end
-
-      def xml_node_name(node)
-        node.name
-      end
-
-      def xml_node_content(node)
-        node.content
-      end
-
-      def xml_node_attribute(node, attribute)
-        node.attributes[attribute]
-      end
-
-      def xpath_compile(xpath)
-        LibXML::XML::XPath::Expression.new(xpath)
-      end
-
-      def xpath_find(doc, expr)
-        doc.find(expr, Namespaces::MAP)
-      end
-
-      def xpath_first(doc, expr)
-        doc.find_first(expr, Namespaces::MAP)
-      end
-
-      def xpath_attr(doc, expr, attribute)
-        node = xpath_first(doc, expr)
-        node.nil? ? nil : node.attributes[attribute]
-      end
-    end
+    @v240s = T2Server::Server::Version.new(TWO_FOUR_ZERO_SNAP)
+    @v240a = T2Server::Server::Version.new(TWO_FOUR_ZERO_ALPHA)
   end
+
+  def test_version_parsing
+    assert_equal TWO_FOUR_ZERO, @v24.to_s
+    assert_equal TWO_FOUR_ZERO, @v240.to_s
+    assert_equal TWO_FOUR_ZERO, @v240s.to_s
+    assert_equal TWO_FOUR_ZERO, @v240a.to_s
+    assert_equal @v24.to_s, @v240.to_s
+  end
+
+  def test_version_comparison
+    assert @v24 == @v240
+    assert @v240 < @v250
+    assert @v240 < @v241
+    assert @v251 > @v241
+    assert @v251 > @v250
+  end
+
+  def test_version_components
+    assert_equal [2, 4, 0], @v24.to_a
+    assert_equal [2, 4, 0], @v240.to_a
+    assert_equal [2, 5, 0], @v250.to_a
+
+    assert_equal [2, 4, 0], @v240s.to_a
+    assert_equal [2, 4, 0], @v240a.to_a
+  end
+
 end

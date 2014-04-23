@@ -148,8 +148,7 @@ module T2Server
       create(links[:runs], workflow, "application/vnd.taverna.t2flow+xml",
         credentials)
     rescue AccessForbiddenError => afe
-      (major, minor, patch) = version_components
-      if minor == 4 && patch >= 2
+      if version >= "2.4.2"
         # Need to re-raise as it's a real error for later versions.
         raise afe
       else
@@ -159,26 +158,22 @@ module T2Server
     # :startdoc:
 
     # :call-seq:
-    #   version -> string
+    #   version -> Server::Version
     #
-    # The version string of the remote Taverna Server.
+    # An object representing the version of the remote Taverna Server.
     def version
       @version ||= _get_version
     end
 
-    # :call-seq:
-    #   version_components -> array
-    #
-    # An array of the major, minor and patch version components of the remote
-    # Taverna Server.
+    # :stopdoc:
     def version_components
-      if @version_components.nil?
-        comps = version.split(".")
-        @version_components = comps.map { |v| v.to_i }
-      end
+      warn "[DEPRECATED] Server#version_components is deprecated and will "\
+        "be removed in the next major release. Please use "\
+        "Server#version.to_a instead."
 
-      @version_components
+      version.to_a
     end
+    # :startdoc:
 
     # :call-seq:
     #   uri -> URI
@@ -233,12 +228,10 @@ module T2Server
     end
 
     def upload_file(filename, uri, remote_name, credentials = nil)
-      # Different Server versions support different upload methods
-      (major, minor, patch) = version_components
-
       remote_name = filename.split('/')[-1] if remote_name == ""
 
-      if minor == 4 && patch >= 1
+      # Different Server versions support different upload methods
+      if version >= "2.4.1"
         File.open(filename, "rb") do |file|
           upload_data(file, remote_name, uri, credentials)
         end
@@ -250,9 +243,7 @@ module T2Server
 
     def upload_data(data, remote_name, uri, credentials = nil)
       # Different Server versions support different upload methods
-      (major, minor, patch) = version_components
-
-      if minor == 4 && patch >= 1
+      if version >= "2.4.1"
         put_uri = Util.append_to_uri_path(uri, remote_name)
         @connection.PUT(put_uri, data, "application/octet-stream", credentials)
       else
@@ -357,21 +348,13 @@ module T2Server
     def _get_version
       doc = _get_server_description
       version = xpath_attr(doc, @@xpaths[:server], "serverVersion")
-      if version == nil
+
+      if version.nil?
         raise RuntimeError.new("Taverna Servers prior to version 2.3 " +
           "are no longer supported.")
-      else
-        # Remove extra version tags if present.
-        version.gsub!("-SNAPSHOT", "")
-        version.gsub!(/alpha[0-9]*/, "")
-
-        # Add .0 if we only have a major and minor component.
-        if version.split(".").length == 2
-          version += ".0"
-        end
-
-        return version
       end
+
+      Version.new(version)
     end
 
     def _get_server_links
@@ -398,6 +381,85 @@ module T2Server
 
       # Refresh the user's cache and return the runs in it.
       @run_cache.refresh_all!(run_list, credentials)
+    end
+
+    # Represents a Taverna Server version number in a way that can be compared
+    # to other version numbers or strings.
+    #
+    # This class mixes in Comparable so all the usual comparison operators
+    # work as expected.
+    class Version
+      include Comparable
+
+      # :call-seq:
+      #   new(version_string) -> Version
+      #
+      # Create a new Version object from the supplied version string.
+      def initialize(version)
+        @string = parse_version(version)
+        @array = []
+      end
+
+      # :call-seq:
+      #   to_s -> String
+      #
+      # Convert this Version object back into a String.
+      def to_s
+        @string
+      end
+
+      # :call-seq:
+      #   to_a -> Array
+      #
+      # Convert this Version object into an array of numbers representing the
+      # components of the version number. The order of the components is:
+      # * Major
+      # * Minor
+      # * Patch
+      #
+      # For example:
+      #   Version.new("2.5.1").to_a == [2, 5, 1]
+      def to_a
+        if @array.empty?
+          comps = @string.split(".")
+          @array = comps.map { |v| v.to_i }
+        end
+
+        @array
+      end
+
+      # :call-seq:
+      #   version <=> other -> -1, 0 or +1
+      #
+      # Returns -1, 0 or +1 depending of whether +version+ is less than,
+      # equal to or greater than +other+.
+      #
+      # This is the basis for the tests in Comparable.
+      def <=>(other)
+        other = Version.new(other) if other.instance_of?(String)
+        self.to_a.zip(other.to_a).each do |c|
+          comp = c[0] <=> c[1]
+          return comp unless comp == 0
+        end
+
+        # If we get here then we know we have equal version numbers.
+        0
+      end
+
+      private
+
+      def parse_version(version)
+        # Remove extra version tags if present.
+        version.gsub!("-SNAPSHOT", "")
+        version.gsub!(/alpha[0-9]*/, "")
+
+        # Add .0 if we only have a major and minor component.
+        if version.split(".").length == 2
+          version += ".0"
+        end
+
+        version
+      end
     end
 
   end

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -124,10 +124,8 @@ class TestRun < Test::Unit::TestCase
   # Test run naming. This is different for different versions of server.
   def test_run_naming
     T2Server::Server.new($uri, $conn_params) do |server|
-      vc = server.version_components
-      v250plus = vc[0] > 2 || (vc[0] == 2 && vc[1] >= 5)
       server.create_run($wkf_no_io, $creds) do |run|
-        if v250plus
+        if server.version >= "2.5.0"
           # Read initial name.
           assert(run.name.length > 0)
           assert_equal("Workflow1", run.name[0...9])
@@ -202,7 +200,7 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test run with a list and file input
+  # Test run with a list and file input, and check that provenance is not on
   def test_run_list_and_file
     T2Server::Run.create($uri, $wkf_l_v, $creds, $conn_params) do |run|
       list = ["one", 2, :three]
@@ -228,6 +226,10 @@ class TestRun < Test::Unit::TestCase
         assert_not_equal(log_cache.size, 0)
       end
 
+      assert_raise(T2Server::AccessForbiddenError) do
+        run.provenance
+      end
+
       assert(run.delete)
     end
   end
@@ -245,7 +247,8 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test run with file input. Also pass workflow as File object.
+  # Test run with file input. Also pass workflow as File object. Also test
+  # toggling provenance on and then off again.
   def test_run_file_input
     workflow = File.open($wkf_pass, "r")
 
@@ -253,12 +256,20 @@ class TestRun < Test::Unit::TestCase
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.input_port("IN").file = $file_input
+        run.generate_provenance
+        run.generate_provenance(false)
       end
+      refute run.generate_provenance?
 
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert_equal(run.output_port("OUT").value, "Hello, World!")
+
+      assert_raise(T2Server::AccessForbiddenError) do
+        run.provenance
+      end
+
       assert(run.delete)
     end
 
@@ -266,10 +277,18 @@ class TestRun < Test::Unit::TestCase
   end
 
   # Test run that returns list of lists, some empty, using baclava for input
+  # Also test provenance output works with baclava input
   def test_baclava_input
     T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.baclava_input = $list_input
+        run.generate_provenance
+      end
+
+      if run.server.version >= "2.5.3"
+        assert(run.generate_provenance?)
+      else
+        refute(run.generate_provenance?)
       end
 
       assert_equal(run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
@@ -291,6 +310,20 @@ class TestRun < Test::Unit::TestCase
       assert(run.output_port("MANY")[1][0][0].empty?)
       assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
+
+      # Grab provenance
+      if run.server.version >= "2.5.3"
+        assert_nothing_raised(T2Server::AccessForbiddenError) do
+          prov = run.provenance
+          assert_not_equal(prov, "")
+        end
+      else
+        assert_raise(T2Server::AccessForbiddenError) do
+          prov = run.provenance
+          assert_equal(prov, "")
+        end
+      end
+
       assert(run.delete)
     end
   end
@@ -323,12 +356,19 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
-  # Test partial result download
+  # Test partial result download and provenance streaming
   def test_result_download
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         file = run.upload_file($file_strs)
         run.input_port("IN").remote_file = file
+        run.generate_provenance(true)
+      end
+
+      if run.server.version >= "2.5.3"
+        assert(run.generate_provenance?)
+      else
+        refute(run.generate_provenance?)
       end
 
       run.start
@@ -370,6 +410,23 @@ class TestRun < Test::Unit::TestCase
       # Now get the lot and check its size.
       out = run.output_port("OUT").value
       assert_equal(out.length, 100)
+
+      # test streaming provenance data
+      if run.server.version >= "2.5.3"
+        assert_nothing_raised(T2Server::AccessForbiddenError) do
+          prov_cache = TestCache.new
+          prov_size = run.provenance(prov_cache)
+          assert_not_equal(prov_size, 0)
+          assert_not_equal(prov_cache.data, "")
+        end
+      else
+        assert_raise(T2Server::AccessForbiddenError) do
+          prov_cache = TestCache.new
+          prov_size = run.provenance(prov_cache)
+          assert_equal(prov_size, 0)
+          assert_equal(prov_cache.data, "")
+        end
+      end
 
       assert(run.delete)
     end

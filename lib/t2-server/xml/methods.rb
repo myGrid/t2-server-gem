@@ -30,27 +30,71 @@
 #
 # Author: Robert Haines
 
-require 'rubygems'
-require 'bundler/setup'
+require 'libxml'
 
-require 't2-server/version'
-require 't2-server/util'
-require 't2-server/xml'
-require 't2-server/exceptions'
-require 't2-server/net/credentials'
-require 't2-server/net/connection'
-require 't2-server/net/parameters'
-require 't2-server/port'
-require 't2-server/interaction'
-require 't2-server/server'
-require 't2-server/run'
-require 't2-server/admin'
-
-# This is a Ruby library to interface with the Taverna 2 Server REST API.
-#
-# There are two API entry points:
-# * T2Server::Run - Use this for running single jobs on a server.
-# * T2Server::Server - Use this if you are providing a web interface to a
-#   Taverna 2 Server instance.
 module T2Server
+  module XML
+    # Shut the libxml error handler up
+    LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
+
+    module Methods
+      def xml_document(string)
+        LibXML::XML::Document.string(string)
+      end
+
+      def xml_text_node(text)
+        LibXML::XML::Node.new_text(text)
+      end
+
+      def xml_first_child(node)
+        node.first
+      end
+
+      def xml_children(doc, &block)
+        doc.each { |node| yield node }
+      end
+
+      def xml_node_name(node)
+        node.name
+      end
+
+      def xml_node_content(node)
+        node.content
+      end
+
+      def xml_node_attribute(node, attribute)
+        node.attributes[attribute]
+      end
+
+      def xpath_compile(xpath)
+        LibXML::XML::XPath::Expression.new(xpath)
+      end
+
+      def xpath_find(doc, expr)
+        doc.find(expr, Namespaces::MAP)
+      end
+
+      def xpath_first(doc, expr)
+        doc.find_first(expr, Namespaces::MAP)
+      end
+
+      def xpath_attr(doc, expr, attribute)
+        node = xpath_first(doc, expr)
+        node.nil? ? nil : node.attributes[attribute]
+      end
+
+      # Given a list of xpath keys, extract the href URIs from those elements.
+      def get_uris_from_doc(doc, keys)
+        cache = XPathCache.instance
+        uris = {}
+
+        keys.each do |key|
+          uri = xpath_attr(doc, cache[key], "href")
+          uris[key] = uri.nil? ? nil : URI.parse(uri)
+        end
+
+        uris
+      end
+    end
+  end
 end

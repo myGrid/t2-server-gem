@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -104,7 +104,8 @@ module T2Server
       @method = method
       @path = path
       @code = response.code
-      @body = response.body.empty? ? "<none>" : "#{response.body}"
+      @body = response.body.to_s
+      @body = @body.empty? ? "<none>" : "#{response.body}"
       message = "Unexpected server response:\n  Method: #{@method}\n  Path: "\
         "#{@path}\n  Code: #{@code}\n  Body: #{@body}"
       super message
