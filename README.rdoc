@@ -52,7 +52,7 @@ Server, but if that is not possible right now then these are the recommended
 version pairings:
 * pre Taverna Server 2.3, use version 0.6.1 of the gem
 * 2.3, use version 0.9.3
-* 2.4 and up, use version 1.0.0
+* 2.4 and up, use version 1.0.0 and up.
 
 === Ruby
 
