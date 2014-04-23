@@ -57,9 +57,10 @@ version pairings:
 === Ruby
 
 This library is known to work with the following versions of Ruby:
-* 1.9.2 +
+* 1.9.2
 * 1.9.3 +*
 * 2.0.0 +*
+* 2.1.0 +
 
 Those marked with an asterisk (*) are fully supported and bugs found against
 them will be fixed. Other versions may work but are not tested or supported.
