@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>CHANGES -  Taverna 2 Server Ruby Interface Library version 1.1.0</title>
+
+<link href="./fonts.css" rel="stylesheet">
+<link href="./rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/navigation.js"></script>
+<script src="./js/search_index.js"></script>
+<script src="./js/search.js"></script>
+<script src="./js/searcher.js"></script>
+<script src="./js/darkfish.js"></script>
+
+
+<body id="top" role="document" class="file">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+<div class="nav-section">
+  <h3>Table of Contents</h3>
+
+  <ul class="link-list" role="directory">
+    <li><a href="#label-Changes+log+for+the+T2+Ruby+Gem">Changes log for the T2 Ruby Gem</a>
+    <li><a href="#label-Version+1.1.0">Version 1.1.0</a>
+    <li><a href="#label-Version+1.0.0">Version 1.0.0</a>
+    <li><a href="#label-Version+0.9.3">Version 0.9.3</a>
+    <li><a href="#label-Version+0.9.2">Version 0.9.2</a>
+    <li><a href="#label-Version+0.9.1">Version 0.9.1</a>
+    <li><a href="#label-Version+0.9.0">Version 0.9.0</a>
+    <li><a href="#label-Version+0.6.1">Version 0.6.1</a>
+    <li><a href="#label-Version+0.6.0">Version 0.6.0</a>
+    <li><a href="#label-Version+0.5.3">Version 0.5.3</a>
+    <li><a href="#label-Version+0.5.2">Version 0.5.2</a>
+    <li><a href="#label-Version+0.5.1">Version 0.5.1</a>
+    <li><a href="#label-Version+0.5.0">Version 0.5.0</a>
+    <li><a href="#label-Version+0.2.1">Version 0.2.1</a>
+    <li><a href="#label-Version+0.2.0">Version 0.2.0</a>
+    <li><a href="#label-Version+0.1.1">Version 0.1.1</a>
+    <li><a href="#label-Version+0.1.0">Version 0.1.0</a>
+    <li><a href="#label-Version+0.0.4">Version 0.0.4</a>
+    <li><a href="#label-Version+0.0.3">Version 0.0.3</a>
+    <li><a href="#label-Version+0.0.2">Version 0.0.2</a>
+    <li><a href="#label-Version+0.0.1">Version 0.0.1</a>
+    <li><a href="#label-About+this+CHANGES+file">About this CHANGES file</a>
+  </ul>
+</div>
+
+
+  <div id="project-metadata">
+    <div id="fileindex-section" class="nav-section">
+  <h3>Pages</h3>
+
+  <ul class="link-list">
+  
+    <li><a href="./CHANGES_rdoc.html">CHANGES</a>
+  
+    <li><a href="./LICENCE_rdoc.html">LICENCE</a>
+  
+    <li><a href="./README_rdoc.html">README</a>
+  
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-label="Page CHANGES.rdoc">
+
+<h1 id="label-Changes+log+for+the+T2+Ruby+Gem">Changes log for the T2 Ruby Gem<span><a href="#label-Changes+log+for+the+T2+Ruby+Gem">&para;</a> <a href="#documentation">&uarr;</a></span></h1>
+
+<h2 id="label-Version+1.1.0">Version 1.1.0<span><a href="#label-Version+1.1.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Remove hirb as a runtime dependency.</p>
+</li><li>
+<p>t2-server-admin: Minor fix for readability.</p>
+</li><li>
+<p>Add a gem version badge from badge.fury.io.</p>
+</li><li>
+<p>Use bundler and stop using jeweler.</p>
+</li><li>
+<p>Update dependencies.</p>
+</li><li>
+<p>Add travis configuration.</p>
+</li><li>
+<p>Separate out the version code from the main include file.</p>
+</li><li>
+<p>If in travis, don’t wait for a server address.</p>
+</li><li>
+<p>Update note about SemVer in readme.</p>
+</li><li>
+<p>Add travis badge and update ruby testing info.</p>
+</li><li>
+<p>Refactor out rexml and nokogiri xml support.</p>
+</li><li>
+<p>Setup rubygems and bundler in the main require file.</p>
+</li><li>
+<p>t2-run-workflow: Fix baclava output option.</p>
+</li><li>
+<p>Fix error in exception caused by chunked response.</p>
+</li><li>
+<p>Add provenance capture and retrieval functionality.</p>
+</li><li>
+<p>Can now toggle provenance generation on and off.</p>
+</li><li>
+<p>Implement a comparable version class.</p>
+</li><li>
+<p>Restrict provenance functionality to correct server versions.</p>
+</li><li>
+<p>Remove Server#version_components from the docs.</p>
+</li><li>
+<p>Tighten ratom version and move libxml-ruby to runtime list.</p>
+</li><li>
+<p>Align baclava output method names with the prov ones.</p>
+</li></ul>
+
+<h2 id="label-Version+1.0.0">Version 1.0.0<span><a href="#label-Version+1.0.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Remove deprecated methods.</p>
+</li><li>
+<p>Add read streaming capability to the underlying connection.</p>
+</li><li>
+<p>Add a read method to stream data directly to a file.</p>
+</li><li>
+<p>Stream zip data from server.</p>
+</li><li>
+<p>Update t2-run-workflow so that debug is optional.</p>
+</li><li>
+<p>Stream baclava data from server.</p>
+</li><li>
+<p>Expose streaming capability to output ports.</p>
+</li><li>
+<p>Bring port error handling inline with normal values.</p>
+</li><li>
+<p>Tidy up usage of a mime-type for empty ports.</p>
+</li><li>
+<p>Add methods to test for empty ports or port values.</p>
+</li><li>
+<p>Add output port data streaming functionality.</p>
+</li><li>
+<p>Stream output data directly to a file.</p>
+</li><li>
+<p>Document the credentials classes.</p>
+</li><li>
+<p>Add general stream-to-stream data downloads.</p>
+</li><li>
+<p>Expose stream-to-stream methods in the Run class.</p>
+</li><li>
+<p>Add upload streaming to the underlying connection.</p>
+</li><li>
+<p>Stream uploads of workflows and data.</p>
+</li><li>
+<p>Add streaming examples to the <a href="README_rdoc.html">README</a>.</p>
+</li><li>
+<p>Make XPath searching robust to nodes not being found.</p>
+</li><li>
+<p>Read interaction feed URI and query support with API.</p>
+</li><li>
+<p>Read notifications from the interaction feed.</p>
+</li><li>
+<p>Document the Interaction Service additions in the <a
+href="README_rdoc.html">README</a>.</p>
+</li><li>
+<p>Add a bit more compatibility info to the Readme.</p>
+</li><li>
+<p>Clean up run caching code in the Server class.</p>
+</li><li>
+<p>Clean up variables and comments for run creation.</p>
+</li><li>
+<p>Code clarity improvements.</p>
+</li><li>
+<p>Remove duplicated download/streaming code in Run.</p>
+</li><li>
+<p>Remove duplicate URI stripping code from Server.</p>
+</li><li>
+<p>Improve readability of the XML fragments.</p>
+</li><li>
+<p>Add a global complied XPath cache and use for Server.</p>
+</li><li>
+<p>Use global XPath cache for Run class.</p>
+</li><li>
+<p>Add Ruby 2.0.0 as known to work in <a href="README_rdoc.html">README</a>.</p>
+</li><li>
+<p>t2-delete-runs: Minor code clean-up.</p>
+</li><li>
+<p>t2-delete-runs: Add a flag to only delete finished runs.</p>
+</li><li>
+<p>t2-run-workflow: Minor code clean-up.</p>
+</li><li>
+<p>t2-run-workflow: Add flag for service credentials.</p>
+</li><li>
+<p>Server now returns 503 when at capacity.</p>
+</li><li>
+<p>Server now has a limit on concurrently running runs.</p>
+</li><li>
+<p>Test for max concurrently running runs.</p>
+</li><li>
+<p>t2-run-workflow: Cope with hitting max running runs.</p>
+</li><li>
+<p>t2-server-stress: Cope with hitting max running runs.</p>
+</li><li>
+<p>Ensure all unit tests delete runs that they create.</p>
+</li><li>
+<p>Mark deleted runs as such in their Run object.</p>
+</li><li><dl class="rdoc-list label-list"><dt>TAVSERV-308
+<dd>
+<p>Run#permissions returns nil, instead of :none</p>
+</dd></dl>
+</li><li>
+<p>Add a function to download a single port as a zip file.</p>
+</li><li>
+<p>Added ssl_version to connection parameters</p>
+</li><li>
+<p>Put a guard in to check that the SSL version is sensible.</p>
+</li><li>
+<p>Add SSL version support to the command line tools.</p>
+</li><li>
+<p>Add a new example connection parameter class for SSL version 3.</p>
+</li><li>
+<p>Describe the connection parameters in more detail.</p>
+</li><li>
+<p>Add Run#error? to check all output ports for errors.</p>
+</li><li>
+<p>UnexpectedServerResponse now provides more information.</p>
+</li><li>
+<p>Remove the port value caching code.</p>
+</li><li>
+<p>Simplify the HTTP methods and clean up error handling.</p>
+</li><li>
+<p>Split up the CLI options code.</p>
+</li><li>
+<p>Improve version string parsing.</p>
+</li><li>
+<p>Handle server returning Accepted on run start.</p>
+</li><li>
+<p>Get the run name from the server.</p>
+</li><li>
+<p>t2-server-info: Display run names in list view.</p>
+</li><li>
+<p>Set the run name on the server.</p>
+</li><li>
+<p>t2-run-workflow: Set name of run on server.</p>
+</li><li>
+<p>t2-get-output: Get name of run from server.</p>
+</li><li>
+<p>OutputPort#zip now returns nil for singletons.</p>
+</li><li>
+<p>Fix well-hidden HTTPS connection setup bug.</p>
+</li><li>
+<p>Use a RunCache class instead of a Hash to store local run objects.</p>
+</li><li>
+<p>t2-server-info: Configurable run detail in list view.</p>
+</li><li><dl class="rdoc-list label-list"><dt>TAVSERV-324
+<dd>
+<p>Uninitialized connection parameters.</p>
+</dd></dl>
+</li><li>
+<p>Move interaction code out of Server, into Run.</p>
+</li><li>
+<p>Simplifications for per-run feeds.</p>
+</li><li>
+<p>Get different types of notifications for a Run.</p>
+</li><li>
+<p>Expose the run notification/interaction locations.</p>
+</li><li>
+<p>Add Run#log to get run logs.</p>
+</li><li>
+<p>Add connection timeout parameters.</p>
+</li><li>
+<p>Enable interaction reply publishing.</p>
+</li><li>
+<p>Read the interaction serial number from the notification.</p>
+</li><li>
+<p>Enable retrieval of an interaction’s input data.</p>
+</li></ul>
+
+<h2 id="label-Version+0.9.3">Version 0.9.3<span><a href="#label-Version+0.9.3">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Correctly handle missing values in output ports.</p>
+</li></ul>
+
+<h2 id="label-Version+0.9.2">Version 0.9.2<span><a href="#label-Version+0.9.2">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Cleanup of the <a href="README_rdoc.html">README</a> and some delete
+additions.</p>
+</li><li>
+<p>Complete documentation coverage.</p>
+</li><li>
+<p>Update the parsing of the server version.</p>
+</li><li>
+<p>Optimize Server object creation.</p>
+</li><li>
+<p>Add URI manipulating methods to <a
+href="T2Server/Util.html">T2Server::Util</a>.</p>
+</li><li>
+<p>Internal updates to use full URIs rather than relative paths.</p>
+</li><li>
+<p>Updates to the administrator interface to use full URIs.</p>
+</li><li>
+<p>URI code updates for secure workflow and permissions support.</p>
+</li><li>
+<p>Remove (deprecate) Server#delete_run.</p>
+</li><li>
+<p>Support direct PUT of data for newer versions of server.</p>
+</li><li>
+<p>Update the documentation of the Connection classes.</p>
+</li><li>
+<p>Minor updates to the top-level <a href="README_rdoc.html">README</a>.</p>
+</li><li>
+<p>Cleanup of t2-server-info script.</p>
+</li><li>
+<p>t2-run-workflow: Only print outputs if there are any.</p>
+</li></ul>
+
+<h2 id="label-Version+0.9.1">Version 0.9.1<span><a href="#label-Version+0.9.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Update unit test code for Ruby 1.9 compatibility.</p>
+</li><li>
+<p>Major reductions in the time taken to instantiate a Run object.</p>
+</li><li>
+<p>t2-server-info: Don’t list runs by default.</p>
+</li><li>
+<p>Move to persistent HTTP connections.</p>
+</li><li>
+<p>SSL certificate store changes.</p>
+</li></ul>
+
+<h2 id="label-Version+0.9.0">Version 0.9.0<span><a href="#label-Version+0.9.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>t2-run-workflow: Add a switch to set the expiry date/time.</p>
+</li><li>
+<p>Support version 2 of the Server API.</p>
+</li><li>
+<p>Update example scripts to work with the new server API.</p>
+</li><li>
+<p>Retire the T2Server::API_VERSION constant.</p>
+</li><li>
+<p>Add a method to get expected inputs from the server.</p>
+</li><li>
+<p>Make the baclava input/output calls more “ruby-like”</p>
+</li><li>
+<p>Fix the Run#wait method to cope with finished runs.</p>
+</li><li>
+<p>Changes to Run and Server to yield created objects.</p>
+</li><li>
+<p>Add zip output facilities to the Run class.</p>
+</li><li>
+<p>Scripts: Add switches for passing user credentials.</p>
+</li><li>
+<p>t2-run-workflow: Exit if workflow is empty.</p>
+</li><li>
+<p>Top-level documentation updates.</p>
+</li><li>
+<p>Add server administrative interface infrastructure.</p>
+</li><li>
+<p>Fix exception raised within exception code!</p>
+</li><li>
+<p>Fix exception raised within exception code!</p>
+</li><li>
+<p>Allow Run#expiry= to accept Time objects as input.</p>
+</li><li>
+<p>Add a deprecation message when require ‘t2server’ is used.</p>
+</li><li>
+<p>Add connection-parameters classes.</p>
+</li><li>
+<p>Use supplied parameters to configure SSL connections.</p>
+</li><li>
+<p>Connection parameters tests.</p>
+</li><li>
+<p>Add use of connection parameters to the cli scripts.</p>
+</li><li>
+<p>Fix Run#status to return state as symbols rather than text.</p>
+</li><li>
+<p>Enable dynamic selection of XML implementation.</p>
+</li><li>
+<p>Move URI monkeypatch code to new Util module.</p>
+</li><li>
+<p>Move String monkeypatch code to Util module.</p>
+</li><li>
+<p>Remove progress output from Run#wait.</p>
+</li><li>
+<p>Change all references to UUIDs to ‘identifier’.</p>
+</li><li>
+<p>Get run ownership from the server for each run.</p>
+</li><li>
+<p>Facilities for granting and revoking permissions on runs.</p>
+</li><li>
+<p>Facilities for providing user/pass credentials for secure services.</p>
+</li><li>
+<p>Add support for uploading trusts for peer verification.</p>
+</li><li>
+<p>Facilities for providing keypair credentials for secure services.</p>
+</li><li>
+<p>Secure workflow and Run permissions test cases.</p>
+</li><li>
+<p>Update Readme with security info.</p>
+</li><li>
+<p>Update the input port API.</p>
+</li><li>
+<p>Update the output port API.</p>
+</li><li>
+<p>t2-get-output: Change -E switch to -x.</p>
+</li><li>
+<p>t2-get-output: Wire up the -r switch.</p>
+</li><li>
+<p>t2-get-output: Add -T switch for returning output types.</p>
+</li><li>
+<p>Remove support for Taverna Server versions &lt; 2.3.</p>
+</li><li>
+<p>Add Server#upload_data.</p>
+</li><li>
+<p>Add Run#upload_data.</p>
+</li><li>
+<p>Fake list inputs with baclava.</p>
+</li><li>
+<p>More detailed documentation in the ReadMe file.</p>
+</li><li>
+<p>Compatibily note added to the ReadMe file.</p>
+</li></ul>
+
+<h2 id="label-Version+0.6.1">Version 0.6.1<span><a href="#label-Version+0.6.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Store server addresses internally as URI objects.</p>
+</li><li>
+<p>t2-run-workflow: Add a no-wait option.</p>
+</li><li>
+<p>Fix input value escaping to allow XML in inputs.</p>
+</li></ul>
+
+<h2 id="label-Version+0.6.0">Version 0.6.0<span><a href="#label-Version+0.6.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Add a new API call Run#get_output_ports</p>
+</li><li>
+<p>Remove Run#ls from the API.</p>
+</li><li>
+<p>Refactor the code that builds output port lists.</p>
+</li><li>
+<p>Update and streamline test suite.</p>
+</li><li>
+<p>Parameterize the Rakefile for use in CI.</p>
+</li><li>
+<p>Return dates as instances of class Time.</p>
+</li><li>
+<p>Allow expiry dates to be specified in human readable formats.</p>
+</li><li>
+<p>Workaround for CXF bug upon server start-up.</p>
+</li><li>
+<p>t2-run-workflow: accept files as inputs.</p>
+</li><li>
+<p>Tabulate run information.</p>
+</li></ul>
+
+<h2 id="label-Version+0.5.3">Version 0.5.3<span><a href="#label-Version+0.5.3">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Fix an issue with singleton value/empty list confusion for output ports.</p>
+</li></ul>
+
+<h2 id="label-Version+0.5.2">Version 0.5.2<span><a href="#label-Version+0.5.2">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Fix two issues with the retrieving of workflow outputs.</p>
+</li><li>
+<p>Update tests to reflect changes to output code.</p>
+</li></ul>
+
+<h2 id="label-Version+0.5.1">Version 0.5.1<span><a href="#label-Version+0.5.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Fix horror typo in Server#set_run_input.</p>
+</li><li>
+<p>Expand test coverage to include more diverse workflows.</p>
+</li><li>
+<p>Reformat <a href="LICENCE_rdoc.html">LICENCE</a> and <a
+href="CHANGES_rdoc.html">CHANGES</a> as rdoc files.</p>
+</li></ul>
+
+<h2 id="label-Version+0.5.0">Version 0.5.0<span><a href="#label-Version+0.5.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Make the require file consistent with the gem name.</p>
+</li><li>
+<p>Fix run_workflow –input switch for values containing colons.</p>
+</li><li>
+<p>Require rubygems in all scripts.</p>
+</li><li>
+<p>Updates to RDoc options.</p>
+</li><li>
+<p>Rename executables with a consistant name pattern.</p>
+</li><li>
+<p>Convert t2-delete-all-runs script to be more flexible.</p>
+</li><li>
+<p>Change the Run#get_output method to correctly return a list.</p>
+</li><li>
+<p>Stop t2-run-workflow from deleting runs automatically.</p>
+</li><li>
+<p>Install the scripts as part of the gem.</p>
+</li><li>
+<p>Fix inconsistencies in the Server API.</p>
+</li><li>
+<p>Updates to the test suite to reflect recent library updates.</p>
+</li><li>
+<p>Move to LibXML for parsing server responses.</p>
+</li></ul>
+
+<h2 id="label-Version+0.2.1">Version 0.2.1<span><a href="#label-Version+0.2.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Don’t pollute global namespace with REXML stuff.</p>
+</li></ul>
+
+<h2 id="label-Version+0.2.0">Version 0.2.0<span><a href="#label-Version+0.2.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Removed a test that seems to behave oddly.</p>
+</li><li>
+<p>Add capabilities for https and basic auth.</p>
+</li><li>
+<p>Use a single http connection per server.</p>
+</li></ul>
+
+<h2 id="label-Version+0.1.1">Version 0.1.1<span><a href="#label-Version+0.1.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Add baclava input functionality to run_workflow script.</p>
+</li><li>
+<p>Add baclava output functionality to the Run API.</p>
+</li><li>
+<p>Add baclava output functionality to run_workflow script.</p>
+</li><li>
+<p>Document attributes in Server and Run classes.</p>
+</li></ul>
+
+<h2 id="label-Version+0.1.0">Version 0.1.0<span><a href="#label-Version+0.1.0">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Update the Run#mkdir method to cope with nested directories.</p>
+</li><li>
+<p>Add code to the String class to operate on file paths.</p>
+</li><li>
+<p>Use strip_path methods to sanitize inputs.</p>
+</li><li>
+<p>Add exceptions for the Server class to raise and rescue.</p>
+</li><li>
+<p>Add code to handle exceptions to the Server class.</p>
+</li><li>
+<p>Add exceptions and handlers for the Run class.</p>
+</li><li>
+<p>Add exception handling code to the example scripts.</p>
+</li><li>
+<p>Consolidate all PUT operations into one method.</p>
+</li><li>
+<p>Add top level test suite driver and first testcase.</p>
+</li><li>
+<p>Move to a Rake based build system.</p>
+</li><li>
+<p>Add a testcase for the Server.</p>
+</li><li>
+<p>Add a testcase for the Run class.</p>
+</li><li>
+<p>Rakefile rules to run rdoc over the source files.</p>
+</li><li>
+<p>Add rdoc comments to the top-level module.</p>
+</li><li>
+<p>Add rdoc comments to the exception classes.</p>
+</li><li>
+<p>Add rdoc comments to the Run class.</p>
+</li><li>
+<p>Add rdoc comments to the Server class.</p>
+</li></ul>
+
+<h2 id="label-Version+0.0.4">Version 0.0.4<span><a href="#label-Version+0.0.4">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Rationalize methods doing HTTP GETs into one.</p>
+</li><li>
+<p>Add an example script to print server infomation.</p>
+</li><li>
+<p>Cope with double slashes (//) in URI paths.</p>
+</li><li>
+<p>Update documentation and version numbers.</p>
+</li></ul>
+
+<h2 id="label-Version+0.0.3">Version 0.0.3<span><a href="#label-Version+0.0.3">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Update the workflow wrapping fragment.</p>
+</li><li>
+<p>Fix getting of output data in root working dir.</p>
+</li></ul>
+
+<h2 id="label-Version+0.0.2">Version 0.0.2<span><a href="#label-Version+0.0.2">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Server#runs now returns an array not a hash.</p>
+</li><li>
+<p>Expose the newly added time attributes for runs.</p>
+</li><li>
+<p>Add a method to return a run instance given a UUID.</p>
+</li><li>
+<p>Update Run#ls to return separate lists of ‘dirs’ and ‘files’</p>
+</li></ul>
+
+<h2 id="label-Version+0.0.1">Version 0.0.1<span><a href="#label-Version+0.0.1">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+<ul><li>
+<p>Update project config boiler-plate</p>
+</li><li>
+<p>First cut of T2 Server Ruby API.</p>
+</li><li>
+<p>Added gemspec file to project.</p>
+</li><li>
+<p>Add an example script to delete all runs on a server.</p>
+</li><li>
+<p>Add an example script to run a workflow.</p>
+</li></ul>
+
+<h2 id="label-About+this+CHANGES+file">About this <a href="CHANGES_rdoc.html">CHANGES</a> file<span><a href="#label-About+this+CHANGES+file">&para;</a> <a href="#documentation">&uarr;</a></span></h2>
+
+<p>This file is, at least in part, generated by the following command:</p>
+
+<pre>$ git log --pretty=format:&quot;* %s&quot; --reverse --no-merges &lt;commit-hash&gt;..</pre>
+</main>
+
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://rdoc.rubyforge.org">RDoc</a> 4.1.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+
