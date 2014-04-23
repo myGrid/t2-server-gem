@@ -165,11 +165,7 @@ module T2Server
       @version ||= _get_version
     end
 
-    # :call-seq:
-    #   version_components -> array
-    #
-    # An array of the major, minor and patch version components of the remote
-    # Taverna Server.
+    # :stopdoc:
     def version_components
       warn "[DEPRECATED] Server#version_components is deprecated and will "\
         "be removed in the next major release. Please use "\
@@ -177,6 +173,7 @@ module T2Server
 
       version.to_a
     end
+    # :startdoc:
 
     # :call-seq:
     #   uri -> URI
