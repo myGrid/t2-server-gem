@@ -244,6 +244,23 @@ output can be downloaded into memory or saved directly to a file.
   output = run.baclava_output                    # download to memory
   run.baclava_output("/path/to/output.baclava")  # save to a file
 
+Later versions of Taverna Server can generate a complete provenance log of a
+workflow run in {Taverna-PROV}[https://github.com/myGrid/taverna-prov] format.
+The generation of provenance data must be requested *before* starting the run.
+
+  run.generate_provenance
+  run.start
+  ...
+  provenance = run.provenance                # download to memory
+  run.provenance("/path/to/provenance.zip")  # save to a file
+
+The resultant provenance bundle is a zip file containing all input, output and
+intermediate values as separate files, along with the provenance of
+the workflow run. The bundle is based on the
+{Research Object Bundle specification}[http://wf4ever.github.io/ro/bundle/],
+and complies with the
+{W3C PROV-O provenance specification}[http://www.w3.org/TR/prov-o/].
+
 The log from Taverna Server can be downloaded in a similar way to zip files or
 Baclava documents.
 
@@ -251,7 +268,7 @@ Baclava documents.
   run.log("/path/to/log.txt")  # save to a file
 
 When downloading outputs the underlying stream can be accessed by supplying a
-block to the value, zip_output, baclava_output or log methods:
+block to the value, zip_output, provenance, baclava_output or log methods:
 
   run.output_port("port_name").value do |data|
     print data
