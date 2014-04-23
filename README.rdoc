@@ -238,7 +238,7 @@ supported:
 But make sure you request baclava output *before* starting the run. Baclava
 output can be downloaded into memory or saved directly to a file.
 
-  run.request_baclava_output
+  run.generate_baclava_output
   run.start
   run.wait
   output = run.baclava_output                    # download to memory

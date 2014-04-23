@@ -468,11 +468,11 @@ module T2Server
     end
 
     # :call-seq:
-    #   request_baclava_output -> true or false
+    #   generate_baclava_output -> true or false
     #
     # Set the server to save the outputs of this run in baclava format. This
     # must be done before the run is started.
-    def request_baclava_output
+    def generate_baclava_output
       return if @baclava_out
       state = status
       raise RunStateError.new(state, :initialized) if state != :initialized
@@ -480,6 +480,16 @@ module T2Server
       @baclava_out = @server.update(links[:output], BACLAVA_FILE, "text/plain",
         @credentials)
     end
+
+    # :stopdoc:
+    def request_baclava_output
+      warn "[DEPRECATED] Run#request_baclava_output is deprecated and will "\
+        "be removed in the next major release. Please use "\
+        "Run#generate_baclava_output instead."
+
+      generate_baclava_output
+    end
+    # :startdoc:
 
     # :call-seq:
     #   baclava_input? -> true or false
@@ -490,12 +500,22 @@ module T2Server
     end
 
     # :call-seq:
-    #   baclava_output? -> true or false
+    #   generate_baclava_output? -> true or false
     #
     # Has this run been set to return results in baclava format?
-    def baclava_output?
+    def generate_baclava_output?
       @baclava_out
     end
+
+    # :stopdoc:
+    def baclava_output?
+      warn "[DEPRECATED] Run#baclava_output? is deprecated and will be "\
+        "removed in the next major release. Please use "\
+        "Run#generate_baclava_output? instead."
+
+      generate_baclava_output?
+    end
+    # :startdoc:
 
     # :call-seq:
     #   baclava_output -> string
