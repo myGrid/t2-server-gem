@@ -333,9 +333,9 @@ class TestRun < Test::Unit::TestCase
     T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
       run.input_port("IN").value = "Some input..."
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.request_baclava_output
+        run.generate_baclava_output
       end
-      assert(run.baclava_output?)
+      assert(run.generate_baclava_output?)
 
       run.start
       assert(run.running?)

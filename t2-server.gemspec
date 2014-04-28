@@ -56,11 +56,11 @@ Gem::Specification.new do |s|
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
   s.add_development_dependency('rake', '~> 10.0')
   s.add_development_dependency('bundler', '~> 1.5')
-  s.add_development_dependency('libxml-ruby', '~> 2.6.0')
   s.add_development_dependency('rdoc', '~> 4.1')
   s.add_development_dependency('launchy', '~> 2.2')
   s.add_development_dependency('hirb', '~> 0.7')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0')
-  s.add_runtime_dependency('ratom', '~> 0.8')
+  s.add_runtime_dependency('ratom', '~> 0.8.2')
+  s.add_runtime_dependency('libxml-ruby', '~> 2.6')
 end

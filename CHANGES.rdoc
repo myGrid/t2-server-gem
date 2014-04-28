@@ -1,5 +1,29 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 1.1.0
+
+* Remove hirb as a runtime dependency.
+* t2-server-admin: Minor fix for readability.
+* Add a gem version badge from badge.fury.io.
+* Use bundler and stop using jeweler.
+* Update dependencies.
+* Add travis configuration.
+* Separate out the version code from the main include file.
+* If in travis, don't wait for a server address.
+* Update note about SemVer in readme.
+* Add travis badge and update ruby testing info.
+* Refactor out rexml and nokogiri xml support.
+* Setup rubygems and bundler in the main require file.
+* t2-run-workflow: Fix baclava output option.
+* Fix error in exception caused by chunked response.
+* Add provenance capture and retrieval functionality.
+* Can now toggle provenance generation on and off.
+* Implement a comparable version class.
+* Restrict provenance functionality to correct server versions.
+* Remove Server#version_components from the docs.
+* Tighten ratom version and move libxml-ruby to runtime list.
+* Align baclava output method names with the prov ones.
+
 == Version 1.0.0
 
 * Remove deprecated methods.
