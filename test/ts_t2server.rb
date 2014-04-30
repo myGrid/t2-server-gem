@@ -61,6 +61,7 @@ address ||= ""
 # the testcases to run
 require 'tc_util'
 require 'tc_params'
+require 'tc_connection_factory'
 require 'tc_server_version'
 unless address == ""
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
