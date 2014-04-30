@@ -285,7 +285,7 @@ class TestRun < Test::Unit::TestCase
         run.generate_provenance
       end
 
-      if run.server.version >= "2.5.3"
+      if run.server.version >= "2.5.4"
         assert(run.generate_provenance?)
       else
         refute(run.generate_provenance?)
@@ -312,7 +312,7 @@ class TestRun < Test::Unit::TestCase
       assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
 
       # Grab provenance
-      if run.server.version >= "2.5.3"
+      if run.server.version >= "2.5.4"
         assert_nothing_raised(T2Server::AccessForbiddenError) do
           prov = run.provenance
           assert_not_equal(prov, "")
@@ -365,7 +365,7 @@ class TestRun < Test::Unit::TestCase
         run.generate_provenance(true)
       end
 
-      if run.server.version >= "2.5.3"
+      if run.server.version >= "2.5.4"
         assert(run.generate_provenance?)
       else
         refute(run.generate_provenance?)
@@ -412,7 +412,7 @@ class TestRun < Test::Unit::TestCase
       assert_equal(out.length, 100)
 
       # test streaming provenance data
-      if run.server.version >= "2.5.3"
+      if run.server.version >= "2.5.4"
         assert_nothing_raised(T2Server::AccessForbiddenError) do
           prov_cache = TestCache.new
           prov_size = run.provenance(prov_cache)
