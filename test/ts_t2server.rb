@@ -63,7 +63,16 @@ require 'tc_util'
 require 'tc_params'
 require 'tc_connection_factory'
 require 'tc_server_version'
-unless address == ""
+
+# Only run tests against a live server if we have an address for one.
+if address == ""
+  $uri = URI.parse("http://localhost/taverna")
+  $creds = T2Server::HttpBasic.new("test", "test")
+  $userinfo = "test:test"
+  $conn_params = T2Server::DefaultConnectionParameters.new
+
+  require 'tc_server'
+else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
   # override creds if passed in on the command line
