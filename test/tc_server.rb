@@ -36,6 +36,9 @@ require 't2-server'
 class TestServer < Test::Unit::TestCase
   include T2Server::Mocks
 
+  # Server version is baked into the recorded server responses.
+  SERVER_VERSION = "2.5.4"
+
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
 
@@ -50,6 +53,14 @@ class TestServer < Test::Unit::TestCase
     mock("/rest/runs", :method => :post, :credentials => $userinfo,
       :status => 201,
       :location => "http://localhost/taverna/rest/runs/#{RUN_UUID}")
+  end
+
+  # A simple check that the server version is correctly parsed out of the xml.
+  def test_server_version
+    assert_equal SERVER_VERSION, @server.version.to_s
+
+    assert_requested @mock_rest, :times => 1
+    assert_not_requested @mock_policy
   end
 
   def test_run_creation
