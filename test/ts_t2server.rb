@@ -30,6 +30,9 @@
 #
 # Author: Robert Haines
 
+require 'coveralls'
+Coveralls.wear!
+
 require 'test/unit'
 require 't2-server'
 
