@@ -36,13 +36,20 @@ require 't2-server'
 class TestServer < Test::Unit::TestCase
   include T2Server::Mocks
 
+  # Need to lock down the run UUID so recorded server responses make sense.
+  RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
+
   def setup
     @server = T2Server::Server.new($uri, $conn_params)
 
     # Register common mocks.
-    @mock_rest = mock("/rest/")
-    @mock_policy = mock("/rest/policy")
-    mock("/rest/runs", :post, "*/*", $userinfo)
+    @mock_rest = mock("/rest/", :accept => "application/xml",
+      :output => "get-rest.raw")
+    @mock_policy = mock("/rest/policy", :accept => "application/xml",
+      :output => "get-rest-policy.raw")
+    mock("/rest/runs", :method => :post, :credentials => $userinfo,
+      :status => 201,
+      :location => "http://localhost/taverna/rest/runs/#{RUN_UUID}")
   end
 
   def test_run_creation
@@ -50,14 +57,81 @@ class TestServer < Test::Unit::TestCase
       run = @server.create_run($wkf_pass, $creds)
 
       # Mock the deletion of this specific run.
-      mock("/rest/runs/#{run.id}", :delete, "*/*", $userinfo)
+      mock("/rest/runs/#{run.id}", :method => :delete,
+        :credentials => $userinfo, :status => 204)
 
       run.delete
     end
 
-    # Make sure we don't keep getting this information.
+    # Make sure we don't keep fetching this information.
     assert_requested @mock_rest, :times => 1
     assert_requested @mock_policy, :times => 1
+  end
+
+  def test_server_limits_delete_all
+    # Mock specific routes for these tests.
+    mock_limit = mock("/rest/policy/runLimit", :accept => "text/plain",
+      :credentials => $userinfo, :output => "get-rest-policy-runlimit.raw")
+
+    limit = @server.run_limit($creds)
+    assert_instance_of(Fixnum, limit)
+
+    # Mock creation of a run to work once then fail due to server capacity.
+    mock("/rest/runs", :method => :post, :credentials => $userinfo,
+      :status => [201, 503],
+      :location => "http://localhost/taverna/rest/runs/#{RUN_UUID}")
+
+
+
+    run = nil
+    assert_nothing_raised(T2Server::ServerAtCapacityError) do
+      run = @server.create_run($wkf_pass, $creds)
+    end
+    assert_raise(T2Server::ServerAtCapacityError) do
+      @server.create_run($wkf_pass, $creds)
+    end
+
+    assert_equal RUN_UUID, run.id
+
+    mock("/rest/runs", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-runs.raw")
+
+    assert_equal 1, @server.runs($creds).length
+
+    # Mock for this specific run.
+    run_uri = "/rest/runs/#{run.id}"
+    mock_run = mock(run_uri, :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run.raw")
+    mock_input = mock("#{run_uri}/input", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-input.raw")
+    mock_status = mock("#{run_uri}/status", :accept => "text/plain",
+      :credentials => $userinfo, :output => "get-rest-run-status.raw")
+    mock_input_exp = mock("#{run_uri}/input/expected",
+      :accept => "application/xml", :credentials => $userinfo,
+      :output => "get-rest-run-input-expected.raw")
+
+    # Mock starting a run to fail due to concurrent running limit.
+    mock_run_start = mock("#{run_uri}/status", :method => :put,
+      :status => 503, :credentials => $userinfo, :body => "Operating")
+
+    # Running limit reached: Run#start should return false and run should stay
+    # in the initialized state.
+    refute run.start
+    assert_equal :initialized, run.status
+
+    # Delete all runs but just need to mock deletion of the one run.
+    mock(run_uri, :method => :delete, :credentials => $userinfo,
+      :status => 204)
+
+    assert_nothing_raised(T2Server::T2ServerError) do
+      @server.delete_all_runs($creds)
+    end
+
+    # Make sure we don't keep fetching this information.
+    assert_requested @mock_rest, :times => 1
+    assert_requested @mock_policy, :times => 1
+    assert_requested mock_limit, :times => 1
+    assert_requested mock_run, :times => 1
   end
 
 end

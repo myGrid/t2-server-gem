@@ -35,25 +35,46 @@ require 'webmock/test_unit'
 module T2Server
   module Mocks
 
-    def mock(path = "/", method = :get, accept = "application/xml", credentials = nil)
+    def mock(path, options = {})
+      options = { :method => :get, :accept => "*/*", :status => 200 }.merge(options)
+
+      with = { :headers => { "Accept" => options[:accept] } }
+      with[:body] = options[:body] if options[:body]
 
       output =
-      case method
-      when :get
-        file("#{(method.to_s + path).chomp('/').gsub('/', '-')}.raw")
-      when :post
-        { :status => 201, :headers => { "Content-Length" => 0,
-          "Location" => "http://localhost/taverna/rest/runs/ce775ea6-62e7-4417-8a56-1d6b1e807c8a" } }
-      when :delete
-        { :status => 204, :headers => { "Content-Length" => 0 } }
+      if options[:output]
+        file(options[:output])
+      else
+        out = add_to_hash(:status, options[:status])
+        out = add_to_hash("Location", options[:location], out, true) if options[:location]
+        out
       end
 
-      stub_request(method, uri(credentials) + path).
-        with(:headers => { "Accept" => accept}).
-        to_return(output)
+      stub_request(options[:method], uri(options[:credentials]) + path).
+        with(with).to_return(output)
     end
 
     private
+
+    def add_to_hash(param, values, hash = [], headers = false)
+      values = [*values]
+
+      hi = 0
+      values.each do |v|
+        hash[hi] ||= {}
+
+        if headers
+          hash[hi][:headers] ||= {}
+          hash[hi][:headers][param] = v
+        else
+          hash[hi][param] = v
+        end
+
+        hi += 1
+      end
+
+      hash
+    end
 
     def uri(credentials)
       if credentials.nil?
