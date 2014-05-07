@@ -66,6 +66,7 @@ require 'tc_util'
 require 'tc_params'
 require 'tc_connection_factory'
 require 'tc_server_version'
+require 'tc_credentials'
 
 # Only run tests against a live server if we have an address for one.
 if address == ""
