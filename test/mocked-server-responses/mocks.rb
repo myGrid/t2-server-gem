@@ -39,13 +39,21 @@ module T2Server
       options = { :method => :get, :accept => "*/*", :status => 200 }.merge(options)
 
       with = { :headers => { "Accept" => options[:accept] } }
-      with[:body] = options[:body] if options[:body]
+      if options[:body] && (options[:method] == :post || options[:method] == :put)
+        with[:body] = options[:body]
+      end
 
       output =
       if options[:output]
         file(options[:output])
       else
         out = add_to_hash(:status, options[:status])
+
+        if options[:body] && options[:method] == :get
+          out = add_to_hash(:body, options[:body], out)
+          out = add_to_hash("Content-Length", options[:body].length, out)
+        end
+
         out = add_to_hash("Location", options[:location], out, true) if options[:location]
         out
       end
