@@ -33,15 +33,23 @@
 require 'mocked-server-responses/mocks'
 require 't2-server'
 
+# For time-based tests to run we have to mangle the timezone to match the
+# local server. Sigh.
+def timezone
+  z = Time.zone_offset(Time.now.zone) / 3600
+  s = z.abs < 10 ? "0#{z.abs.to_s}" : z.abs.to_s
+  z < 0 ? "-#{s}" : "+#{s}"
+end
+
 class TestRun < Test::Unit::TestCase
   include T2Server::Mocks
 
   WKF_PASS = "test/workflows/pass_through.t2flow"
 
-  # Some expiry times
-  TIME_STR = "2014-05-08 17:41:57 +0100"    # Ruby time format
-  TIME_RET = "2014-05-08T17:41:57.00+01:00" # Server return format
-  TIME_SET = "2014-05-08T17:41:57.00+0100"  # Server update format
+  # Some expiry times, mangled to work in different timezones.
+  TIME_STR = "2014-05-08 17:41:57 #{timezone}00"    # Ruby time format
+  TIME_RET = "2014-05-08T17:41:57.00#{timezone}:00" # Server return format
+  TIME_SET = "2014-05-08T17:41:57.00#{timezone}00"  # Server update format
 
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
