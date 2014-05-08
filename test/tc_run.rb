@@ -73,4 +73,35 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  # Test run naming.
+  def test_run_naming
+    mock("/rest/runs/#{RUN_UUID}/name", :accept => "text/plain",
+      :credentials => $userinfo, :output => "get-rest-run-name.raw")
+
+    T2Server::Server.new($uri, $conn_params) do |server|
+      server.create_run(WKF_PASS, $creds) do |run|
+        # Read initial name.
+        assert run.name.length > 0
+        assert_equal "Workflow1", run.name
+
+        # Set a new name.
+        name = "No input or output"
+
+        mock("/rest/runs/#{RUN_UUID}/name", :method => :put, :body => name,
+          :credentials => $userinfo)
+
+        assert run.name = name
+
+        # Set a name that is too long. The mock should only see the first 48
+        # characters.
+        long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
+
+        mock("/rest/runs/#{RUN_UUID}/name", :method => :put,
+          :body => long_name[0...48], :credentials => $userinfo)
+
+        assert run.name = long_name
+      end
+    end
+  end
+
 end
