@@ -70,7 +70,7 @@ require 'tc_credentials'
 
 # Only run tests against a live server if we have an address for one.
 if address == ""
-  $uri = URI.parse("http://localhost/taverna")
+  $uri = URI.parse("https://localhost/taverna")
   $creds = T2Server::HttpBasic.new("test", "test")
   $userinfo = "test:test"
   $conn_params = T2Server::DefaultConnectionParameters.new

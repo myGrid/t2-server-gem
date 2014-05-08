@@ -52,7 +52,7 @@ class TestServer < Test::Unit::TestCase
       :output => "get-rest-policy.raw")
     mock("/rest/runs", :method => :post, :credentials => $userinfo,
       :status => 201,
-      :location => "http://localhost/taverna/rest/runs/#{RUN_UUID}")
+      :location => "https://localhost/taverna/rest/runs/#{RUN_UUID}")
   end
 
   # A simple check that the server version is correctly parsed out of the xml.
@@ -90,7 +90,7 @@ class TestServer < Test::Unit::TestCase
     # Mock creation of a run to work once then fail due to server capacity.
     mock("/rest/runs", :method => :post, :credentials => $userinfo,
       :status => [201, 503],
-      :location => "http://localhost/taverna/rest/runs/#{RUN_UUID}")
+      :location => "https://localhost/taverna/rest/runs/#{RUN_UUID}")
 
 
 
