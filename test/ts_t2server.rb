@@ -76,6 +76,7 @@ if address == ""
   $conn_params = T2Server::DefaultConnectionParameters.new
 
   require 'tc_server'
+  require 'tc_run'
 else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
