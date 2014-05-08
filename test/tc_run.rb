@@ -36,6 +36,8 @@ require 't2-server'
 class TestRun < Test::Unit::TestCase
   include T2Server::Mocks
 
+  WKF_PASS = "test/workflows/pass_through.t2flow"
+
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
 
@@ -54,13 +56,13 @@ class TestRun < Test::Unit::TestCase
     mock("/rest/runs/#{RUN_UUID}/status", :accept => "text/plain",
       :credentials => $userinfo, :output => "get-rest-run-status.raw")
     mock("/rest/runs/#{RUN_UUID}", :method => :delete, :status => 204,
-        :credentials => $userinfo)
+      :credentials => $userinfo)
   end
 
   # Test run connection
   def test_run_create_and_delete
     assert_nothing_raised(T2Server::ConnectionError) do
-      run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
+      run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
       assert run.initialized?
       assert run.delete
       assert run.deleted?

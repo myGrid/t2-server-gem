@@ -34,6 +34,8 @@ require 't2-server'
 
 class TestServer < Test::Unit::TestCase
 
+  WKF_PASS = "test/workflows/pass_through.t2flow"
+
   def test_server_connection
     assert_nothing_raised(T2Server::ConnectionError) do
       T2Server::Server.new($uri, $conn_params)
@@ -49,7 +51,7 @@ class TestServer < Test::Unit::TestCase
   def test_run_creation
     T2Server::Server.new($uri, $conn_params) do |server|
       assert_nothing_raised(T2Server::T2ServerError) do
-        run = server.create_run($wkf_pass, $creds)
+        run = server.create_run(WKF_PASS, $creds)
         run.delete
       end
     end
@@ -66,7 +68,7 @@ class TestServer < Test::Unit::TestCase
         # add 1 just in case there are no runs at this point
         more = true
         (limit + 1).times do
-          run = server.create_run($wkf_pass, $creds)
+          run = server.create_run(WKF_PASS, $creds)
           if more
             run.input_port("IN").value = "Hello"
             more = run.start

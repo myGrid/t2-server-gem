@@ -52,10 +52,22 @@ end
 
 class TestRun < Test::Unit::TestCase
 
+  WKF_PASS   = "test/workflows/pass_through.t2flow"
+  WKF_LISTS  = "test/workflows/empty_list.t2flow"
+  WKF_L_V    = "test/workflows/list_and_value.t2flow"
+  WKF_XML    = "test/workflows/xml_xpath.t2flow"
+  WKF_FAIL   = "test/workflows/always_fail.t2flow"
+  WKF_ERRORS = "test/workflows/list_with_errors.t2flow"
+  WKF_NO_IO  = "test/workflows/no-ports.t2flow"
+
+  LIST_INPUT = "test/workflows/empty_list_input.baclava"
+  FILE_INPUT = "test/workflows/in.txt"
+  FILE_STRS  = "test/workflows/strings.txt"
+
   # Test run connection
   def test_run_create_and_delete
     assert_nothing_raised(T2Server::ConnectionError) do
-      run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
+      run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
       assert_equal(run.status, :initialized)
       assert(run.delete)
       assert(run.deleted?)
@@ -69,7 +81,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test misc run functions
   def test_status_codes
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params) do |run|
 
       # test mkdir
       assert(run.mkdir("test"))
@@ -124,7 +136,7 @@ class TestRun < Test::Unit::TestCase
   # Test run naming. This is different for different versions of server.
   def test_run_naming
     T2Server::Server.new($uri, $conn_params) do |server|
-      server.create_run($wkf_no_io, $creds) do |run|
+      server.create_run(WKF_NO_IO, $creds) do |run|
         if server.version >= "2.5.0"
           # Read initial name.
           assert(run.name.length > 0)
@@ -157,7 +169,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run with no input or output. Also, pre-load workflow into a String.
   def test_run_no_ports
-    workflow = File.read($wkf_no_io)
+    workflow = File.read(WKF_NO_IO)
 
     T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
       assert_nothing_raised { run.input_ports }
@@ -171,7 +183,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run with list inputs
   def test_run_list_input
-    T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_LISTS, $creds, $conn_params) do |run|
       many = [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]]
       single = [1, 2, 3, 4, 5]
       single_out = single.map { |v| v.to_s } # Taverna outputs strings!
@@ -202,12 +214,12 @@ class TestRun < Test::Unit::TestCase
 
   # Test run with a list and file input, and check that provenance is not on
   def test_run_list_and_file
-    T2Server::Run.create($uri, $wkf_l_v, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_L_V, $creds, $conn_params) do |run|
       list = ["one", 2, :three]
       list_out = list.map { |v| v.to_s }
 
       run.input_port("list_in").value = list
-      run.input_port("singleton_in").file = $file_input
+      run.input_port("singleton_in").file = FILE_INPUT
       assert_nothing_raised { run.start }
       assert(run.running?)
       run.wait
@@ -236,7 +248,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run with xml input
   def test_run_xml_input
-    T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_XML, $creds, $conn_params) do |run|
       run.input_port("xml").value =
         "<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>"
       run.input_port("xpath").value = "//yes"
@@ -250,12 +262,12 @@ class TestRun < Test::Unit::TestCase
   # Test run with file input. Also pass workflow as File object. Also test
   # toggling provenance on and then off again.
   def test_run_file_input
-    workflow = File.open($wkf_pass, "r")
+    workflow = File.open(WKF_PASS, "r")
 
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params) do |run|
 
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.input_port("IN").file = $file_input
+        run.input_port("IN").file = FILE_INPUT
         run.generate_provenance
         run.generate_provenance(false)
       end
@@ -279,9 +291,9 @@ class TestRun < Test::Unit::TestCase
   # Test run that returns list of lists, some empty, using baclava for input
   # Also test provenance output works with baclava input
   def test_baclava_input
-    T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_LISTS, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.baclava_input = $list_input
+        run.baclava_input = LIST_INPUT
         run.generate_provenance
       end
 
@@ -330,7 +342,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run with baclava output
   def test_baclava_output
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params) do |run|
       run.input_port("IN").value = "Some input..."
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         run.generate_baclava_output
@@ -358,9 +370,9 @@ class TestRun < Test::Unit::TestCase
 
   # Test partial result download and provenance streaming
   def test_result_download
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params) do |run|
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        file = run.upload_file($file_strs)
+        file = run.upload_file(FILE_STRS)
         run.input_port("IN").remote_file = file
         run.generate_provenance(true)
       end
@@ -434,7 +446,7 @@ class TestRun < Test::Unit::TestCase
 
   # test error handling
   def test_always_fail
-    T2Server::Run.create($uri, $wkf_fail, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_FAIL, $creds, $conn_params) do |run|
       run.start
       run.wait
       assert_not_nil(run.output_port("OUT").value)
@@ -444,7 +456,7 @@ class TestRun < Test::Unit::TestCase
   end
 
   def test_errors
-    T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_ERRORS, $creds, $conn_params) do |run|
       run.start
       assert(!run.error?)
       run.wait

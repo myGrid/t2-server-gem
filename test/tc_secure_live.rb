@@ -52,23 +52,23 @@ class TestSecurity < Test::Unit::TestCase
   WS4          = "axis/services/HelloService-DigestPassword-Timestamp?wsdl"
 
   # Workflows
-  $wkf_basic_http   = File.read("test/workflows/secure/basic-http.t2flow")
-  $wkf_digest_http  = File.read("test/workflows/secure/digest-http.t2flow")
-  $wkf_ws_http      = File.read("test/workflows/secure/ws-http.t2flow")
-  $wkf_basic_https  = File.read("test/workflows/secure/basic-https.t2flow")
-  $wkf_digest_https = File.read("test/workflows/secure/digest-https.t2flow")
-  $wkf_ws_https     = File.read("test/workflows/secure/ws-https.t2flow")
-  $wkf_client_https = File.read("test/workflows/secure/client-https.t2flow")
+  WKF_BASIC_HTTP   = File.read("test/workflows/secure/basic-http.t2flow")
+  WKF_DIGEST_HTTP  = File.read("test/workflows/secure/digest-http.t2flow")
+  WKF_WS_HTTP      = File.read("test/workflows/secure/ws-http.t2flow")
+  WKF_BASIC_HTTPS  = File.read("test/workflows/secure/basic-https.t2flow")
+  WKF_DIGEST_HTTPS = File.read("test/workflows/secure/digest-https.t2flow")
+  WKF_WS_HTTPS     = File.read("test/workflows/secure/ws-https.t2flow")
+  WKF_CLIENT_HTTPS = File.read("test/workflows/secure/client-https.t2flow")
 
   # Server public key for HTTPS peer verification.
-  $heater_pk = "test/workflows/secure/heater-pk.pem"
+  HEATER_PK = "test/workflows/secure/heater-pk.pem"
 
   # Client private key for HTTPS authentication
-  $user_pk = "test/workflows/secure/user-cert.p12"
+  USER_PK = "test/workflows/secure/user-cert.p12"
 
   # HTTP Basic authentication
   def test_basic_creds_http
-    T2Server::Run.create($uri, $wkf_basic_http, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_BASIC_HTTP, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTP, USERNAME, PASSWORD)
       run.start
       assert(run.running?)
@@ -79,7 +79,7 @@ class TestSecurity < Test::Unit::TestCase
     end
 
     # now test with no credential
-    T2Server::Run.create($uri, $wkf_basic_http, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_BASIC_HTTP, $creds, $conn_params) do |run|
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
@@ -91,9 +91,9 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTPS Basic authentication
   def test_basic_creds_https
-    T2Server::Run.create($uri, $wkf_basic_https, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_BASIC_HTTPS, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTPS, USERNAME, PASSWORD)
-      run.add_trust($heater_pk)
+      run.add_trust(HEATER_PK)
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
@@ -103,7 +103,7 @@ class TestSecurity < Test::Unit::TestCase
     end
 
     # now test with no server public key
-    T2Server::Run.create($uri, $wkf_basic_https, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_BASIC_HTTPS, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTPS, USERNAME, PASSWORD)
       run.start
       assert(run.running?)
@@ -116,7 +116,7 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTP Digest authentication
   def test_digest_creds_http
-    T2Server::Run.create($uri, $wkf_digest_http, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_DIGEST_HTTP, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTP, USERNAME, PASSWORD)
       run.start
       assert(run.running?)
@@ -129,9 +129,9 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTPS Digest authentication
   def test_digest_creds_https
-    T2Server::Run.create($uri, $wkf_digest_https, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_DIGEST_HTTPS, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTPS, USERNAME, PASSWORD)
-      run.add_trust($heater_pk)
+      run.add_trust(HEATER_PK)
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
@@ -143,7 +143,7 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTP WS-Security authentication
   def test_ws_creds_http
-    T2Server::Run.create($uri, $wkf_ws_http, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_WS_HTTP, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTP + WS1, USERNAME, PASSWORD)
       run.add_password_credential(HEATER_HTTP + WS2, USERNAME, PASSWORD)
       run.add_password_credential(HEATER_HTTP + WS3, USERNAME, PASSWORD)
@@ -164,12 +164,12 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTPS WS-Security authentication
   def test_ws_creds_https
-    T2Server::Run.create($uri, $wkf_ws_https, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_WS_HTTPS, $creds, $conn_params) do |run|
       run.add_password_credential(HEATER_HTTPS + WS1, USERNAME, PASSWORD)
       run.add_password_credential(HEATER_HTTPS + WS2, USERNAME, PASSWORD)
       run.add_password_credential(HEATER_HTTPS + WS3, USERNAME, PASSWORD)
       run.add_password_credential(HEATER_HTTPS + WS4, USERNAME, PASSWORD)
-      run.add_trust($heater_pk)
+      run.add_trust(HEATER_PK)
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
@@ -186,9 +186,9 @@ class TestSecurity < Test::Unit::TestCase
 
   # HTTPS client certificate authentication
   def test_client_cert_auth_https
-    T2Server::Run.create($uri, $wkf_client_https, $creds, $conn_params) do |run|
-      run.add_keypair_credential(HEATER_CAUTH, $user_pk, CERTPASS)
-      run.add_trust($heater_pk)
+    T2Server::Run.create($uri, WKF_CLIENT_HTTPS, $creds, $conn_params) do |run|
+      run.add_keypair_credential(HEATER_CAUTH, USER_PK, CERTPASS)
+      run.add_trust(HEATER_PK)
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }

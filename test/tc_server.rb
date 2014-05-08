@@ -36,6 +36,8 @@ require 't2-server'
 class TestServer < Test::Unit::TestCase
   include T2Server::Mocks
 
+  WKF_PASS = "test/workflows/pass_through.t2flow"
+
   # Server version is baked into the recorded server responses.
   SERVER_VERSION = "2.5.4"
 
@@ -65,7 +67,7 @@ class TestServer < Test::Unit::TestCase
 
   def test_run_creation
     assert_nothing_raised(T2Server::T2ServerError) do
-      run = @server.create_run($wkf_pass, $creds)
+      run = @server.create_run(WKF_PASS, $creds)
 
       # Mock the deletion of this specific run.
       mock("/rest/runs/#{run.id}", :method => :delete,
@@ -96,10 +98,10 @@ class TestServer < Test::Unit::TestCase
 
     run = nil
     assert_nothing_raised(T2Server::ServerAtCapacityError) do
-      run = @server.create_run($wkf_pass, $creds)
+      run = @server.create_run(WKF_PASS, $creds)
     end
     assert_raise(T2Server::ServerAtCapacityError) do
-      @server.create_run($wkf_pass, $creds)
+      @server.create_run(WKF_PASS, $creds)
     end
 
     assert_equal RUN_UUID, run.id

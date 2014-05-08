@@ -84,18 +84,6 @@ else
   $creds = T2Server::HttpBasic.new(user1, pass1) if user1
   $creds1 = T2Server::HttpBasic.new(user2, pass2) if user2
 
-  $wkf_pass   = "test/workflows/pass_through.t2flow"
-  $wkf_lists  = "test/workflows/empty_list.t2flow"
-  $wkf_l_v    = "test/workflows/list_and_value.t2flow"
-  $wkf_xml    = "test/workflows/xml_xpath.t2flow"
-  $wkf_fail   = "test/workflows/always_fail.t2flow"
-  $wkf_errors = "test/workflows/list_with_errors.t2flow"
-  $wkf_no_io  = "test/workflows/no-ports.t2flow"
-  $wkf_miss_o = "test/workflows/missing_outputs.t2flow"
-  $list_input = "test/workflows/empty_list_input.baclava"
-  $file_input = "test/workflows/in.txt"
-  $file_strs  = "test/workflows/strings.txt"
-
   if $uri.scheme == "http"
     $conn_params = T2Server::DefaultConnectionParameters.new
   else
