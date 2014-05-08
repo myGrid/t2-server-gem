@@ -38,6 +38,11 @@ class TestRun < Test::Unit::TestCase
 
   WKF_PASS = "test/workflows/pass_through.t2flow"
 
+  # Some expiry times
+  TIME_STR = "2014-05-08 17:41:57 +0100"    # Ruby time format
+  TIME_RET = "2014-05-08T17:41:57.00+01:00" # Server return format
+  TIME_SET = "2014-05-08T17:41:57.00+0100"  # Server update format
+
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
 
@@ -102,6 +107,28 @@ class TestRun < Test::Unit::TestCase
         assert run.name = long_name
       end
     end
+  end
+
+  def test_get_expiry
+    mock("/rest/runs/#{RUN_UUID}/expiry", :accept => "text/plain",
+      :body => TIME_RET, :credentials => $userinfo)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    exp = run.expiry
+    assert exp.instance_of?(Time)
+  end
+
+  def test_update_expiry
+    exp = mock("/rest/runs/#{RUN_UUID}/expiry", :method => :put,
+      :accept => "*/*", :body => TIME_SET, :credentials => $userinfo)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    run.expiry = TIME_STR
+    run.expiry = Time.parse(TIME_STR)
+
+    assert_requested exp, :times => 2
   end
 
 end
