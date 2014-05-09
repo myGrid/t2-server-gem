@@ -69,12 +69,13 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo, :output => "get-rest-run-input.raw")
     mock("#{RUN_PATH}/status", :accept => "text/plain",
       :credentials => $userinfo, :output => "get-rest-run-status.raw")
-    mock(RUN_PATH, :method => :delete, :status => 204,
-      :credentials => $userinfo)
   end
 
   # Test run connection
   def test_run_create_and_delete
+    del = mock(RUN_PATH, :method => :delete, :status => [204, 404, 404],
+      :credentials => $userinfo)
+
     assert_nothing_raised(T2Server::ConnectionError) do
       run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
       assert run.initialized?
@@ -85,6 +86,8 @@ class TestRun < Test::Unit::TestCase
       end
       assert run.delete # Should still return true
     end
+
+    assert_requested del, :times => 3
   end
 
   # Test run naming.
