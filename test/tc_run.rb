@@ -159,4 +159,15 @@ class TestRun < Test::Unit::TestCase
     assert_requested wkf, :times => 1
   end
 
+  def test_mkdir
+    dir = "test"
+    location = "#{RUN_PATH}/wd/#{dir}"
+    mock("#{RUN_PATH}/wd", :method => :post, :accept => "*/*", :status => 201,
+      :credentials => $userinfo, :location => location)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    assert run.mkdir(dir)
+  end
+
 end
