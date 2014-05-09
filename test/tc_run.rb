@@ -139,4 +139,20 @@ class TestRun < Test::Unit::TestCase
     assert_requested exp, :times => 2
   end
 
+  # Upload workflow as a string, then test getting it back.
+  def test_get_workflow
+    workflow = File.read(WKF_PASS)
+
+    wkf = mock("/rest/runs/#{RUN_UUID}/workflow", :body => workflow,
+      :accept => "application/xml", :credentials => $userinfo)
+
+    T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
+      # Download twice to check it's only actually retrieved once.
+      assert_equal workflow, run.workflow
+      assert_equal workflow, run.workflow
+    end
+
+    assert_requested wkf, :times => 1
+  end
+
 end
