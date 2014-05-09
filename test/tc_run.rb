@@ -53,6 +53,7 @@ class TestRun < Test::Unit::TestCase
 
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
+  RUN_PATH = "/rest/runs/#{RUN_UUID}"
 
   def setup
     # Register common mocks.
@@ -61,14 +62,14 @@ class TestRun < Test::Unit::TestCase
       :output => "get-rest-policy.raw")
     mock("/rest/runs", :method => :post, :credentials => $userinfo,
       :status => 201,
-      :location => "https://localhost/taverna/rest/runs/#{RUN_UUID}")
-    mock("/rest/runs/#{RUN_UUID}", :accept => "application/xml",
-      :credentials => $userinfo, :output => "get-rest-run.raw")
-    mock("/rest/runs/#{RUN_UUID}/input", :accept => "application/xml",
+      :location => "https://localhost/taverna#{RUN_PATH}")
+    mock(RUN_PATH, :accept => "application/xml", :credentials => $userinfo,
+      :output => "get-rest-run.raw")
+    mock("#{RUN_PATH}/input", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-input.raw")
-    mock("/rest/runs/#{RUN_UUID}/status", :accept => "text/plain",
+    mock("#{RUN_PATH}/status", :accept => "text/plain",
       :credentials => $userinfo, :output => "get-rest-run-status.raw")
-    mock("/rest/runs/#{RUN_UUID}", :method => :delete, :status => 204,
+    mock(RUN_PATH, :method => :delete, :status => 204,
       :credentials => $userinfo)
   end
 
@@ -88,7 +89,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run naming.
   def test_run_naming
-    mock("/rest/runs/#{RUN_UUID}/name", :accept => "text/plain",
+    mock("#{RUN_PATH}/name", :accept => "text/plain",
       :credentials => $userinfo, :output => "get-rest-run-name.raw")
 
     T2Server::Server.new($uri, $conn_params) do |server|
@@ -100,7 +101,7 @@ class TestRun < Test::Unit::TestCase
         # Set a new name.
         name = "No input or output"
 
-        mock("/rest/runs/#{RUN_UUID}/name", :method => :put, :body => name,
+        mock("#{RUN_PATH}/name", :method => :put, :body => name,
           :credentials => $userinfo)
 
         assert run.name = name
@@ -109,8 +110,8 @@ class TestRun < Test::Unit::TestCase
         # characters.
         long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
 
-        mock("/rest/runs/#{RUN_UUID}/name", :method => :put,
-          :body => long_name[0...48], :credentials => $userinfo)
+        mock("#{RUN_PATH}/name", :method => :put, :body => long_name[0...48],
+          :credentials => $userinfo)
 
         assert run.name = long_name
       end
@@ -118,8 +119,8 @@ class TestRun < Test::Unit::TestCase
   end
 
   def test_get_expiry
-    mock("/rest/runs/#{RUN_UUID}/expiry", :accept => "text/plain",
-      :body => TIME_RET, :credentials => $userinfo)
+    mock("#{RUN_PATH}/expiry", :accept => "text/plain", :body => TIME_RET,
+      :credentials => $userinfo)
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
@@ -128,8 +129,8 @@ class TestRun < Test::Unit::TestCase
   end
 
   def test_update_expiry
-    exp = mock("/rest/runs/#{RUN_UUID}/expiry", :method => :put,
-      :accept => "*/*", :body => TIME_SET, :credentials => $userinfo)
+    exp = mock("#{RUN_PATH}/expiry", :method => :put, :accept => "*/*",
+      :body => TIME_SET, :credentials => $userinfo)
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
@@ -143,7 +144,7 @@ class TestRun < Test::Unit::TestCase
   def test_get_workflow
     workflow = File.read(WKF_PASS)
 
-    wkf = mock("/rest/runs/#{RUN_UUID}/workflow", :body => workflow,
+    wkf = mock("#{RUN_PATH}/workflow", :body => workflow,
       :accept => "application/xml", :credentials => $userinfo)
 
     T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
