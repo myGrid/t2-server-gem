@@ -54,6 +54,7 @@ class TestRun < Test::Unit::TestCase
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
   RUN_PATH = "/rest/runs/#{RUN_UUID}"
+  RUN_LSTN = "#{RUN_PATH}/listeners/io/properties"
 
   def setup
     # Register common mocks.
@@ -168,6 +169,23 @@ class TestRun < Test::Unit::TestCase
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
     assert run.mkdir(dir)
+  end
+
+  def test_listeners
+    mock("#{RUN_LSTN}/exitcode", :accept => "text/plain", :body => "0",
+      :credentials => $userinfo)
+    mock("#{RUN_LSTN}/stdout", :accept => "text/plain", :body => "Out",
+      :credentials => $userinfo)
+    mock("#{RUN_LSTN}/stderr", :accept => "text/plain", :body => "Error",
+      :credentials => $userinfo)
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    # Check the exitcode is parsed into a number and other things not mangled.
+    exit = run.exitcode
+    assert_equal 0, exit
+    assert_instance_of(Fixnum, exit)
+    assert_equal "Out", run.stdout
+    assert_equal "Error", run.stderr
   end
 
 end
