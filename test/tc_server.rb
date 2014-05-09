@@ -65,6 +65,17 @@ class TestServer < Test::Unit::TestCase
     assert_not_requested @mock_policy
   end
 
+  def test_redirect
+    # Re-mock getting the rest endpoint so that it redirects.
+    mock("/rest/", :accept => "application/xml", :status => 302,
+      :location => "http://localhost/taverna/rest/")
+
+    # And now a webmock error should be triggered.
+    assert_raise(WebMock::NetConnectNotAllowedError) do
+      @server.run_limit($creds)
+    end
+  end
+
   def test_run_creation
     assert_nothing_raised(T2Server::T2ServerError) do
       run = @server.create_run(WKF_PASS, $creds)
