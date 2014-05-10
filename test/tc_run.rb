@@ -203,7 +203,8 @@ class TestRun < Test::Unit::TestCase
     # Re-mock status to fake up a running run.
     status = mock("#{RUN_PATH}/status", :accept => "text/plain",
       :credentials => $userinfo,
-      :body => ["Initialized", "Initialized", "Running", "Running", "Finished"])
+      :body => ["Initialized", "Initialized", "Operating", "Operating",
+        "Operating", "Finished"])
 
     out = mock("#{RUN_PATH}/output", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-output.raw")
@@ -221,6 +222,9 @@ class TestRun < Test::Unit::TestCase
     # Need to start the run to trigger input upload, then don't wait between
     # mocked polling of status.
     run.start
+
+    assert run.running?
+
     run.wait(0)
 
     assert run.finished?
@@ -235,7 +239,7 @@ class TestRun < Test::Unit::TestCase
       assert_nil run.output_port("wrong!")
     end
 
-    assert_requested status, :times => 11
+    assert_requested status, :times => 12
     assert_requested in_exp, :times => 1
     assert_requested out, :times => 1
   end
