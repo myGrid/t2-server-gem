@@ -126,6 +126,8 @@ class TestServer < Test::Unit::TestCase
     run_uri = "/rest/runs/#{run.id}"
     mock_run = mock(run_uri, :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run.raw")
+    mock("#{run_uri}/security", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-security.raw")
     mock_input = mock("#{run_uri}/input", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-input.raw")
     mock_status = mock("#{run_uri}/status", :accept => "text/plain",
