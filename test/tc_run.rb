@@ -41,6 +41,24 @@ def timezone
   z < 0 ? "-#{s}" : "+#{s}"
 end
 
+# A class to test data streaming.
+class TestCache
+  attr_reader :data
+
+  def initialize
+    @data = ""
+  end
+
+  def write(data)
+    @data += data
+    data.size
+  end
+
+  def size
+    return @data.size
+  end
+end
+
 class TestRun < Test::Unit::TestCase
   include T2Server::Mocks
 
@@ -242,6 +260,39 @@ class TestRun < Test::Unit::TestCase
     assert_requested status, :times => 12
     assert_requested in_exp, :times => 1
     assert_requested out, :times => 1
+  end
+
+  def test_log
+    log = mock("#{RUN_PATH}/wd/logs/detail.log", :accept => "text/plain",
+      :credentials => $userinfo, :body => mocked_file("log.txt"))
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    # Should be an error if a parameter and a block are passed in here.
+    assert_raise(ArgumentError) do
+      run.log("log.txt") do |chunk|
+        # ...
+      end
+    end
+
+    assert_nothing_raised(ArgumentError) do
+      log_str = run.log
+
+      assert_not_equal(log_str, "")
+
+      log_stream = ""
+      run.log do |chunk|
+        log_stream += chunk
+      end
+      assert_equal log_str, log_stream
+
+      log_cache = TestCache.new
+      run.log(log_cache)
+      assert_not_equal 0, log_cache.size
+      assert_equal log_str, log_cache.data
+    end
+
+    assert_requested log, :times => 3
   end
 
 end

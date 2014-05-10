@@ -45,13 +45,15 @@ module T2Server
 
       output =
       if options[:output]
-        file(options[:output])
+        mocked_file(options[:output])
       else
         out = add_to_hash(:status, options[:status])
 
         if options[:body] && options[:method] == :get
           out = add_to_hash(:body, options[:body], out)
-          out = add_to_hash("Content-Length", options[:body].length, out)
+          unless options[:body].instance_of?(File)
+            out = add_to_hash("Content-Length", options[:body].length, out)
+          end
         end
 
         out = add_to_hash("Location", options[:location], out, true) if options[:location]
@@ -60,6 +62,10 @@ module T2Server
 
       stub_request(options[:method], uri(options[:credentials]) + path).
         with(with).to_return(output)
+    end
+
+    def mocked_file(name)
+      File.new(File.join(File.dirname(__FILE__), name))
     end
 
     private
@@ -92,10 +98,6 @@ module T2Server
         u.userinfo = credentials
         u.to_s
       end
-    end
-
-    def file(name)
-      File.new(File.join(File.dirname(__FILE__), name))
     end
 
   end
