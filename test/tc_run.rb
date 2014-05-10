@@ -188,4 +188,56 @@ class TestRun < Test::Unit::TestCase
     assert_equal "Error", run.stderr
   end
 
+  def test_full_run
+    data = "Hello"
+
+    in_exp = mock("#{RUN_PATH}/input/expected", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-input-expected.raw")
+
+    mock("#{RUN_PATH}/input/input/IN", :method => :put, :accept => "*/*",
+      :credentials => $userinfo)
+
+    mock("#{RUN_PATH}/status", :method => :put, :body => "Operating",
+      :credentials => $userinfo)
+
+    # Re-mock status to fake up a running run.
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :credentials => $userinfo,
+      :body => ["Initialized", "Initialized", "Running", "Running", "Finished"])
+
+    out = mock("#{RUN_PATH}/output", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-output.raw")
+
+    mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
+      :credentials => $userinfo, :body => data)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      run.input_port("IN").value = data
+    end
+    assert_equal data, run.input_port("IN").value
+
+    # Need to start the run to trigger input upload, then don't wait between
+    # mocked polling of status.
+    run.start
+    run.wait(0)
+
+    assert run.finished?
+
+    outputs = run.output_ports
+    assert_equal 1, outputs.length
+
+    assert_equal data, run.output_port("OUT").value
+
+    # No network access should occur on the next call.
+    assert_nothing_raised(WebMock::NetConnectNotAllowedError) do
+      assert_nil run.output_port("wrong!")
+    end
+
+    assert_requested status, :times => 11
+    assert_requested in_exp, :times => 1
+    assert_requested out, :times => 1
+  end
+
 end

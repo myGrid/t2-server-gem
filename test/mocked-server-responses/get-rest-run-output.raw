@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Content-Type: application/xml
+Content-Length: 661
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><port:workflowOutputs xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:run="http://ns.taverna.org.uk/2010/run/" xmlns:xlink="http://www.w3.org/1999/xlink" port:workflowId="" port:workflowRun="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74" port:workflowRunId="a341b87f-25cc-4dfd-be36-f5b073a6ba74"><port:output port:name="OUT" port:depth="0"><port:value port:contentFile="/out/OUT" port:contentType="text/plain" port:contentByteLength="5" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT"/></port:output></port:workflowOutputs>
