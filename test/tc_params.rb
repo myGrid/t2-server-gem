@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2011 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -34,13 +34,13 @@ require 't2-server'
 
 class TestParams < Test::Unit::TestCase
 
-  def test_params
+  def test_base_params
     params = T2Server::ConnectionParameters.new
 
     params[:verify_peer] = true
-    assert_not_nil(params[:verify_peer])
+    assert_not_nil params[:verify_peer]
 
     params[:not_a_chance] = true
-    assert_nil(params[:not_a_chance])
+    assert_nil params[:not_a_chance]
   end
 end
