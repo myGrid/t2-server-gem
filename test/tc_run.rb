@@ -297,4 +297,17 @@ class TestRun < Test::Unit::TestCase
     assert_requested log, :times => 3
   end
 
+  def test_create_start_finish_times
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    %w(create start finish).each do |time|
+      mock("#{RUN_PATH}/#{time}Time", :accept => "text/plain", :body => TIME_RET,
+        :credentials => $userinfo)
+
+      t = run.create_time
+      assert t.instance_of?(Time)
+      assert TIME_STR, t.to_s
+    end
+  end
+
 end
