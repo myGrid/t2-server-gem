@@ -34,6 +34,9 @@ require 't2-server'
 
 class TestParams < Test::Unit::TestCase
 
+  CERT_DIR  = "test/workflows/secure"
+  SERVER_PK = "#{CERT_DIR}/heater-pk.pem"
+
   def test_base_params
     params = T2Server::ConnectionParameters.new
 
@@ -66,6 +69,27 @@ class TestParams < Test::Unit::TestCase
 
     assert_nothing_raised do
       T2Server::Server.new($uri, params)
+    end
+  end
+
+  def test_custom_ca
+    [CERT_DIR, SERVER_PK, Dir.new(CERT_DIR), File.new(SERVER_PK)].each do |c|
+      params = T2Server::CustomCASSLConnectionParameters.new(c)
+
+      assert_not_nil params[:verify_peer]
+      assert params[:verify_peer]
+
+      if c.instance_of?(Dir) || File.directory?(c)
+        assert_not_nil params[:ca_path]
+        assert_equal CERT_DIR, params[:ca_path]
+      else
+        assert_not_nil params[:ca_file]
+        assert_equal SERVER_PK, params[:ca_file]
+      end
+
+      assert_nothing_raised do
+        T2Server::Server.new($uri, params)
+      end
     end
   end
 
