@@ -55,4 +55,18 @@ class TestParams < Test::Unit::TestCase
     end
   end
 
+  def test_ssl3
+    params = T2Server::SSL3ConnectionParameters.new
+
+    assert_not_nil params[:verify_peer]
+    assert params[:verify_peer]
+
+    assert_not_nil params[:ssl_version]
+    assert_equal :SSLv3, params[:ssl_version]
+
+    assert_nothing_raised do
+      T2Server::Server.new($uri, params)
+    end
+  end
+
 end
