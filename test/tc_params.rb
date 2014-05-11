@@ -54,7 +54,7 @@ class TestParams < Test::Unit::TestCase
     refute params[:verify_peer]
 
     assert_nothing_raised do
-      T2Server::Server.new($uri, params)
+      T2Server::Server.new("#{$uri}/insecure", params)
     end
   end
 
@@ -68,11 +68,13 @@ class TestParams < Test::Unit::TestCase
     assert_equal :SSLv3, params[:ssl_version]
 
     assert_nothing_raised do
-      T2Server::Server.new($uri, params)
+      T2Server::Server.new("#{$uri}/ssl3", params)
     end
   end
 
   def test_custom_ca
+    uri_suffix = 0
+
     [CERT_DIR, SERVER_PK, Dir.new(CERT_DIR), File.new(SERVER_PK)].each do |c|
       params = T2Server::CustomCASSLConnectionParameters.new(c)
 
@@ -88,8 +90,10 @@ class TestParams < Test::Unit::TestCase
       end
 
       assert_nothing_raised do
-        T2Server::Server.new($uri, params)
+        T2Server::Server.new("#{$uri}/ca/#{uri_suffix}", params)
       end
+
+      uri_suffix += 1
     end
   end
 
