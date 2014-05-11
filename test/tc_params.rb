@@ -43,4 +43,16 @@ class TestParams < Test::Unit::TestCase
     params[:not_a_chance] = true
     assert_nil params[:not_a_chance]
   end
+
+  def test_insecure
+    params = T2Server::InsecureSSLConnectionParameters.new
+
+    assert_not_nil params[:verify_peer]
+    refute params[:verify_peer]
+
+    assert_nothing_raised do
+      T2Server::Server.new($uri, params)
+    end
+  end
+
 end
