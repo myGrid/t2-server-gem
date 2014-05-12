@@ -114,4 +114,13 @@ class TestConnection < Test::Unit::TestCase
     end
   end
 
+  def test_options_500
+    mock("", :method => :options, :status => 500)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+    assert_raise(T2Server::UnexpectedServerResponse) do
+      connection.OPTIONS($uri, nil)
+    end
+  end
+
 end
