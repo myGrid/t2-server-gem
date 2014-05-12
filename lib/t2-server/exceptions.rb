@@ -30,7 +30,7 @@
 #
 # Author: Robert Haines
 
-require 'net/http'
+require 'net/http/persistent'
 
 module T2Server
   # :stopdoc:
@@ -41,8 +41,10 @@ module T2Server
   module InternalHTTPError
   end
 
-  # These are the HTTP errors we want to catch.
-  # Add the above exception as an ancestor to them all.
+  # These are the HTTP errors we want to catch. Add the above exception as an
+  # ancestor to them all. Some are caught by Net::HTTP::Persistent and
+  # re-raised as a Net::HTTP::Persistent::Error but keep them listed here just
+  # in case.
   [
     EOFError,
     SocketError,
@@ -53,7 +55,8 @@ module T2Server
     Errno::ECONNREFUSED,
     Net::HTTPBadResponse,
     Net::HTTPHeaderSyntaxError,
-    Net::ProtocolError
+    Net::ProtocolError,
+    Net::HTTP::Persistent::Error
   ].each {|err| err.send(:include, InternalHTTPError)}
 
   # :startdoc:
