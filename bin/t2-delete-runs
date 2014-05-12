@@ -88,9 +88,6 @@ for run in server_runs
         run.delete
       end
     end
-  rescue T2Server::RunNotFoundError => rnf
-    puts "Run '#{run.id}' not found - skipping."
-    next
   rescue T2Server::AuthorizationError => ae
     puts "You are not authorized to delete run '#{run.id}' - skipping."
     next

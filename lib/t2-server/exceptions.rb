@@ -115,21 +115,6 @@ module T2Server
     end
   end
 
-  # Raised when the run that is being operated on cannot be found. If the
-  # expectation is that the run exists then it could have been destroyed by
-  # a timeout or another user.
-  class RunNotFoundError < T2ServerError
-
-    # The identifier of the run that was not found on the server.
-    attr_reader :identifier
-
-    # Create a new RunNotFoundError with the specified identifier.
-    def initialize(id)
-      @identifier = id
-      super "Could not find run #{@identifier}"
-    end
-  end
-
   # Indicates that the attribute that the user is trying to read/change does
   # not exist. The attribute could be a server or run attribute.
   class AttributeNotFoundError < T2ServerError
