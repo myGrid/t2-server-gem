@@ -30,9 +30,11 @@
 #
 # Author: Robert Haines
 
+require 'mocked-server-responses/mocks'
 require 't2-server'
 
 class TestConnection < Test::Unit::TestCase
+  include T2Server::Mocks
 
   # Test URIs.
   EXAMPLE_COM = "http://example.com"
@@ -82,6 +84,15 @@ class TestConnection < Test::Unit::TestCase
     conn2 = T2Server::ConnectionFactory.connect(EXAMPLE_URI_S, $conn_params)
 
     assert_not_same conn1, conn2
+  end
+
+  def test_get_404
+    mock("", :accept => "*/*", :status => 404)
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+
+    assert_raise(T2Server::AttributeNotFoundError) do
+      connection.GET($uri, "*/*", nil, nil)
+    end
   end
 
 end
