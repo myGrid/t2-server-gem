@@ -60,8 +60,11 @@ module T2Server
         out
       end
 
-      stub_request(options[:method], uri(options[:credentials]) + path).
-        with(with).to_return(output)
+      stub = stub_request(options[:method], uri(options[:credentials]) + path).
+        with(with)
+      stub = stub.to_return(output) unless output == []
+      stub = stub.to_raise(options[:raise]) if options[:raise]
+      options[:timeout] ? stub.to_timeout : stub
     end
 
     def mocked_file(name)
