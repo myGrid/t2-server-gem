@@ -127,7 +127,7 @@ class TestConnection < Test::Unit::TestCase
     mock("", :timeout => true)
 
     connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-    assert_raise(Net::HTTP::Persistent::Error) do
+    assert_raise(T2Server::ConnectionError) do
       connection.GET($uri, "*/*", nil, nil)
     end
   end
