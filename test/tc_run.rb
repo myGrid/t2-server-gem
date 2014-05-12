@@ -323,4 +323,17 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  def test_upload_file
+    filename = "in.txt"
+    mock("#{RUN_PATH}/wd/#{filename}", :method => :put, :accept => "*/*",
+      :status => 201, :credentials => $userinfo,
+      :location => "https://localhost/taverna#{RUN_PATH}/wd/#{filename}")
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    file = run.upload_file("test/workflows/#{filename}")
+
+    assert_equal filename, file
+  end
+
 end
