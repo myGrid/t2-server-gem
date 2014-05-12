@@ -123,4 +123,13 @@ class TestConnection < Test::Unit::TestCase
     end
   end
 
+  def test_network_timeout
+    mock("", :timeout => true)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+    assert_raise(Net::HTTP::Persistent::Error) do
+      connection.GET($uri, "*/*", nil, nil)
+    end
+  end
+
 end
