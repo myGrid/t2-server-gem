@@ -311,4 +311,16 @@ class TestRun < Test::Unit::TestCase
     end
   end
 
+  def test_bad_state
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    # Re-mock status to fake up an already running run.
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo, :body => "Operating")
+
+    assert_raise(T2Server::RunStateError) do
+      run.start
+    end
+  end
+
 end
