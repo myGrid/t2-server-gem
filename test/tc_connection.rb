@@ -106,11 +106,12 @@ class TestConnection < Test::Unit::TestCase
   end
 
   def test_post_401
-    mock("", :method => :post, :accept => "*/*", :status => 401)
+    mock("", :method => :post, :accept => "*/*", :credentials => $userinfo,
+      :status => 401)
 
     connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
     assert_raise(T2Server::AuthorizationError) do
-      connection.POST($uri, "", "*/*", nil)
+      connection.POST($uri, "", "*/*", $creds)
     end
   end
 
