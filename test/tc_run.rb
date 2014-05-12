@@ -305,7 +305,7 @@ class TestRun < Test::Unit::TestCase
       mock("#{RUN_PATH}/#{time}Time", :accept => "text/plain", :body => TIME_RET,
         :credentials => $userinfo)
 
-      t = run.create_time
+      t = run.send("#{time}_time".to_sym)
       assert t.instance_of?(Time)
       assert TIME_STR, t.to_s
     end
