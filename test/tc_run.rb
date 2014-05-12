@@ -113,7 +113,7 @@ class TestRun < Test::Unit::TestCase
 
   # Test run naming.
   def test_run_naming
-    mock("#{RUN_PATH}/name", :accept => "text/plain",
+    mock("#{RUN_PATH}/name", :accept => "text/plain", :status => 200,
       :credentials => $userinfo, :output => "get-rest-run-name.raw")
 
     T2Server::Server.new($uri, $conn_params) do |server|
@@ -126,7 +126,7 @@ class TestRun < Test::Unit::TestCase
         name = "No input or output"
 
         mock("#{RUN_PATH}/name", :method => :put, :body => name,
-          :credentials => $userinfo)
+          :status => 200, :credentials => $userinfo)
 
         assert run.name = name
 
@@ -135,7 +135,7 @@ class TestRun < Test::Unit::TestCase
         long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
 
         mock("#{RUN_PATH}/name", :method => :put, :body => long_name[0...48],
-          :credentials => $userinfo)
+          :status => 200, :credentials => $userinfo)
 
         assert run.name = long_name
       end
@@ -144,7 +144,7 @@ class TestRun < Test::Unit::TestCase
 
   def test_get_expiry
     mock("#{RUN_PATH}/expiry", :accept => "text/plain", :body => TIME_RET,
-      :credentials => $userinfo)
+      :status => 200, :credentials => $userinfo)
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
@@ -154,7 +154,7 @@ class TestRun < Test::Unit::TestCase
 
   def test_update_expiry
     exp = mock("#{RUN_PATH}/expiry", :method => :put, :accept => "*/*",
-      :body => TIME_SET, :credentials => $userinfo)
+      :status => 200, :body => TIME_SET, :credentials => $userinfo)
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
@@ -215,14 +215,14 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo, :output => "get-rest-run-input-expected.raw")
 
     mock("#{RUN_PATH}/input/input/IN", :method => :put, :accept => "*/*",
-      :credentials => $userinfo)
+      :status => 200, :credentials => $userinfo)
 
     mock("#{RUN_PATH}/status", :method => :put, :body => "Operating",
-      :credentials => $userinfo)
+      :status => 200, :credentials => $userinfo)
 
     # Re-mock status to fake up a running run.
     status = mock("#{RUN_PATH}/status", :accept => "text/plain",
-      :credentials => $userinfo,
+      :status => 200, :credentials => $userinfo,
       :body => ["Initialized", "Initialized", "Operating", "Operating",
         "Operating", "Finished"])
 
@@ -230,7 +230,7 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo, :output => "get-rest-run-output.raw")
 
     mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
-      :credentials => $userinfo, :body => data)
+      :status => 200, :credentials => $userinfo, :body => data)
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
@@ -266,7 +266,8 @@ class TestRun < Test::Unit::TestCase
 
   def test_log
     log = mock("#{RUN_PATH}/wd/logs/detail.log", :accept => "text/plain",
-      :credentials => $userinfo, :body => mocked_file("log.txt"))
+      :status => 200, :credentials => $userinfo,
+      :body => mocked_file("log.txt"))
 
     run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 

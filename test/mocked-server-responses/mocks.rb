@@ -36,7 +36,7 @@ module T2Server
   module Mocks
 
     def mock(path, options = {})
-      options = { :method => :get, :accept => "*/*", :status => 200 }.merge(options)
+      options = { :method => :get, :accept => "*/*" }.merge(options)
 
       with = { :headers => { "Accept" => options[:accept] } }
       if options[:body] && (options[:method] == :post || options[:method] == :put)
@@ -47,7 +47,7 @@ module T2Server
       if options[:output]
         mocked_file(options[:output])
       else
-        out = add_to_hash(:status, options[:status])
+        out = options[:status] ? add_to_hash(:status, options[:status]) : []
 
         if options[:body] && options[:method] == :get
           out = add_to_hash(:body, options[:body], out)
