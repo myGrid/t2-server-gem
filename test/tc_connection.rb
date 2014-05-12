@@ -95,4 +95,14 @@ class TestConnection < Test::Unit::TestCase
     end
   end
 
+  def test_put_403
+    mock("", :method => :put, :accept => "*/*", :status => 403)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+
+    assert_raise(T2Server::AccessForbiddenError) do
+      connection.PUT($uri, "", "*/*", nil)
+    end
+  end
+
 end
