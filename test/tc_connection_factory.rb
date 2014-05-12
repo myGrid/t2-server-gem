@@ -73,6 +73,8 @@ class TestConnection < Test::Unit::TestCase
 
     assert_same conn1, conn2
     assert_same conn3, conn4
+    assert_not_same conn1, conn3
+    assert_not_same conn2, conn4
   end
 
   def test_return_different_connection_for_different_address
