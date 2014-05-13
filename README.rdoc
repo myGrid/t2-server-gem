@@ -16,11 +16,12 @@ This is a Ruby library to interface with the Taverna 2 Server REST API.
 
 == Installation
 
-Ensure that gem itself is up to date:
-  [sudo] gem update --system
-
-Then simply install as you would any other gem:
+Simply install as you would any other gem:
   [sudo] gem install t2-server
+
+Or use {Bundler}[http://bundler.io/], with
+  gem 't2-server', '~> 1.0'
+in your +Gemfile+, for example.
 
 In case of problems with the above the gem is available for download here:
 https://rubygems.org/gems/t2-server
