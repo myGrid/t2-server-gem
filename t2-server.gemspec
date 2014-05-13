@@ -48,9 +48,9 @@ Gem::Specification.new do |s|
   s.require_path     = "lib"
   s.bindir           = "bin"
   s.files            = `git ls-files`.split($/)
+  s.test_files       = `git ls-files -- test/*`.split($/)
   s.executables      = ["t2-delete-runs", "t2-run-workflow", "t2-server-info",
                           "t2-get-output", "t2-server-admin"]
-  s.test_file        = "test/ts_t2server.rb"
   s.has_rdoc         = true
   s.extra_rdoc_files = ["README.rdoc", "LICENCE.rdoc", "CHANGES.rdoc"]
   s.rdoc_options     = ["-N", "--tab-width=2", "--main=README.rdoc"]
@@ -59,6 +59,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rdoc', '~> 4.1')
   s.add_development_dependency('launchy', '~> 2.2')
   s.add_development_dependency('hirb', '~> 0.7')
+  s.add_development_dependency('webmock', '~> 1.17')
+  s.add_development_dependency('coveralls')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0')
   s.add_runtime_dependency('ratom', '~> 0.8.2')

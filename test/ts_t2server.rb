@@ -30,6 +30,9 @@
 #
 # Author: Robert Haines
 
+require 'coveralls'
+Coveralls.wear!
+
 require 'test/unit'
 require 't2-server'
 
@@ -48,21 +51,11 @@ if ARGV.size != 0
     user2 = nil if pass2.nil?
   end
 
-  puts "Using server at: #{address}"
+  puts "Running tests against a live server at: #{address}"
   puts "   With user(s): #{user1} #{user2}" if user1
 
   # Clear the commandline arguments so that we don't confuse runit.
   ARGV.clear
-elsif !ENV["TRAVIS"]
-  # get a server address to test if not in travis - 30 second timeout
-  print "\nPlease supply a valid Taverna 2 Server address.\n\nNOTE that " +
-    "these tests will fully load the server and then delete all the runs " +
-    "that it has permission to do so - if you are not using security ALL " +
-    "runs will be deleted!\n(leave blank to skip tests): "
-  $stdout.flush
-  if select([$stdin], [], [], 30)
-    address = $stdin.gets.chomp
-  end
 end
 
 # If address is still unset then set it to something.
@@ -71,25 +64,25 @@ address ||= ""
 # the testcases to run
 require 'tc_util'
 require 'tc_params'
+require 'tc_connection'
 require 'tc_server_version'
-unless address == ""
+require 'tc_credentials'
+
+# Only run tests against a live server if we have an address for one.
+if address == ""
+  $uri = URI.parse("https://localhost/taverna")
+  $creds = T2Server::HttpBasic.new("test", "test")
+  $userinfo = "test:test"
+  $conn_params = T2Server::DefaultConnectionParameters.new
+
+  require 'tc_server'
+  require 'tc_run'
+else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
   # override creds if passed in on the command line
   $creds = T2Server::HttpBasic.new(user1, pass1) if user1
   $creds1 = T2Server::HttpBasic.new(user2, pass2) if user2
-
-  $wkf_pass   = "test/workflows/pass_through.t2flow"
-  $wkf_lists  = "test/workflows/empty_list.t2flow"
-  $wkf_l_v    = "test/workflows/list_and_value.t2flow"
-  $wkf_xml    = "test/workflows/xml_xpath.t2flow"
-  $wkf_fail   = "test/workflows/always_fail.t2flow"
-  $wkf_errors = "test/workflows/list_with_errors.t2flow"
-  $wkf_no_io  = "test/workflows/no-ports.t2flow"
-  $wkf_miss_o = "test/workflows/missing_outputs.t2flow"
-  $list_input = "test/workflows/empty_list_input.baclava"
-  $file_input = "test/workflows/in.txt"
-  $file_strs  = "test/workflows/strings.txt"
 
   if $uri.scheme == "http"
     $conn_params = T2Server::DefaultConnectionParameters.new
@@ -102,15 +95,15 @@ unless address == ""
     # This will drop out before further tests are run
     T2Server::Server.new($uri, $conn_params)
 
-    require 'tc_server'
-    require 'tc_run'
-    require 'tc_admin'
-    require 'tc_secure'
-    require 'tc_misc'
+    require 'tc_server_live'
+    require 'tc_run_live'
+    require 'tc_admin_live'
+    require 'tc_secure_live'
+    require 'tc_misc_live'
 
     # if we have two sets of credentials we can run permissions tests
     if $creds1
-      require 'tc_perms'
+      require 'tc_perms_live'
     end
   rescue RuntimeError => e
     puts "!!!\nNo tests on the remote server could be run.\n#{e.message}\n!!!"

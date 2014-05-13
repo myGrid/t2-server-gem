@@ -34,10 +34,12 @@ require 't2-server'
 
 class TestPermissions < Test::Unit::TestCase
 
+  WKF_PASS = "test/workflows/pass_through.t2flow"
+
   def test_ownership_and_revokation
     server = T2Server::Server.new($uri, $conn_params)
 
-    server.create_run($wkf_pass, $creds) do |run|
+    server.create_run(WKF_PASS, $creds) do |run|
       assert(run.owner?)
       assert_equal(run.owner, $creds.username)
 
@@ -61,7 +63,7 @@ class TestPermissions < Test::Unit::TestCase
   def test_read_permission
     server = T2Server::Server.new($uri, $conn_params)
 
-    server.create_run($wkf_pass, $creds) do |run|
+    server.create_run(WKF_PASS, $creds) do |run|
       assert_nothing_raised(T2Server::AccessForbiddenError) do
         run.grant_permission($creds1.username, :read)
       end
@@ -99,7 +101,7 @@ class TestPermissions < Test::Unit::TestCase
   def test_update_permission
     server = T2Server::Server.new($uri, $conn_params)
 
-    server.create_run($wkf_pass, $creds) do |run|
+    server.create_run(WKF_PASS, $creds) do |run|
       assert_nothing_raised(T2Server::AccessForbiddenError) do
         run.grant_permission($creds1.username, :update)
       end
@@ -128,7 +130,7 @@ class TestPermissions < Test::Unit::TestCase
   def test_destroy_permission
     server = T2Server::Server.new($uri, $conn_params)
 
-    server.create_run($wkf_pass, $creds) do |run|
+    server.create_run(WKF_PASS, $creds) do |run|
       assert_nothing_raised(T2Server::AccessForbiddenError) do
         run.grant_permission($creds1.username, :destroy)
       end

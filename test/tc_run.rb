@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014 The University of Manchester, UK.
+# Copyright (c) 2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,7 +30,16 @@
 #
 # Author: Robert Haines
 
+require 'mocked-server-responses/mocks'
 require 't2-server'
+
+# For time-based tests to run we have to mangle the timezone to match the
+# local server. Sigh.
+def timezone
+  z = Time.zone_offset(Time.now.zone) / 3600
+  s = z.abs < 10 ? "0#{z.abs.to_s}" : z.abs.to_s
+  z < 0 ? "-#{s}" : "+#{s}"
+end
 
 # A class to test data streaming.
 class TestCache
@@ -51,407 +60,295 @@ class TestCache
 end
 
 class TestRun < Test::Unit::TestCase
+  include T2Server::Mocks
+
+  WKF_PASS = "test/workflows/pass_through.t2flow"
+
+  # Some expiry times, mangled to work in different timezones.
+  TIME_STR = "2014-05-08 17:41:57 #{timezone}00"    # Ruby time format
+  TIME_RET = "2014-05-08T17:41:57.00#{timezone}:00" # Server return format
+  TIME_SET = "2014-05-08T17:41:57.00#{timezone}00"  # Server update format
+
+  # Need to lock down the run UUID so recorded server responses make sense.
+  RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
+  RUN_PATH = "/rest/runs/#{RUN_UUID}"
+  RUN_LSTN = "#{RUN_PATH}/listeners/io/properties"
+
+  def setup
+    # Register common mocks.
+    mock("/rest/", :accept => "application/xml", :output => "get-rest.raw")
+    mock("/rest/policy", :accept => "application/xml",
+      :output => "get-rest-policy.raw")
+    mock("/rest/runs", :method => :post, :credentials => $userinfo,
+      :status => 201,
+      :location => "https://localhost/taverna#{RUN_PATH}")
+    mock(RUN_PATH, :accept => "application/xml", :credentials => $userinfo,
+      :output => "get-rest-run.raw")
+    mock("#{RUN_PATH}/input", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-input.raw")
+    mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :credentials => $userinfo, :output => "get-rest-run-status.raw")
+    mock("#{RUN_PATH}/security", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-security.raw")
+  end
 
   # Test run connection
   def test_run_create_and_delete
+    del = mock(RUN_PATH, :method => :delete, :status => [204, 404, 404],
+      :credentials => $userinfo)
+
     assert_nothing_raised(T2Server::ConnectionError) do
-      run = T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params)
-      assert_equal(run.status, :initialized)
-      assert(run.delete)
-      assert(run.deleted?)
-      assert_equal(run.status, :deleted)
+      run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+      assert run.initialized?
+      assert run.delete
+      assert run.deleted?
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        assert(run.delete) # Should still return true, not raise 404
+        assert run.delete # Should still return true, not raise 404
       end
-      assert(run.delete) # Should still return true
+      assert run.delete # Should still return true
     end
+
+    assert_requested del, :times => 3
   end
 
-  # Test misc run functions
-  def test_status_codes
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-
-      # test mkdir
-      assert(run.mkdir("test"))
-
-      # set input, start, check state and wait
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.input_port("IN").value = "Hello, World!"
-      end
-      assert_equal(run.input_port("IN").value, "Hello, World!")
-
-      # test correct/incorrect status codes
-      assert_equal(run.status, :initialized)
-      assert_raise(T2Server::RunStateError) { run.wait }
-      assert_nothing_raised(T2Server::RunStateError) { run.start }
-      assert(run.running?)
-      assert_equal(run.status, :running)
-      assert_nothing_raised(T2Server::RunStateError) { run.wait }
-      assert_equal(run.status, :finished)
-      assert_raise(T2Server::RunStateError) { run.start }
-
-      # exitcode and output
-      assert_instance_of(Fixnum, run.exitcode)
-      assert_equal(run.output_port("OUT").value, "Hello, World!")
-      assert_equal(run.output_port("wrong!"), nil)
-
-      # get zip file
-      assert_nothing_raised(T2Server::T2ServerError) do
-        zip_out = run.zip_output
-        assert_not_equal(zip_out, "")
-      end
-
-      # test streaming zip data
-      assert_nothing_raised(T2Server::T2ServerError) do
-        zip_cache = TestCache.new
-        run.zip_output(zip_cache)
-      end
-
-      # show getting a zip file of a singleton port does nothing
-      assert_nothing_raised(T2Server::T2ServerError) do
-        assert_nil(run.output_port("OUT").zip)
-
-        zip_cache = TestCache.new
-        run.output_port("OUT").zip(zip_cache)
-        assert_equal(zip_cache.data, "")
-      end
-
-      # deletion
-      assert(run.delete)
-    end
-  end
-
-  # Test run naming. This is different for different versions of server.
+  # Test run naming.
   def test_run_naming
+    mock("#{RUN_PATH}/name", :accept => "text/plain", :status => 200,
+      :credentials => $userinfo, :output => "get-rest-run-name.raw")
+
     T2Server::Server.new($uri, $conn_params) do |server|
-      server.create_run($wkf_no_io, $creds) do |run|
-        if server.version >= "2.5.0"
-          # Read initial name.
-          assert(run.name.length > 0)
-          assert_equal("Workflow1", run.name[0...9])
+      server.create_run(WKF_PASS, $creds) do |run|
+        # Read initial name.
+        assert run.name.length > 0
+        assert_equal "Workflow1", run.name
 
-          # Set a new name and test.
-          name = "No input or output"
-          assert(run.name = name)
-          assert(run.name.length == 18)
-          assert_equal(name, run.name)
+        # Set a new name.
+        name = "No input or output"
 
-          # Set a name that is too long
-          long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
-          assert(run.name = long_name)
-          assert(run.name.length == 48)
-          assert_equal(long_name[0...48], run.name)
-        else
-          # Read initial name.
-          assert(run.name.length == 0)
-          assert_equal("", run.name)
+        mock("#{RUN_PATH}/name", :method => :put, :body => name,
+          :status => 200, :credentials => $userinfo)
 
-          # "Set" a new name and test.
-          assert(run.name = "test")
-          assert(run.name.length == 0)
-          assert_equal("", run.name)
-        end
+        assert run.name = name
+
+        # Set a name that is too long. The mock should only see the first 48
+        # characters.
+        long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
+
+        mock("#{RUN_PATH}/name", :method => :put, :body => long_name[0...48],
+          :status => 200, :credentials => $userinfo)
+
+        assert run.name = long_name
       end
     end
   end
 
-  # Test run with no input or output. Also, pre-load workflow into a String.
-  def test_run_no_ports
-    workflow = File.read($wkf_no_io)
+  def test_get_expiry
+    mock("#{RUN_PATH}/expiry", :accept => "text/plain", :body => TIME_RET,
+      :status => 200, :credentials => $userinfo)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    exp = run.expiry
+    assert exp.instance_of?(Time)
+  end
+
+  def test_update_expiry
+    exp = mock("#{RUN_PATH}/expiry", :method => :put, :accept => "*/*",
+      :status => 200, :body => TIME_SET, :credentials => $userinfo)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    run.expiry = TIME_STR
+    run.expiry = Time.parse(TIME_STR)
+
+    assert_requested exp, :times => 2
+  end
+
+  # Upload workflow as a string, then test getting it back.
+  def test_get_workflow
+    workflow = File.read(WKF_PASS)
+
+    wkf = mock("#{RUN_PATH}/workflow", :body => workflow,
+      :accept => "application/xml", :credentials => $userinfo)
 
     T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
-      assert_nothing_raised { run.input_ports }
-      assert_nothing_raised { run.start }
-      assert(run.running?)
-      run.wait
-      assert_nothing_raised { run.output_ports }
-      assert(run.delete)
+      # Download twice to check it's only actually retrieved once.
+      assert_equal workflow, run.workflow
+      assert_equal workflow, run.workflow
+    end
+
+    assert_requested wkf, :times => 1
+  end
+
+  def test_mkdir
+    dir = "test"
+    location = "#{RUN_PATH}/wd/#{dir}"
+    mock("#{RUN_PATH}/wd", :method => :post, :accept => "*/*", :status => 201,
+      :credentials => $userinfo, :location => location)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    assert run.mkdir(dir)
+  end
+
+  def test_listeners
+    mock("#{RUN_LSTN}/exitcode", :accept => "text/plain", :body => "0",
+      :credentials => $userinfo)
+    mock("#{RUN_LSTN}/stdout", :accept => "text/plain", :body => "Out",
+      :credentials => $userinfo)
+    mock("#{RUN_LSTN}/stderr", :accept => "text/plain", :body => "Error",
+      :credentials => $userinfo)
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    # Check the exitcode is parsed into a number and other things not mangled.
+    exit = run.exitcode
+    assert_equal 0, exit
+    assert_instance_of(Fixnum, exit)
+    assert_equal "Out", run.stdout
+    assert_equal "Error", run.stderr
+  end
+
+  def test_full_run
+    data = "Hello"
+
+    in_exp = mock("#{RUN_PATH}/input/expected", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-input-expected.raw")
+
+    mock("#{RUN_PATH}/input/input/IN", :method => :put, :accept => "*/*",
+      :status => 200, :credentials => $userinfo)
+
+    mock("#{RUN_PATH}/status", :method => :put, :body => "Operating",
+      :status => 200, :credentials => $userinfo)
+
+    # Re-mock status to fake up a running run.
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo,
+      :body => ["Initialized", "Initialized", "Operating", "Operating",
+        "Operating", "Finished"])
+
+    out = mock("#{RUN_PATH}/output", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-output.raw")
+
+    mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
+      :status => 200, :credentials => $userinfo, :body => data)
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      run.input_port("IN").value = data
+    end
+    assert_equal data, run.input_port("IN").value
+
+    # Need to start the run to trigger input upload, then don't wait between
+    # mocked polling of status.
+    run.start
+
+    assert run.running?
+
+    run.wait(0)
+
+    assert run.finished?
+
+    outputs = run.output_ports
+    assert_equal 1, outputs.length
+
+    assert_equal data, run.output_port("OUT").value
+
+    # No network access should occur on the next call.
+    assert_nothing_raised(WebMock::NetConnectNotAllowedError) do
+      assert_nil run.output_port("wrong!")
+    end
+
+    assert_requested status, :times => 12
+    assert_requested in_exp, :times => 1
+    assert_requested out, :times => 1
+  end
+
+  def test_log
+    log = mock("#{RUN_PATH}/wd/logs/detail.log", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo,
+      :body => mocked_file("log.txt"))
+
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    # Should be an error if a parameter and a block are passed in here.
+    assert_raise(ArgumentError) do
+      run.log("log.txt") do |chunk|
+        # ...
+      end
+    end
+
+    assert_nothing_raised(ArgumentError) do
+      log_str = run.log
+
+      assert_not_equal(log_str, "")
+
+      log_stream = ""
+      run.log do |chunk|
+        log_stream += chunk
+      end
+      assert_equal log_str, log_stream
+
+      log_cache = TestCache.new
+      run.log(log_cache)
+      assert_not_equal 0, log_cache.size
+      assert_equal log_str, log_cache.data
+    end
+
+    assert_requested log, :times => 3
+  end
+
+  def test_create_start_finish_times
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
+
+    %w(create start finish).each do |time|
+      mock("#{RUN_PATH}/#{time}Time", :accept => "text/plain", :body => TIME_RET,
+        :credentials => $userinfo)
+
+      t = run.send("#{time}_time".to_sym)
+      assert t.instance_of?(Time)
+      assert TIME_STR, t.to_s
     end
   end
 
-  # Test run with list inputs
-  def test_run_list_input
-    T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
-      many = [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]]
-      single = [1, 2, 3, 4, 5]
-      single_out = single.map { |v| v.to_s } # Taverna outputs strings!
+  def test_bad_state
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
-      run.input_port("SINGLE_IN").value = single
-      run.input_port("MANY_IN").value = many
-      assert_nothing_raised { run.start }
-      assert(run.running?)
-      run.wait
+    # Re-mock status to fake up an already running run.
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo, :body => "Operating")
 
-      assert_equal(run.output_port("MANY").value, many)
-      assert_equal(run.output_port("SINGLE").value, single_out)
-
-      # get zip file of a single port and test streaming
-      assert_nothing_raised(T2Server::T2ServerError) do
-        zip_out = run.output_port("MANY").zip
-        assert_not_equal(zip_out, "")
-      end
-
-      assert_nothing_raised(T2Server::T2ServerError) do
-        zip_cache = TestCache.new
-        run.output_port("MANY").zip(zip_cache)
-      end
-
-      assert(run.delete)
-    end
-  end
-
-  # Test run with a list and file input, and check that provenance is not on
-  def test_run_list_and_file
-    T2Server::Run.create($uri, $wkf_l_v, $creds, $conn_params) do |run|
-      list = ["one", 2, :three]
-      list_out = list.map { |v| v.to_s }
-
-      run.input_port("list_in").value = list
-      run.input_port("singleton_in").file = $file_input
-      assert_nothing_raised { run.start }
-      assert(run.running?)
-      run.wait
-
-      assert_equal(run.output_port("list_out").value, list_out)
-      assert_equal(run.output_port("singleton_out").value, "Hello, World!")
-
-      # Get the log file
-      assert_nothing_raised(T2Server::T2ServerError) do
-        assert_not_equal(run.log, "")
-      end
-
-      assert_nothing_raised(T2Server::T2ServerError) do
-        log_cache = TestCache.new
-        run.log(log_cache)
-        assert_not_equal(log_cache.size, 0)
-      end
-
-      assert_raise(T2Server::AccessForbiddenError) do
-        run.provenance
-      end
-
-      assert(run.delete)
-    end
-  end
-
-  # Test run with xml input
-  def test_run_xml_input
-    T2Server::Run.create($uri, $wkf_xml, $creds, $conn_params) do |run|
-      run.input_port("xml").value =
-        "<hello><yes>hello</yes><no>everybody</no><yes>world</yes></hello>"
-      run.input_port("xpath").value = "//yes"
+    assert_raise(T2Server::RunStateError) do
       run.start
-      run.wait
-      assert_equal(run.output_port("nodes").value, ["hello", "world"])
-      assert(run.delete)
     end
   end
 
-  # Test run with file input. Also pass workflow as File object. Also test
-  # toggling provenance on and then off again.
-  def test_run_file_input
-    workflow = File.open($wkf_pass, "r")
+  def test_upload_file
+    filename = "in.txt"
+    mock("#{RUN_PATH}/wd/#{filename}", :method => :put, :accept => "*/*",
+      :status => 201, :credentials => $userinfo,
+      :location => "https://localhost/taverna#{RUN_PATH}/wd/#{filename}")
 
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.input_port("IN").file = $file_input
-        run.generate_provenance
-        run.generate_provenance(false)
-      end
-      refute run.generate_provenance?
+    file = run.upload_file("test/workflows/#{filename}")
 
-      run.start
-      assert(run.running?)
-      assert_nothing_raised(T2Server::RunStateError) { run.wait }
-      assert_equal(run.output_port("OUT").value, "Hello, World!")
-
-      assert_raise(T2Server::AccessForbiddenError) do
-        run.provenance
-      end
-
-      assert(run.delete)
-    end
-
-    workflow.close
+    assert_equal filename, file
   end
 
-  # Test run that returns list of lists, some empty, using baclava for input
-  # Also test provenance output works with baclava input
-  def test_baclava_input
-    T2Server::Run.create($uri, $wkf_lists, $creds, $conn_params) do |run|
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.baclava_input = $list_input
-        run.generate_provenance
-      end
+  def test_upload_data
+    filename = "in.txt"
+    location = "https://localhost/taverna#{RUN_PATH}/wd/#{filename}"
+    data = File.new("test/workflows/#{filename}")
 
-      if run.server.version >= "2.5.4"
-        assert(run.generate_provenance?)
-      else
-        refute(run.generate_provenance?)
-      end
+    mock("#{RUN_PATH}/wd/#{filename}", :method => :put, :accept => "*/*",
+      :status => 201, :credentials => $userinfo, :location => location)
 
-      assert_equal(run.input_ports.keys.sort, ["MANY_IN", "SINGLE_IN"])
-      assert_equal(run.input_port("MANY_IN").depth, 3)
-      assert_equal(run.input_port("SINGLE_IN").depth, 1)
-      assert(run.baclava_input?)
-      assert(run.input_port("SINGLE_IN").baclava?)
-      assert(run.input_port("SINGLE_IN").set?)
+    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
-      run.start
-      assert(run.running?)
-      assert_nothing_raised(T2Server::RunStateError) { run.wait }
-      assert_equal(run.output_ports.keys.sort, ["MANY", "SINGLE"])
-      assert_equal(run.output_port("SINGLE").value, [])
-      assert(!run.output_port("SINGLE").empty?)
-      assert_equal(run.output_port("MANY").value,
-        [[["boo"]], [["", "Hello"]], [], [[], ["test"], []]])
-      assert_equal(run.output_port("MANY").total_size, 12)
-      assert(run.output_port("MANY")[1][0][0].empty?)
-      assert_equal(run.output_port("MANY")[1][0][1].value(1..3), "ell")
-      assert_raise(NoMethodError) { run.output_port("SINGLE")[0].value }
+    file = run.upload_data(data, filename)
 
-      # Grab provenance
-      if run.server.version >= "2.5.4"
-        assert_nothing_raised(T2Server::AccessForbiddenError) do
-          prov = run.provenance
-          assert_not_equal(prov, "")
-        end
-      else
-        assert_raise(T2Server::AccessForbiddenError) do
-          prov = run.provenance
-          assert_equal(prov, "")
-        end
-      end
-
-      assert(run.delete)
-    end
+    assert_equal location, file.to_s
   end
 
-  # Test run with baclava output
-  def test_baclava_output
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      run.input_port("IN").value = "Some input..."
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        run.generate_baclava_output
-      end
-      assert(run.generate_baclava_output?)
-
-      run.start
-      assert(run.running?)
-      assert_nothing_raised(T2Server::RunStateError) { run.wait }
-
-      # Test normal and streamed output
-      assert_nothing_raised(T2Server::AccessForbiddenError) do
-        output = run.baclava_output
-
-        out_stream = ""
-        run.baclava_output do |chunk|
-          out_stream += chunk
-        end
-        assert_equal(output, out_stream)
-      end
-
-      assert(run.delete)
-    end
-  end
-
-  # Test partial result download and provenance streaming
-  def test_result_download
-    T2Server::Run.create($uri, $wkf_pass, $creds, $conn_params) do |run|
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        file = run.upload_file($file_strs)
-        run.input_port("IN").remote_file = file
-        run.generate_provenance(true)
-      end
-
-      if run.server.version >= "2.5.4"
-        assert(run.generate_provenance?)
-      else
-        refute(run.generate_provenance?)
-      end
-
-      run.start
-      run.wait
-
-      # Get total data size (without downloading the data).
-      assert_equal(run.output_port("OUT").total_size, 100)
-      assert_equal(run.output_port("OUT").size, 100)
-
-      # Stream just the first 10 bytes.
-      stream = ""
-      run.output_port("OUT").value(0...10) do |chunk|
-        stream += chunk
-      end
-      assert_equal(stream, "123456789\n")
-
-      # Get just the second 10 bytes.
-      assert_equal(run.output_port("OUT").value(10...20),
-        "223456789\n")
-
-      # Stream the first 20 bytes.
-      stream = ""
-      run.output_port("OUT").value(0...20) do |chunk|
-        stream += chunk
-      end
-      assert_equal(stream, "123456789\n223456789\n")
-
-      # Get a bad range - should return the first 10 bytes.
-      assert_equal(run.output_port("OUT").value(-10...10),
-        "123456789\n")
-
-      # Stream the lot and check total length. There should be two chunks.
-      stream = ""
-      run.output_port("OUT").value do |chunk|
-        stream += chunk
-      end
-      assert_equal(stream.length, 100)
-
-      # Now get the lot and check its size.
-      out = run.output_port("OUT").value
-      assert_equal(out.length, 100)
-
-      # test streaming provenance data
-      if run.server.version >= "2.5.4"
-        assert_nothing_raised(T2Server::AccessForbiddenError) do
-          prov_cache = TestCache.new
-          prov_size = run.provenance(prov_cache)
-          assert_not_equal(prov_size, 0)
-          assert_not_equal(prov_cache.data, "")
-        end
-      else
-        assert_raise(T2Server::AccessForbiddenError) do
-          prov_cache = TestCache.new
-          prov_size = run.provenance(prov_cache)
-          assert_equal(prov_size, 0)
-          assert_equal(prov_cache.data, "")
-        end
-      end
-
-      assert(run.delete)
-    end
-  end
-
-  # test error handling
-  def test_always_fail
-    T2Server::Run.create($uri, $wkf_fail, $creds, $conn_params) do |run|
-      run.start
-      run.wait
-      assert_not_nil(run.output_port("OUT").value)
-      assert(run.output_port("OUT").error?)
-      assert(run.delete)
-    end
-  end
-
-  def test_errors
-    T2Server::Run.create($uri, $wkf_errors, $creds, $conn_params) do |run|
-      run.start
-      assert(!run.error?)
-      run.wait
-      assert_not_nil(run.output_port("OUT").value)
-      assert(run.output_port("OUT").error?)
-      assert(run.error?)
-      assert(run.delete)
-    end
-  end
 end

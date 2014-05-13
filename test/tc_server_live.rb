@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014 The University of Manchester, UK.
+# Copyright (c) 2010-2013 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -32,69 +32,61 @@
 
 require 't2-server'
 
-class TestParams < Test::Unit::TestCase
+class TestServer < Test::Unit::TestCase
 
-  CERT_DIR  = "test/workflows/secure"
-  SERVER_PK = "#{CERT_DIR}/heater-pk.pem"
+  WKF_PASS = "test/workflows/pass_through.t2flow"
 
-  def test_base_params
-    params = T2Server::ConnectionParameters.new
-
-    params[:verify_peer] = true
-    assert_not_nil params[:verify_peer]
-
-    params[:not_a_chance] = true
-    assert_nil params[:not_a_chance]
-  end
-
-  def test_insecure
-    params = T2Server::InsecureSSLConnectionParameters.new
-
-    assert_not_nil params[:verify_peer]
-    refute params[:verify_peer]
-
-    assert_nothing_raised do
-      T2Server::Server.new("#{$uri}/insecure", params)
+  def test_server_connection
+    assert_nothing_raised(T2Server::ConnectionError) do
+      T2Server::Server.new($uri, $conn_params)
     end
   end
 
-  def test_ssl3
-    params = T2Server::SSL3ConnectionParameters.new
-
-    assert_not_nil params[:verify_peer]
-    assert params[:verify_peer]
-
-    assert_not_nil params[:ssl_version]
-    assert_equal :SSLv3, params[:ssl_version]
-
-    assert_nothing_raised do
-      T2Server::Server.new("#{$uri}/ssl3", params)
+  def test_server_connection_no_params
+    assert_nothing_raised(T2Server::ConnectionError) do
+      T2Server::Server.new($uri)
     end
   end
 
-  def test_custom_ca
-    uri_suffix = 0
+  def test_run_creation
+    T2Server::Server.new($uri, $conn_params) do |server|
+      assert_nothing_raised(T2Server::T2ServerError) do
+        run = server.create_run(WKF_PASS, $creds)
+        run.delete
+      end
+    end
+  end
 
-    [CERT_DIR, SERVER_PK, Dir.new(CERT_DIR), File.new(SERVER_PK)].each do |c|
-      params = T2Server::CustomCASSLConnectionParameters.new(c)
-
-      assert_not_nil params[:verify_peer]
-      assert params[:verify_peer]
-
-      if c.instance_of?(Dir) || File.directory?(c)
-        assert_not_nil params[:ca_path]
-        assert_equal CERT_DIR, params[:ca_path]
-      else
-        assert_not_nil params[:ca_file]
-        assert_equal SERVER_PK, params[:ca_file]
+  # Need to do these together so testing the limit is cleaned up!
+  def test_server_limits_delete_all
+    T2Server::Server.new($uri, $conn_params) do |server|
+      limit = server.run_limit($creds)
+      max_runs = 0
+      assert_instance_of(Fixnum, limit)
+      assert_raise(T2Server::ServerAtCapacityError) do
+        # Detect the concurrent run limit and
+        # add 1 just in case there are no runs at this point
+        more = true
+        (limit + 1).times do
+          run = server.create_run(WKF_PASS, $creds)
+          if more
+            run.input_port("IN").value = "Hello"
+            more = run.start
+            if more
+              max_runs += 1
+              assert(run.running?)
+            else
+              assert(run.initialized?)
+            end
+          end
+        end
       end
 
-      assert_nothing_raised do
-        T2Server::Server.new("#{$uri}/ca/#{uri_suffix}", params)
-      end
+      assert(max_runs <= limit)
 
-      uri_suffix += 1
+      assert_nothing_raised(T2Server::T2ServerError) do
+        server.delete_all_runs($creds)
+      end
     end
   end
-
 end

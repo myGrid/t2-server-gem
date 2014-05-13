@@ -1,6 +1,7 @@
 *~
 pkg/
 html/
+coverage/
 .buildpath
 .project
 .idea
