@@ -34,10 +34,12 @@ require 't2-server'
 
 class TestMisc < Test::Unit::TestCase
 
+  WKF_MISS_O = "test/workflows/missing_outputs.t2flow"
+
   # Test a run with the missing output data bug to check that the library can
   # workaround it ok. Bug is: http://dev.mygrid.org.uk/issues/browse/T2-2100
   def test_missing_ports
-    T2Server::Run.create($uri, $wkf_miss_o, $creds, $conn_params) do |run|
+    T2Server::Run.create($uri, WKF_MISS_O, $creds, $conn_params) do |run|
       assert_nothing_raised { run.start }
       assert(run.running?)
       run.wait

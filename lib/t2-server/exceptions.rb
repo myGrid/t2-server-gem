@@ -30,7 +30,7 @@
 #
 # Author: Robert Haines
 
-require 'net/http'
+require 'net/http/persistent'
 
 module T2Server
   # :stopdoc:
@@ -41,8 +41,10 @@ module T2Server
   module InternalHTTPError
   end
 
-  # These are the HTTP errors we want to catch.
-  # Add the above exception as an ancestor to them all.
+  # These are the HTTP errors we want to catch. Add the above exception as an
+  # ancestor to them all. Some are caught by Net::HTTP::Persistent and
+  # re-raised as a Net::HTTP::Persistent::Error but keep them listed here just
+  # in case.
   [
     EOFError,
     SocketError,
@@ -53,7 +55,8 @@ module T2Server
     Errno::ECONNREFUSED,
     Net::HTTPBadResponse,
     Net::HTTPHeaderSyntaxError,
-    Net::ProtocolError
+    Net::ProtocolError,
+    Net::HTTP::Persistent::Error
   ].each {|err| err.send(:include, InternalHTTPError)}
 
   # :startdoc:
@@ -109,21 +112,6 @@ module T2Server
       message = "Unexpected server response:\n  Method: #{@method}\n  Path: "\
         "#{@path}\n  Code: #{@code}\n  Body: #{@body}"
       super message
-    end
-  end
-
-  # Raised when the run that is being operated on cannot be found. If the
-  # expectation is that the run exists then it could have been destroyed by
-  # a timeout or another user.
-  class RunNotFoundError < T2ServerError
-
-    # The identifier of the run that was not found on the server.
-    attr_reader :identifier
-
-    # Create a new RunNotFoundError with the specified identifier.
-    def initialize(id)
-      @identifier = id
-      super "Could not find run #{@identifier}"
     end
   end
 

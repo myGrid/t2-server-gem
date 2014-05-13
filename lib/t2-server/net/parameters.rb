@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -122,7 +122,7 @@ module T2Server
     # _path_ can either be a directory where the required certificate is stored
     # or the path to the certificate file itself.
     def initialize(path)
-      super
+      super()
 
       case path
       when String
@@ -147,7 +147,7 @@ module T2Server
     # encrypted. If _password_ is not specified, but needed, then the
     # underlying SSL implementation may ask for it if it can.
     def initialize(cert, password = nil)
-      super
+      super()
 
       case cert
       when String

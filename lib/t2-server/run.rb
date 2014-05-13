@@ -441,11 +441,14 @@ module T2Server
     end
 
     # :call-seq:
-    #   upload_data(data, remote_name, remote_directory = "") -> true or false
+    #   upload_data(data, remote_name, remote_directory = "") -> URI
     #
     # Upload data to the server and store it in <tt>remote_file</tt>. The
     # remote directory to put this file in can also be specified, but if it is
     # it must first have been created by a call to Run#mkdir.
+    #
+    # Returns the URI of the file on the server in which the data has been
+    # stored.
     def upload_data(data, remote_name, remote_directory = "")
       location_uri = Util.append_to_uri_path(links[:wdir], remote_directory)
       @server.upload_data(data, remote_name, location_uri, @credentials)
