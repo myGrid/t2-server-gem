@@ -95,6 +95,33 @@ module T2Server
 
         uris
       end
+
+      private
+
+      def create_document(root, children = [])
+        doc = LibXML::XML::Document.new
+        doc.root = root
+
+        children.each do |child|
+          doc << child
+        end
+
+        doc
+      end
+
+      def create_node(name, attributes = {})
+        node = LibXML::XML::Node.new(name)
+
+        Namespaces::MAP.each do |prefix, uri|
+          LibXML::XML::Namespace.new(node, prefix, uri)
+        end
+
+        attributes.each do |attr, value|
+          LibXML::XML::Attr.new(node, attr, value)
+        end
+
+        node
+      end
     end
   end
 end
