@@ -39,8 +39,6 @@ module T2Server
       RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
       UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" "\
                         "t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
-      MKDIR         = "<t2sr:mkdir xmlns:t2sr=\"#{Namespaces::REST}\" "\
-                        "t2sr:name=\"%s\" />"
 
       PERMISSION    = "<t2sr:userName>%s</t2sr:userName>"\
                       "<t2sr:permission>%s</t2sr:permission>"

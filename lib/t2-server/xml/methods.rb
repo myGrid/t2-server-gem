@@ -96,6 +96,11 @@ module T2Server
         uris
       end
 
+      def xml_mkdir_fragment(name)
+        node = create_node("nsr:mkdir", { "nsr:name" => name })
+        create_document(node).to_s
+      end
+
       private
 
       def create_document(root, children = [])

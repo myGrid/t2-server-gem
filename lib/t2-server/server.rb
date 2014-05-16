@@ -223,7 +223,7 @@ module T2Server
 
     # :stopdoc:
     def mkdir(uri, dir, credentials = nil)
-      @connection.POST(uri, XML::Fragments::MKDIR % dir, "application/xml",
+      @connection.POST(uri, xml_mkdir_fragment(dir), "application/xml",
         credentials)
     end
 
