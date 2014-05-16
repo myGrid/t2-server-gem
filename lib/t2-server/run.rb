@@ -1063,9 +1063,9 @@ module T2Server
           # use a remote file.
           port.remote_file = upload_file(port.file) unless port.remote_file?
 
-          xml_value = XML::Fragments::RUNINPUTFILE % xml_text_node(port.file)
+          xml_value = xml_input_fragment(port.file, :file)
         else
-          xml_value = XML::Fragments::RUNINPUTVALUE % xml_text_node(port.value)
+          xml_value = xml_input_fragment(port.value)
         end
 
         @server.update(uri, xml_value, "application/xml", @credentials)

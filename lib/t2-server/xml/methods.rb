@@ -42,10 +42,6 @@ module T2Server
         LibXML::XML::Document.string(string)
       end
 
-      def xml_text_node(text)
-        LibXML::XML::Node.new_text(text)
-      end
-
       def xml_first_child(node)
         node.first
       end
@@ -94,6 +90,13 @@ module T2Server
         end
 
         uris
+      end
+
+      def xml_input_fragment(input, type = :value)
+        child = create_node("nsr:#{type}", {}, input.to_s)
+        node = create_node("nsr:runInput")
+        node << child
+        create_document(node).to_s
       end
 
       def xml_mkdir_fragment(name)
