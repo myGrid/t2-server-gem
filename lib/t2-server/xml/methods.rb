@@ -109,6 +109,15 @@ module T2Server
         create_document(node).to_s
       end
 
+      def xml_permissions_fragment(username, permission)
+        user = create_node("nsr:userName", {}, username)
+        perm = create_node("nsr:permission", {}, permission)
+        node = create_node("nsr:permissionUpdate")
+        node << user
+        node << perm
+        create_document(node).to_s
+      end
+
       private
 
       def create_document(root)

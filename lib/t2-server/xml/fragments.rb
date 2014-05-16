@@ -33,12 +33,6 @@
 module T2Server
   module XML
     module Fragments
-      PERMISSION    = "<t2sr:userName>%s</t2sr:userName>"\
-                      "<t2sr:permission>%s</t2sr:permission>"
-      PERM_UPDATE   = "<t2sr:permissionUpdate "\
-                        "xmlns:t2sr=\"#{Namespaces::REST}\">"\
-                        "#{PERMISSION}</t2sr:permissionUpdate>"
-
       SERVICE_URI   = "<t2s:serviceURI>%s</t2s:serviceURI>"
       CREDENTIAL    = "<t2sr:credential xmlns:t2sr=\"#{Namespaces::REST}\""\
                         " xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
