@@ -911,7 +911,7 @@ module T2Server
 
       contents = Base64.encode64(IO.read(filename))
 
-      value = XML::Fragments::TRUST % [contents, type]
+      value = xml_trust_fragment(contents, type)
       @server.create(links[:sec_trusts], value, "application/xml", @credentials)
     end
 

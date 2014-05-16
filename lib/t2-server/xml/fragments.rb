@@ -50,12 +50,6 @@ module T2Server
                         "  <t2s:fileType>%s</t2s:fileType>\n"\
                         "  <t2s:unlockPassword>%s</t2s:unlockPassword>\n"\
                         "</t2s:keypair>"
-
-      TRUST         = "<t2s:trustedIdentity "\
-                        "xmlns:t2s=\"#{Namespaces::SERVER}\">\n"\
-                        "  <t2s:certificateBytes>%s</t2s:certificateBytes>\n"\
-                        "  <t2s:fileType>%s</t2s:fileType>\n"\
-                        "</t2s:trustedIdentity>"
     end
   end
 end

@@ -118,6 +118,15 @@ module T2Server
         create_document(node).to_s
       end
 
+      def xml_trust_fragment(contents, type)
+        cert = create_node("nss:certificateBytes", {}, contents)
+        type = create_node("nss:fileType", {}, type)
+        node = create_node("nss:trustedIdentity")
+        node << cert
+        node << type
+        create_document(node).to_s
+      end
+
       private
 
       def create_document(root)
