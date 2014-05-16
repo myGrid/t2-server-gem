@@ -37,8 +37,6 @@ module T2Server
                         "  %s\n</t2sr:runInput>"
       RUNINPUTVALUE = RUNINPUT % "<t2sr:value>%s</t2sr:value>"
       RUNINPUTFILE  = RUNINPUT % "<t2sr:file>%s</t2sr:file>"
-      UPLOAD        = "<t2sr:upload xmlns:t2sr=\"#{Namespaces::REST}\" "\
-                        "t2sr:name=\"%s\">\n  %s\n</t2sr:upload>"
 
       PERMISSION    = "<t2sr:userName>%s</t2sr:userName>"\
                       "<t2sr:permission>%s</t2sr:permission>"

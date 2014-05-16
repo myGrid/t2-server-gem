@@ -101,6 +101,11 @@ module T2Server
         create_document(node).to_s
       end
 
+      def xml_upload_fragment(name, data)
+        node = create_node("nsr:upload", { "nsr:name" => name }, data)
+        create_document(node).to_s
+      end
+
       private
 
       def create_document(root, children = [])
@@ -114,8 +119,8 @@ module T2Server
         doc
       end
 
-      def create_node(name, attributes = {})
-        node = LibXML::XML::Node.new(name)
+      def create_node(name, attributes = {}, contents = nil)
+        node = LibXML::XML::Node.new(name, contents)
 
         Namespaces::MAP.each do |prefix, uri|
           LibXML::XML::Namespace.new(node, prefix, uri)
