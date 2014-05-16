@@ -108,12 +108,12 @@ module T2Server
 
       private
 
-      def create_document(root, children = [])
+      def create_document(root)
         doc = LibXML::XML::Document.new
         doc.root = root
 
-        children.each do |child|
-          doc << child
+        Namespaces::MAP.each do |prefix, uri|
+          LibXML::XML::Namespace.new(root, prefix, uri)
         end
 
         doc
@@ -121,10 +121,6 @@ module T2Server
 
       def create_node(name, attributes = {}, contents = nil)
         node = LibXML::XML::Node.new(name, contents)
-
-        Namespaces::MAP.each do |prefix, uri|
-          LibXML::XML::Namespace.new(node, prefix, uri)
-        end
 
         attributes.each do |attr, value|
           LibXML::XML::Attr.new(node, attr, value)
