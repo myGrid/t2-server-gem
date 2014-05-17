@@ -800,8 +800,7 @@ module T2Server
       # basic uri checks
       uri = _check_cred_uri(uri)
 
-      cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
-      value = XML::Fragments::CREDENTIAL % cred
+      value = xml_password_cred_fragment(uri, username, password)
 
       if cred_uri.nil?
         @server.create(links[:sec_creds], value, "application/xml",
@@ -832,9 +831,7 @@ module T2Server
       # basic uri checks
       uri = _check_cred_uri(uri)
 
-      cred = XML::Fragments::KEYPAIR_CRED % [uri, name, contents,
-        type, password]
-      value = XML::Fragments::CREDENTIAL % cred
+      value = xml_keypair_cred_fragment(uri, name, contents, type, password)
 
       @server.create(links[:sec_creds], value, "application/xml", @credentials)
     end

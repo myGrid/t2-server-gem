@@ -118,6 +118,42 @@ module T2Server
         create_document(node).to_s
       end
 
+      def xml_password_cred_fragment(uri, username, password)
+        service = create_node("nss:serviceURI", {}, uri)
+        user = create_node("nss:username", {}, username)
+        pass = create_node("nss:password", {}, password)
+
+        userpass = create_node("nss:userpass")
+        userpass << service
+        userpass << user
+        userpass << pass
+
+        node = create_node("nsr:credential")
+        node << userpass
+
+        create_document(node).to_s
+      end
+
+      def xml_keypair_cred_fragment(uri, name, key, type, password)
+        service = create_node("nss:serviceURI", {}, uri)
+        credname = create_node("nss:credentialName", {}, name)
+        cred = create_node("nss:credentialBytes", {}, key)
+        filetype = create_node("nss:fileType", {}, type)
+        pass = create_node("nss:unlockPassword", {}, password)
+
+        keypair = create_node("nss:keypair")
+        keypair << service
+        keypair << credname
+        keypair << cred
+        keypair << filetype
+        keypair << pass
+
+        node = create_node("nsr:credential")
+        node << keypair
+
+        create_document(node).to_s
+      end
+
       def xml_trust_fragment(contents, type)
         cert = create_node("nss:certificateBytes", {}, contents)
         type = create_node("nss:fileType", {}, type)

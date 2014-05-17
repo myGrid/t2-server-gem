@@ -31,6 +31,5 @@
 # Author: Robert Haines
 
 require_relative 'xml/namespaces'
-require_relative 'xml/fragments'
 require_relative 'xml/methods'
 require_relative 'xml/xpath_cache'
