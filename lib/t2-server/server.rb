@@ -223,7 +223,7 @@ module T2Server
 
     # :stopdoc:
     def mkdir(uri, dir, credentials = nil)
-      @connection.POST(uri, XML::Fragments::MKDIR % dir, "application/xml",
+      @connection.POST(uri, xml_mkdir_fragment(dir), "application/xml",
         credentials)
     end
 
@@ -248,9 +248,8 @@ module T2Server
         @connection.PUT(put_uri, data, "application/octet-stream", credentials)
       else
         contents = Base64.encode64(data)
-        @connection.POST(uri,
-          XML::Fragments::UPLOAD % [remote_name, contents], "application/xml",
-          credentials)
+        @connection.POST(uri, xml_upload_fragment(remote_name, contents),
+          "application/xml", credentials)
       end
     end
 
