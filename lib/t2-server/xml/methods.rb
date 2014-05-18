@@ -93,9 +93,7 @@ module T2Server
       end
 
       def xml_input_fragment(input, type = :value)
-        child = create_node("nsr:#{type}", {}, input.to_s)
-        node = create_node("nsr:runInput")
-        node << child
+        node = create_node("nsr:runInput", ["nsr:#{type}", input.to_s])
         create_document(node).to_s
       end
 
@@ -110,56 +108,40 @@ module T2Server
       end
 
       def xml_permissions_fragment(username, permission)
-        user = create_node("nsr:userName", {}, username)
-        perm = create_node("nsr:permission", {}, permission)
-        node = create_node("nsr:permissionUpdate")
-        node << user
-        node << perm
+        node = create_node("nsr:permissionUpdate",
+          ["nsr:userName", username], ["nsr:permission", permission])
         create_document(node).to_s
       end
 
       def xml_password_cred_fragment(uri, username, password)
-        service = create_node("nss:serviceURI", {}, uri)
-        user = create_node("nss:username", {}, username)
-        pass = create_node("nss:password", {}, password)
-
-        userpass = create_node("nss:userpass")
-        userpass << service
-        userpass << user
-        userpass << pass
-
-        node = create_node("nsr:credential")
-        node << userpass
+        node = create_node("nsr:credential",
+          ["nss:userpass",
+            ["nss:serviceURI", uri],
+            ["nss:username", username],
+            ["nss:password", password]
+          ]
+        )
 
         create_document(node).to_s
       end
 
       def xml_keypair_cred_fragment(uri, name, key, type, password)
-        service = create_node("nss:serviceURI", {}, uri)
-        credname = create_node("nss:credentialName", {}, name)
-        cred = create_node("nss:credentialBytes", {}, key)
-        filetype = create_node("nss:fileType", {}, type)
-        pass = create_node("nss:unlockPassword", {}, password)
-
-        keypair = create_node("nss:keypair")
-        keypair << service
-        keypair << credname
-        keypair << cred
-        keypair << filetype
-        keypair << pass
-
-        node = create_node("nsr:credential")
-        node << keypair
+        node = create_node("nsr:credential",
+          ["nss:keypair",
+            ["nss:serviceURI", uri],
+            ["nss:credentialName", name],
+            ["nss:credentialBytes", key],
+            ["nss:fileType", type],
+            ["nss:unlockPassword", password]
+          ]
+        )
 
         create_document(node).to_s
       end
 
       def xml_trust_fragment(contents, type)
-        cert = create_node("nss:certificateBytes", {}, contents)
-        type = create_node("nss:fileType", {}, type)
-        node = create_node("nss:trustedIdentity")
-        node << cert
-        node << type
+        node = create_node("nss:trustedIdentity",
+          ["nss:certificateBytes", contents], ["nss:fileType", type])
         create_document(node).to_s
       end
 
@@ -176,15 +158,36 @@ module T2Server
         doc
       end
 
-      def create_node(name, attributes = {}, contents = nil)
+      def create_node(name, *rest)
+        contents = nil
+        attributes = {}
+        children = []
+
+        rest.each do |param|
+          case param
+          when Hash
+            attributes = param
+          when Array
+            children.push(param)
+          else
+            contents = param
+          end
+        end
+
         node = LibXML::XML::Node.new(name, contents)
 
         attributes.each do |attr, value|
           LibXML::XML::Attr.new(node, attr, value)
         end
 
+        children.each do |c|
+          n = create_node(c.shift, *c)
+          node << n
+        end
+
         node
       end
+
     end
   end
 end
