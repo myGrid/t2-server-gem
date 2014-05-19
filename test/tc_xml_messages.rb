@@ -103,6 +103,19 @@ class TestXMLMessages < Test::Unit::TestCase
       "fileType" => cert_type)
   end
 
+  def test_permissions_fragment
+    username = "taverna"
+    permission = "destroy"
+    fragment = @test.xml_permissions_fragment(username, permission)
+
+    root = get_and_check_root(fragment, "permissionUpdate")
+
+    refute root.attributes?
+
+    check_child_nodes(root, "userName" => username,
+      "permission" => permission)
+  end
+
   private
 
   def check_child_nodes(node, children)
