@@ -59,6 +59,23 @@ class TestXMLMessages < Test::Unit::TestCase
     assert_equal dir_name, root["name"]
   end
 
+  def test_upload_fragment
+    file_name = "/file/name.txt"
+    file_data = "test & data"
+    fragment = @test.xml_upload_fragment(file_name, file_data)
+    assert fragment.instance_of?(String)
+
+    doc = LibXML::XML::Document.string(fragment)
+    root = doc.root
+    check_namespaces(root)
+
+    assert_equal "upload", root.name
+    assert_equal file_data, root.content
+
+    assert root.attributes?
+    assert_equal file_name, root["name"]
+  end
+
   private
 
   def check_namespaces(node)
