@@ -45,13 +45,9 @@ class TestXMLMessages < Test::Unit::TestCase
   def test_mkdir_fragment
     dir_name = "new_dir"
     fragment = @test.xml_mkdir_fragment(dir_name)
-    assert fragment.instance_of?(String)
 
-    doc = LibXML::XML::Document.string(fragment)
-    root = doc.root
-    check_namespaces(root)
+    root = get_and_check_root(fragment, "mkdir")
 
-    assert_equal "mkdir", root.name
     assert_equal [], root.children
     assert_equal "", root.content
 
@@ -63,13 +59,9 @@ class TestXMLMessages < Test::Unit::TestCase
     file_name = "/file/name.txt"
     file_data = "test & data"
     fragment = @test.xml_upload_fragment(file_name, file_data)
-    assert fragment.instance_of?(String)
 
-    doc = LibXML::XML::Document.string(fragment)
-    root = doc.root
-    check_namespaces(root)
+    root = get_and_check_root(fragment, "upload")
 
-    assert_equal "upload", root.name
     assert_equal file_data, root.content
 
     assert root.attributes?
@@ -77,6 +69,17 @@ class TestXMLMessages < Test::Unit::TestCase
   end
 
   private
+
+  def get_and_check_root(fragment, root_name)
+    assert fragment.instance_of?(String)
+
+    doc = LibXML::XML::Document.string(fragment)
+    root = doc.root
+    assert_equal root_name, root.name
+    check_namespaces(root)
+
+    root
+  end
 
   def check_namespaces(node)
     namespaces = node.namespaces
