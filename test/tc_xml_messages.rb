@@ -90,6 +90,19 @@ class TestXMLMessages < Test::Unit::TestCase
     check_child_nodes(root, "file" => file_name)
   end
 
+  def test_trust_fragment
+    cert_data = "test contents"
+    cert_type = "X509"
+    fragment = @test.xml_trust_fragment(cert_data, cert_type)
+
+    root = get_and_check_root(fragment, "trustedIdentity")
+
+    refute root.attributes?
+
+    check_child_nodes(root, "certificateBytes" => cert_data,
+      "fileType" => cert_type)
+  end
+
   private
 
   def check_child_nodes(node, children)
