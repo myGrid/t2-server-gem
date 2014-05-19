@@ -733,7 +733,7 @@ module T2Server
     def grant_permission(username, permission)
       return unless owner?
 
-      value = XML::Fragments::PERM_UPDATE % [username, permission.to_s]
+      value = xml_permission_fragment(username, permission.to_s)
       @server.create(links[:sec_perms], value, "application/xml", @credentials)
     end
 
@@ -800,8 +800,7 @@ module T2Server
       # basic uri checks
       uri = _check_cred_uri(uri)
 
-      cred = XML::Fragments::USERPASS_CRED % [uri, username, password]
-      value = XML::Fragments::CREDENTIAL % cred
+      value = xml_password_cred_fragment(uri, username, password)
 
       if cred_uri.nil?
         @server.create(links[:sec_creds], value, "application/xml",
@@ -832,9 +831,7 @@ module T2Server
       # basic uri checks
       uri = _check_cred_uri(uri)
 
-      cred = XML::Fragments::KEYPAIR_CRED % [uri, name, contents,
-        type, password]
-      value = XML::Fragments::CREDENTIAL % cred
+      value = xml_keypair_cred_fragment(uri, name, contents, type, password)
 
       @server.create(links[:sec_creds], value, "application/xml", @credentials)
     end
@@ -911,7 +908,7 @@ module T2Server
 
       contents = Base64.encode64(IO.read(filename))
 
-      value = XML::Fragments::TRUST % [contents, type]
+      value = xml_trust_fragment(contents, type)
       @server.create(links[:sec_trusts], value, "application/xml", @credentials)
     end
 
@@ -1063,9 +1060,9 @@ module T2Server
           # use a remote file.
           port.remote_file = upload_file(port.file) unless port.remote_file?
 
-          xml_value = XML::Fragments::RUNINPUTFILE % xml_text_node(port.file)
+          xml_value = xml_input_fragment(port.file, :file)
         else
-          xml_value = XML::Fragments::RUNINPUTVALUE % xml_text_node(port.value)
+          xml_value = xml_input_fragment(port.value)
         end
 
         @server.update(uri, xml_value, "application/xml", @credentials)

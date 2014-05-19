@@ -42,10 +42,6 @@ module T2Server
         LibXML::XML::Document.string(string)
       end
 
-      def xml_text_node(text)
-        LibXML::XML::Node.new_text(text)
-      end
-
       def xml_first_child(node)
         node.first
       end
@@ -95,6 +91,103 @@ module T2Server
 
         uris
       end
+
+      def xml_input_fragment(input, type = :value)
+        node = create_node("nsr:runInput", ["nsr:#{type}", input.to_s])
+        create_document(node).to_s
+      end
+
+      def xml_mkdir_fragment(name)
+        node = create_node("nsr:mkdir", { "nsr:name" => name })
+        create_document(node).to_s
+      end
+
+      def xml_upload_fragment(name, data)
+        node = create_node("nsr:upload", { "nsr:name" => name }, data)
+        create_document(node).to_s
+      end
+
+      def xml_permissions_fragment(username, permission)
+        node = create_node("nsr:permissionUpdate",
+          ["nsr:userName", username], ["nsr:permission", permission])
+        create_document(node).to_s
+      end
+
+      def xml_password_cred_fragment(uri, username, password)
+        node = create_node("nsr:credential",
+          ["nss:userpass",
+            ["nss:serviceURI", uri],
+            ["nss:username", username],
+            ["nss:password", password]
+          ]
+        )
+
+        create_document(node).to_s
+      end
+
+      def xml_keypair_cred_fragment(uri, name, key, type, password)
+        node = create_node("nsr:credential",
+          ["nss:keypair",
+            ["nss:serviceURI", uri],
+            ["nss:credentialName", name],
+            ["nss:credentialBytes", key],
+            ["nss:fileType", type],
+            ["nss:unlockPassword", password]
+          ]
+        )
+
+        create_document(node).to_s
+      end
+
+      def xml_trust_fragment(contents, type)
+        node = create_node("nss:trustedIdentity",
+          ["nss:certificateBytes", contents], ["nss:fileType", type])
+        create_document(node).to_s
+      end
+
+      private
+
+      def create_document(root)
+        doc = LibXML::XML::Document.new
+        doc.root = root
+
+        Namespaces::MAP.each do |prefix, uri|
+          LibXML::XML::Namespace.new(root, prefix, uri)
+        end
+
+        doc
+      end
+
+      def create_node(name, *rest)
+        contents = nil
+        attributes = {}
+        children = []
+
+        rest.each do |param|
+          case param
+          when Hash
+            attributes = param
+          when Array
+            children.push(param)
+          else
+            contents = param
+          end
+        end
+
+        node = LibXML::XML::Node.new(name, contents)
+
+        attributes.each do |attr, value|
+          LibXML::XML::Attr.new(node, attr, value)
+        end
+
+        children.each do |c|
+          n = create_node(c.shift, *c)
+          node << n
+        end
+
+        node
+      end
+
     end
   end
 end

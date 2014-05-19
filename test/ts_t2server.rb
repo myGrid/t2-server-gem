@@ -63,6 +63,7 @@ address ||= ""
 
 # the testcases to run
 require 'tc_util'
+require 'tc_xml_messages'
 require 'tc_params'
 require 'tc_connection'
 require 'tc_server_version'
@@ -75,6 +76,7 @@ if address == ""
   $userinfo = "test:test"
   $conn_params = T2Server::DefaultConnectionParameters.new
 
+  require 'tc_connection_exceptions'
   require 'tc_server'
   require 'tc_run'
 else

@@ -30,11 +30,9 @@
 #
 # Author: Robert Haines
 
-require 'mocked-server-responses/mocks'
 require 't2-server'
 
 class TestConnection < Test::Unit::TestCase
-  include T2Server::Mocks
 
   # Test URIs.
   EXAMPLE_COM = "http://example.com"
@@ -84,53 +82,6 @@ class TestConnection < Test::Unit::TestCase
     conn2 = T2Server::ConnectionFactory.connect(EXAMPLE_URI_S, $conn_params)
 
     assert_not_same conn1, conn2
-  end
-
-  def test_get_404
-    mock("", :accept => "*/*", :status => 404)
-    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-
-    assert_raise(T2Server::AttributeNotFoundError) do
-      connection.GET($uri, "*/*", nil, nil)
-    end
-  end
-
-  def test_put_403
-    mock("", :method => :put, :accept => "*/*", :status => 403)
-
-    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-
-    assert_raise(T2Server::AccessForbiddenError) do
-      connection.PUT($uri, "", "*/*", nil)
-    end
-  end
-
-  def test_post_401
-    mock("", :method => :post, :accept => "*/*", :credentials => $userinfo,
-      :status => 401)
-
-    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-    assert_raise(T2Server::AuthorizationError) do
-      connection.POST($uri, "", "*/*", $creds)
-    end
-  end
-
-  def test_options_500
-    mock("", :method => :options, :status => 500)
-
-    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-    assert_raise(T2Server::UnexpectedServerResponse) do
-      connection.OPTIONS($uri, nil)
-    end
-  end
-
-  def test_network_timeout
-    mock("", :timeout => true)
-
-    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
-    assert_raise(T2Server::ConnectionError) do
-      connection.GET($uri, "*/*", nil, nil)
-    end
   end
 
 end

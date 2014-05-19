@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014 The University of Manchester, UK.
+# Copyright (c) 2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -30,6 +30,57 @@
 #
 # Author: Robert Haines
 
-require_relative 'xml/namespaces'
-require_relative 'xml/methods'
-require_relative 'xml/xpath_cache'
+require 'mocked-server-responses/mocks'
+require 't2-server'
+
+class TestConnectionExceptions < Test::Unit::TestCase
+  include T2Server::Mocks
+
+  def test_get_404
+    mock("", :accept => "*/*", :status => 404)
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+
+    assert_raise(T2Server::AttributeNotFoundError) do
+      connection.GET($uri, "*/*", nil, nil)
+    end
+  end
+
+  def test_put_403
+    mock("", :method => :put, :accept => "*/*", :status => 403)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+
+    assert_raise(T2Server::AccessForbiddenError) do
+      connection.PUT($uri, "", "*/*", nil)
+    end
+  end
+
+  def test_post_401
+    mock("", :method => :post, :accept => "*/*", :credentials => $userinfo,
+      :status => 401)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+    assert_raise(T2Server::AuthorizationError) do
+      connection.POST($uri, "", "*/*", $creds)
+    end
+  end
+
+  def test_options_500
+    mock("", :method => :options, :status => 500)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+    assert_raise(T2Server::UnexpectedServerResponse) do
+      connection.OPTIONS($uri, nil)
+    end
+  end
+
+  def test_network_timeout
+    mock("", :timeout => true)
+
+    connection = T2Server::ConnectionFactory.connect($uri, $conn_params)
+    assert_raise(T2Server::ConnectionError) do
+      connection.GET($uri, "*/*", nil, nil)
+    end
+  end
+
+end
