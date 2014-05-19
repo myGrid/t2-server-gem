@@ -76,10 +76,7 @@ class TestXMLMessages < Test::Unit::TestCase
 
     refute root.attributes?
 
-    root.each_element do |child|
-      assert_equal "value", child.name
-      assert_equal input_value, child.content
-    end
+    check_child_nodes(root, "value" => input_value)
   end
 
   def test_input_file_fragment
@@ -90,13 +87,18 @@ class TestXMLMessages < Test::Unit::TestCase
 
     refute root.attributes?
 
-    root.each_element do |child|
-      assert_equal "file", child.name
-      assert_equal file_name, child.content
-    end
+    check_child_nodes(root, "file" => file_name)
   end
 
   private
+
+  def check_child_nodes(node, children)
+    names = children.keys
+    node.each_element do |child|
+      assert names.include?(child.name)
+      assert_equal children[child.name], child.content
+    end
+  end
 
   def get_and_check_root(fragment, root_name)
     assert fragment.instance_of?(String)
