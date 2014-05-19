@@ -161,7 +161,10 @@ class TestXMLMessages < Test::Unit::TestCase
 
   def check_child_nodes(node, children)
     names = children.keys
+    num_children = 0
+
     node.each_element do |child|
+      num_children += 1
       assert names.include?(child.name)
       if children[child.name].instance_of?(Hash)
         check_child_nodes(child, children[child.name])
@@ -169,6 +172,8 @@ class TestXMLMessages < Test::Unit::TestCase
         assert_equal children[child.name], child.content
       end
     end
+
+    assert_equal names.length, num_children
   end
 
   def get_and_check_root(fragment, root_name)
