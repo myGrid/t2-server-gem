@@ -68,6 +68,20 @@ class TestXMLMessages < Test::Unit::TestCase
     assert_equal file_name, root["name"]
   end
 
+  def test_input_value_fragment
+    input_value = "test & input"
+    fragment = @test.xml_input_fragment(input_value)
+
+    root = get_and_check_root(fragment, "runInput")
+
+    refute root.attributes?
+
+    root.each_element do |child|
+      assert_equal "value", child.name
+      assert_equal input_value, child.content
+    end
+  end
+
   private
 
   def get_and_check_root(fragment, root_name)
