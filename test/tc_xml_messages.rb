@@ -122,7 +122,11 @@ class TestXMLMessages < Test::Unit::TestCase
     names = children.keys
     node.each_element do |child|
       assert names.include?(child.name)
-      assert_equal children[child.name], child.content
+      if children[child.name].instance_of?(Hash)
+        check_child_nodes(child, children[child.name])
+      else
+        assert_equal children[child.name], child.content
+      end
     end
   end
 
