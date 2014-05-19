@@ -82,6 +82,20 @@ class TestXMLMessages < Test::Unit::TestCase
     end
   end
 
+  def test_input_file_fragment
+    file_name = "/file/name.txt"
+    fragment = @test.xml_input_fragment(file_name, :file)
+
+    root = get_and_check_root(fragment, "runInput")
+
+    refute root.attributes?
+
+    root.each_element do |child|
+      assert_equal "file", child.name
+      assert_equal file_name, child.content
+    end
+  end
+
   private
 
   def get_and_check_root(fragment, root_name)
