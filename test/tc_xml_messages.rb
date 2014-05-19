@@ -134,6 +134,29 @@ class TestXMLMessages < Test::Unit::TestCase
     )
   end
 
+  def test_keypair_cred_fragment
+    service = "http://example.com/service"
+    cred_name = "test_name"
+    cred_bytes = "example cred"
+    cred_type = "PKCS12"
+    password = "T@v3rNa!"
+    fragment = @test.xml_keypair_cred_fragment(service, cred_name, cred_bytes,
+      cred_type, password)
+
+    root = get_and_check_root(fragment, "credential")
+
+    refute root.attributes?
+
+    check_child_nodes(root, "keypair" => {
+      "serviceURI" => service,
+      "credentialName" => cred_name,
+      "credentialBytes" => cred_bytes,
+      "fileType" => cred_type,
+      "unlockPassword" => password
+      }
+    )
+  end
+
   private
 
   def check_child_nodes(node, children)
