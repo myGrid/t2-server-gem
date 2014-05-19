@@ -53,7 +53,7 @@ module T2Server
         ssl_auth_opts(opt, conn_params)
         ssl_transport_opts(opt, conn_params)
 
-        # common options
+        # Simple credential options
         opt.on_tail("-u", "--username=USERNAME", "The username to use for " +
           "server operations.") do |val|
             user = val.chomp
@@ -62,14 +62,9 @@ module T2Server
           "the supplied username.") do |val|
             pass = val.chomp
         end
-        opt.on_tail("-h", "-?", "--help", "Show this help message.") do
-          puts opt
-          exit
-        end
-        opt.on_tail("-v", "--version", "Show the version.") do
-          puts "Taverna 2 Server Ruby Gem version: #{T2Server::Version::STRING}"
-          exit
-        end
+
+        # Common options
+        common_opts(opt)
       end
 
       # parse options
@@ -95,6 +90,18 @@ module T2Server
     end
 
     private
+
+    # The help and version options.
+    def common_opts(opt)
+      opt.on_tail("-h", "-?", "--help", "Show this help message.") do
+        puts opt
+        exit
+      end
+      opt.on_tail("-v", "--version", "Show the version.") do
+        puts "Taverna 2 Server Ruby Gem version: #{T2Server::Version::STRING}"
+        exit
+      end
+    end
 
     # The SSL authentication and peer verification options.
     def ssl_auth_opts(opt, conn_params)
