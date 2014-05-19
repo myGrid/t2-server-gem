@@ -116,6 +116,24 @@ class TestXMLMessages < Test::Unit::TestCase
       "permission" => permission)
   end
 
+  def test_password_cred_fragment
+    service = "http://example.com/service"
+    username = "taverna"
+    password = "T@v3rNa!"
+    fragment = @test.xml_password_cred_fragment(service, username, password)
+
+    root = get_and_check_root(fragment, "credential")
+
+    refute root.attributes?
+
+    check_child_nodes(root, "userpass" => {
+      "serviceURI" => service,
+      "username" => username,
+      "password" => password
+      }
+    )
+  end
+
   private
 
   def check_child_nodes(node, children)
