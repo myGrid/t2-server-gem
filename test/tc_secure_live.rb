@@ -74,7 +74,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
 
@@ -98,7 +98,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
 
@@ -122,7 +122,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end
@@ -136,7 +136,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end
@@ -193,7 +193,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end
