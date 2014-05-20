@@ -733,7 +733,7 @@ module T2Server
     def grant_permission(username, permission)
       return unless owner?
 
-      value = xml_permission_fragment(username, permission.to_s)
+      value = xml_permissions_fragment(username, permission.to_s)
       @server.create(links[:sec_perms], value, "application/xml", @credentials)
     end
 
