@@ -36,6 +36,14 @@ class TestCredentials < Test::Unit::TestCase
 
   USERNAME = "username"
   PASSWORD = "password"
+  USERINFO = "#{USERNAME}:#{PASSWORD}"
+
+  # This class is used to ensure that the password is set in the credentials.
+  class FakeRequest
+    def basic_auth(user, pass)
+      pass
+    end
+  end
 
   def test_no_password_exposure
     creds = T2Server::HttpBasic.new(USERNAME, PASSWORD)
@@ -45,5 +53,21 @@ class TestCredentials < Test::Unit::TestCase
 
     refute r_to_s.include?(PASSWORD)
     refute r_inspect.include?(PASSWORD)
+  end
+
+  def test_create_basic
+    request = FakeRequest.new
+    creds = T2Server::HttpBasic.new(USERNAME, PASSWORD)
+
+    assert_equal USERNAME, creds.username
+    assert_equal PASSWORD, creds.authenticate(request)
+  end
+
+  def test_parse_basic
+    request = FakeRequest.new
+    creds = T2Server::HttpBasic.parse(USERINFO)
+
+    assert_equal USERNAME, creds.username
+    assert_equal PASSWORD, creds.authenticate(request)
   end
 end
