@@ -73,11 +73,14 @@ require 'tc_credentials'
 if address == ""
   $uri = URI.parse("https://localhost/taverna")
   $creds = T2Server::HttpBasic.new("test", "test")
+  $creds1 = T2Server::HttpBasic.new("test1", "test1")
   $userinfo = "test:test"
+  $userinfo1 = "test1:test1"
   $conn_params = T2Server::DefaultConnectionParameters.new
 
   require 'tc_connection_exceptions'
   require 'tc_server'
+  require 'tc_perms'
   require 'tc_run'
 else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
