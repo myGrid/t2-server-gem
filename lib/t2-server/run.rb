@@ -1177,20 +1177,12 @@ module T2Server
 
       links.merge! get_uris_from_doc(doc, [:baclava, :inputexp])
 
-      # set io properties
-      links[:io]       = Util.append_to_uri_path(links[:listeners], "io")
-      [:stdout, :stderr, :exitcode].each do |res|
-        links[res] = Util.append_to_uri_path(links[:io], "properties/#{res}")
-      end
+      # IO properties links
+      _get_io_properties_links(links)
 
-      # security properties - only available to the owner of a run
+      # Security properties links - only available to the owner of a run
       if owner?
-        securectx = @server.read(links[:securectx], "application/xml",
-          @credentials)
-        doc = xml_document(securectx)
-
-        links.merge! get_uris_from_doc(doc,
-          [:sec_creds, :sec_perms, :sec_trusts])
+        _get_security_links(links)
       end
 
       links
@@ -1207,6 +1199,22 @@ module T2Server
       unless links[:feed].nil?
         links[:feeddir] = Util.append_to_uri_path(links[:wdir], "interactions")
       end
+    end
+
+    def _get_io_properties_links(links)
+      links[:io] = Util.append_to_uri_path(links[:listeners], "io")
+      [:stdout, :stderr, :exitcode].each do |res|
+        links[res] = Util.append_to_uri_path(links[:io], "properties/#{res}")
+      end
+    end
+
+    def _get_security_links(links)
+      securectx = @server.read(links[:securectx], "application/xml",
+        @credentials)
+      doc = xml_document(securectx)
+
+      links.merge! get_uris_from_doc(doc,
+        [:sec_creds, :sec_perms, :sec_trusts])
     end
 
     def download_or_stream(param, uri, type, &block)
