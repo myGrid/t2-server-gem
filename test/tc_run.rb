@@ -90,6 +90,8 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo, :output => "get-rest-run-status.raw")
     mock("#{RUN_PATH}/security", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-security.raw")
+
+    @run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
   end
 
   # Test run connection
@@ -98,14 +100,13 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo)
 
     assert_nothing_raised(T2Server::ConnectionError) do
-      run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-      assert run.initialized?
-      assert run.delete
-      assert run.deleted?
+      assert @run.initialized?
+      assert @run.delete
+      assert @run.deleted?
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        assert run.delete # Should still return true, not raise 404
+        assert @run.delete # Should still return true, not raise 404
       end
-      assert run.delete # Should still return true
+      assert @run.delete # Should still return true
     end
 
     assert_requested del, :times => 3
@@ -116,39 +117,33 @@ class TestRun < Test::Unit::TestCase
     mock("#{RUN_PATH}/name", :accept => "text/plain", :status => 200,
       :credentials => $userinfo, :output => "get-rest-run-name.raw")
 
-    T2Server::Server.new($uri, $conn_params) do |server|
-      server.create_run(WKF_PASS, $creds) do |run|
-        # Read initial name.
-        assert run.name.length > 0
-        assert_equal "Workflow1", run.name
+    # Read initial name.
+    assert @run.name.length > 0
+    assert_equal "Workflow1", @run.name
 
-        # Set a new name.
-        name = "No input or output"
+    # Set a new name.
+    name = "No input or output"
 
-        mock("#{RUN_PATH}/name", :method => :put, :body => name,
-          :status => 200, :credentials => $userinfo)
+    mock("#{RUN_PATH}/name", :method => :put, :body => name,
+      :status => 200, :credentials => $userinfo)
 
-        assert run.name = name
+    assert @run.name = name
 
-        # Set a name that is too long. The mock should only see the first 48
-        # characters.
-        long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
+    # Set a name that is too long. The mock should only see the first 48
+    # characters.
+    long_name = "0123456789012345678901234567890123456789ABCDEFGHIJ"
 
-        mock("#{RUN_PATH}/name", :method => :put, :body => long_name[0...48],
-          :status => 200, :credentials => $userinfo)
+    mock("#{RUN_PATH}/name", :method => :put, :body => long_name[0...48],
+      :status => 200, :credentials => $userinfo)
 
-        assert run.name = long_name
-      end
-    end
+    assert @run.name = long_name
   end
 
   def test_get_expiry
     mock("#{RUN_PATH}/expiry", :accept => "text/plain", :body => TIME_RET,
       :status => 200, :credentials => $userinfo)
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
-    exp = run.expiry
+    exp = @run.expiry
     assert exp.instance_of?(Time)
   end
 
@@ -156,10 +151,8 @@ class TestRun < Test::Unit::TestCase
     exp = mock("#{RUN_PATH}/expiry", :method => :put, :accept => "*/*",
       :status => 200, :body => TIME_SET, :credentials => $userinfo)
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
-    run.expiry = TIME_STR
-    run.expiry = Time.parse(TIME_STR)
+    @run.expiry = TIME_STR
+    @run.expiry = Time.parse(TIME_STR)
 
     assert_requested exp, :times => 2
   end
@@ -171,11 +164,9 @@ class TestRun < Test::Unit::TestCase
     wkf = mock("#{RUN_PATH}/workflow", :body => workflow,
       :accept => "application/xml", :credentials => $userinfo)
 
-    T2Server::Run.create($uri, workflow, $creds, $conn_params) do |run|
-      # Download twice to check it's only actually retrieved once.
-      assert_equal workflow, run.workflow
-      assert_equal workflow, run.workflow
-    end
+    # Download twice to check it's only actually retrieved once.
+    assert_equal workflow, @run.workflow
+    assert_equal workflow, @run.workflow
 
     assert_requested wkf, :times => 1
   end
@@ -186,9 +177,7 @@ class TestRun < Test::Unit::TestCase
     mock("#{RUN_PATH}/wd", :method => :post, :accept => "*/*", :status => 201,
       :credentials => $userinfo, :location => location)
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
-    assert run.mkdir(dir)
+    assert @run.mkdir(dir)
   end
 
   def test_listeners
@@ -198,14 +187,13 @@ class TestRun < Test::Unit::TestCase
       :credentials => $userinfo)
     mock("#{RUN_LSTN}/stderr", :accept => "text/plain", :body => "Error",
       :credentials => $userinfo)
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
 
     # Check the exitcode is parsed into a number and other things not mangled.
-    exit = run.exitcode
+    exit = @run.exitcode
     assert_equal 0, exit
     assert_instance_of(Fixnum, exit)
-    assert_equal "Out", run.stdout
-    assert_equal "Error", run.stderr
+    assert_equal "Out", @run.stdout
+    assert_equal "Error", @run.stderr
   end
 
   def test_full_run
@@ -213,10 +201,8 @@ class TestRun < Test::Unit::TestCase
 
     in_exp = mock("#{RUN_PATH}/input/expected", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-input-expected.raw")
-
     mock("#{RUN_PATH}/input/input/IN", :method => :put, :accept => "*/*",
       :status => 200, :credentials => $userinfo)
-
     mock("#{RUN_PATH}/status", :method => :put, :body => "Operating",
       :status => 200, :credentials => $userinfo)
 
@@ -228,35 +214,32 @@ class TestRun < Test::Unit::TestCase
 
     out = mock("#{RUN_PATH}/output", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-output.raw")
-
     mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
       :status => 200, :credentials => $userinfo, :body => data)
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
     assert_nothing_raised(T2Server::AttributeNotFoundError) do
-      run.input_port("IN").value = data
+      @run.input_port("IN").value = data
     end
-    assert_equal data, run.input_port("IN").value
+    assert_equal data, @run.input_port("IN").value
 
     # Need to start the run to trigger input upload, then don't wait between
     # mocked polling of status.
-    run.start
+    @run.start
 
-    assert run.running?
+    assert @run.running?
 
-    run.wait(0)
+    @run.wait(0)
 
-    assert run.finished?
+    assert @run.finished?
 
-    outputs = run.output_ports
+    outputs = @run.output_ports
     assert_equal 1, outputs.length
 
-    assert_equal data, run.output_port("OUT").value
+    assert_equal data, @run.output_port("OUT").value
 
     # No network access should occur on the next call.
     assert_nothing_raised(WebMock::NetConnectNotAllowedError) do
-      assert_nil run.output_port("wrong!")
+      assert_nil @run.output_port("wrong!")
     end
 
     assert_requested status, :times => 12
@@ -269,28 +252,26 @@ class TestRun < Test::Unit::TestCase
       :status => 200, :credentials => $userinfo,
       :body => mocked_file("log.txt"))
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
     # Should be an error if a parameter and a block are passed in here.
     assert_raise(ArgumentError) do
-      run.log("log.txt") do |chunk|
+      @run.log("log.txt") do |chunk|
         # ...
       end
     end
 
     assert_nothing_raised(ArgumentError) do
-      log_str = run.log
+      log_str = @run.log
 
       assert_not_equal(log_str, "")
 
       log_stream = ""
-      run.log do |chunk|
+      @run.log do |chunk|
         log_stream += chunk
       end
       assert_equal log_str, log_stream
 
       log_cache = TestCache.new
-      run.log(log_cache)
+      @run.log(log_cache)
       assert_not_equal 0, log_cache.size
       assert_equal log_str, log_cache.data
     end
@@ -299,27 +280,23 @@ class TestRun < Test::Unit::TestCase
   end
 
   def test_create_start_finish_times
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
     %w(create start finish).each do |time|
       mock("#{RUN_PATH}/#{time}Time", :accept => "text/plain", :body => TIME_RET,
         :credentials => $userinfo)
 
-      t = run.send("#{time}_time".to_sym)
+      t = @run.send("#{time}_time".to_sym)
       assert t.instance_of?(Time)
       assert TIME_STR, t.to_s
     end
   end
 
   def test_bad_state
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
     # Re-mock status to fake up an already running run.
     status = mock("#{RUN_PATH}/status", :accept => "text/plain",
       :status => 200, :credentials => $userinfo, :body => "Operating")
 
     assert_raise(T2Server::RunStateError) do
-      run.start
+      @run.start
     end
   end
 
@@ -329,9 +306,7 @@ class TestRun < Test::Unit::TestCase
       :status => 201, :credentials => $userinfo,
       :location => "https://localhost/taverna#{RUN_PATH}/wd/#{filename}")
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
-    file = run.upload_file("test/workflows/#{filename}")
+    file = @run.upload_file("test/workflows/#{filename}")
 
     assert_equal filename, file
   end
@@ -344,9 +319,7 @@ class TestRun < Test::Unit::TestCase
     mock("#{RUN_PATH}/wd/#{filename}", :method => :put, :accept => "*/*",
       :status => 201, :credentials => $userinfo, :location => location)
 
-    run = T2Server::Run.create($uri, WKF_PASS, $creds, $conn_params)
-
-    file = run.upload_data(data, filename)
+    file = @run.upload_data(data, filename)
 
     assert_equal location, file.to_s
   end
