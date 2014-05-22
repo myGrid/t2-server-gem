@@ -286,6 +286,28 @@ class TestRun < Test::Unit::TestCase
     assert_requested out, :times => 1
   end
 
+  def test_output_range
+    range = 5..30
+    data = File.read("test/mocked-server-responses/log.txt")[range]
+
+    mock("#{RUN_PATH}/status", :accept => "text/plain", :status => 200,
+      :credentials => $userinfo, :body => "Finished")
+    out = mock("#{RUN_PATH}/output", :accept => "application/xml",
+      :credentials => $userinfo, :output => "get-rest-run-output.raw")
+    mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
+      :status => 200, :credentials => $userinfo, :body => data)
+
+    assert_equal data, @run.output_port("OUT").value(range)
+
+    out_stream = ""
+    @run.output_port("OUT").value(range) do |chunk|
+      out_stream += chunk
+    end
+    assert_equal data, out_stream
+
+    assert_requested out, :times => 1
+  end
+
   def test_log
     log = mock("#{RUN_PATH}/wd/logs/detail.log", :accept => "text/plain",
       :status => 200, :credentials => $userinfo,
