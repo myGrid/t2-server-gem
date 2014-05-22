@@ -210,7 +210,7 @@ class TestRun < Test::Unit::TestCase
     status = mock("#{RUN_PATH}/status", :accept => "text/plain",
       :status => 200, :credentials => $userinfo,
       :body => ["Initialized", "Initialized", "Operating", "Operating",
-        "Operating", "Finished"])
+        "Operating", "Operating", "Finished"])
 
     out = mock("#{RUN_PATH}/output", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-output.raw")
@@ -227,6 +227,7 @@ class TestRun < Test::Unit::TestCase
     @run.start
 
     assert @run.running?
+    refute @run.error?
 
     @run.wait(0)
 
@@ -236,13 +237,14 @@ class TestRun < Test::Unit::TestCase
     assert_equal 1, outputs.length
 
     assert_equal data, @run.output_port("OUT").value
+    refute @run.error?
 
     # No network access should occur on the next call.
     assert_nothing_raised(WebMock::NetConnectNotAllowedError) do
       assert_nil @run.output_port("wrong!")
     end
 
-    assert_requested status, :times => 12
+    assert_requested status, :times => 15
     assert_requested in_exp, :times => 1
     assert_requested out, :times => 1
   end
