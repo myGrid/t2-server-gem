@@ -265,6 +265,24 @@ class TestRun < Test::Unit::TestCase
     assert_requested out, :times => 1
   end
 
+  def test_output_with_errors
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo,
+      :body => ["Operating", "Finished"])
+    out = mock("#{RUN_PATH}/output", :accept => "application/xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-output-list-errors.raw")
+
+    # Status :running
+    refute @run.error?
+
+    # Status :finished
+    assert @run.error?
+
+    assert_requested status, :times => 3
+    assert_requested out, :times => 1
+  end
+
   def test_getting_output
     mock("#{RUN_PATH}/status", :accept => "text/plain", :status => 200,
       :credentials => $userinfo, :body => "Finished")
