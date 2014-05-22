@@ -86,8 +86,6 @@ class TestRun < Test::Unit::TestCase
       :output => "get-rest-run.raw")
     mock("#{RUN_PATH}/input", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-input.raw")
-    mock("#{RUN_PATH}/status", :accept => "text/plain",
-      :credentials => $userinfo, :output => "get-rest-run-status.raw")
     mock("#{RUN_PATH}/security", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-security.raw")
 
@@ -96,6 +94,8 @@ class TestRun < Test::Unit::TestCase
 
   # Test run connection
   def test_run_create_and_delete
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :credentials => $userinfo, :body => "Initialized")
     del = mock(RUN_PATH, :method => :delete, :status => [204, 404, 404],
       :credentials => $userinfo)
 
@@ -109,6 +109,7 @@ class TestRun < Test::Unit::TestCase
       assert @run.delete # Should still return true
     end
 
+    assert_requested status, :times => 1
     assert_requested del, :times => 3
   end
 

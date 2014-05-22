@@ -54,8 +54,6 @@ class TestPermissions < Test::Unit::TestCase
       :output => "get-rest-run.raw")
     mock("#{RUN_PATH}/input", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-input.raw")
-    mock("#{RUN_PATH}/status", :accept => "text/plain",
-      :credentials => $userinfo, :output => "get-rest-run-status.raw")
     mock("#{RUN_PATH}/security", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-security.raw")
   end
