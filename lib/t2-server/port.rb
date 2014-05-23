@@ -394,12 +394,6 @@ module T2Server
       end
     end
 
-    # Generate the path to the actual data for a data value.
-    def path(ref)
-      parts = ref.split('/')
-      @depth == 0 ? parts[-1] : "/" + parts[-(@depth + 1)..-1].join('/')
-    end
-
     # Strip the requested attribute from the raw values structure.
     def strip(attribute, struct = @structure)
       if struct.instance_of? Array
