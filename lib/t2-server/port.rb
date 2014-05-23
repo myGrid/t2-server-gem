@@ -477,22 +477,24 @@ module T2Server
     # This method does not cache any data.
     #
     # If this port is an error then this value will be the error message.
-    def value(range = 0...@size, &block)
+    def value(range = nil, &block)
       # The following block is a workaround for Taverna Server versions prior
       # to 2.4.1 and can be removed when support for those versions is no
       # longer required.
       if error? && @size == 0
         value = @port.download(@reference)
         @size = value.size
-        range = 0...@size if range.min.nil?
+        range = 0...@size if range.nil? || range.min.nil?
         return value[range]
       end
 
       return "" if @type == EMPTY_TYPE
 
       # Check that the range provided is sensible
-      range = 0..range.max if range.min < 0
-      range = range.min...@size if range.max >= @size
+      unless range.nil?
+        range = 0..range.max if range.min < 0
+        range = range.min...@size if range.max >= @size
+      end
 
       @port.download(@reference, range, &block)
     end
@@ -506,7 +508,7 @@ module T2Server
     # File, for example. No data is cached by this method.
     #
     # The number of bytes written to the stream is returned.
-    def stream_value(stream, range = 0...@size)
+    def stream_value(stream, range = nil)
       raise ArgumentError,
         "Stream passed in must provide a write method" unless
           stream.respond_to? :write
@@ -527,7 +529,7 @@ module T2Server
     # Stream this port value directly to a file. If a range is supplied then
     # just that range of data is downloaded from the server. No data is cached
     # by this method.
-    def write_value_to_file(filename, range = 0...@size)
+    def write_value_to_file(filename, range = nil)
       File.open(filename, "wb") do |file|
         stream_value(file, range)
       end
