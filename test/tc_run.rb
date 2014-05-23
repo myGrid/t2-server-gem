@@ -314,7 +314,7 @@ class TestRun < Test::Unit::TestCase
     out = mock("#{RUN_PATH}/output", :accept => "application/xml",
       :credentials => $userinfo, :output => "get-rest-run-output.raw")
     mock("#{RUN_PATH}/wd/out/OUT", :accept => "application/octet-stream",
-      :status => 200, :credentials => $userinfo, :body => data)
+      :status => 206, :credentials => $userinfo, :body => data)
 
     assert_equal data, @run.output_port("OUT").value(range)
 
