@@ -231,14 +231,9 @@ module T2Server
     #   run.output_port("port_name")[0].value(0..100)
     def value(range = nil, &block)
       if depth == 0
-        if range.nil?
-          @structure.value(&block)
-        else
-          @structure.value(range, &block)
-        end
+        @structure.value(range, &block)
       else
-        @values = strip(:value) if @values.nil?
-        @values
+        @values ||= strip(:value)
       end
     end
 
@@ -261,11 +256,7 @@ module T2Server
         "Stream passed in must provide a write method" unless
           stream.respond_to? :write
 
-      if range.nil?
-        @structure.stream_value(stream)
-      else
-        @structure.stream_value(stream, range)
-      end
+      @structure.stream_value(stream, range)
     end
 
     # :call-seq:
@@ -282,11 +273,7 @@ module T2Server
     def write_value_to_file(filename, range = nil)
       return 0 unless depth == 0
 
-      if range.nil?
-        @structure.write_value_to_file(filename)
-      else
-        @structure.write_value_to_file(filename, range)
-      end
+      @structure.write_value_to_file(filename, range)
     end
 
     # :call-seq:
