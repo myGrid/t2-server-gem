@@ -296,6 +296,10 @@ class TestRun < Test::Unit::TestCase
 
     assert_equal data, @run.output_port("OUT").value
 
+    out_stream = TestCache.new
+    assert_equal data.length, @run.output_port("OUT").stream_value(out_stream)
+    assert_equal data, out_stream.data
+
     out_stream = ""
     @run.output_port("OUT").value do |chunk|
       out_stream += chunk
