@@ -327,6 +327,54 @@ class TestRun < Test::Unit::TestCase
     assert_requested out, :times => 1
   end
 
+  def test_output_list
+    output_0_ref = "wd/out/OUT/1"
+    output_0_value = "String0"
+    output_4_ref = "wd/out/OUT/5.error"
+    output_4_value = "Processor 'Sometimes_Fails' - Port 'out': Line 6: java.lang.RuntimeException: Fails every four runs!\n"
+    status = mock("#{RUN_PATH}/status", :accept => "text/plain",
+      :status => 200, :credentials => $userinfo, :body => "Finished")
+    out = mock("#{RUN_PATH}/output", :accept => "application/xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-output-list-errors.raw")
+    out_0 = mock("#{RUN_PATH}/#{output_0_ref}", :status => 200,
+      :accept => "application/octet-stream", :credentials => $userinfo,
+      :body => output_0_value)
+    out_4 = mock("#{RUN_PATH}/#{output_4_ref}", :status => 200,
+      :accept => "application/octet-stream", :credentials => $userinfo,
+      :body => output_4_value)
+
+    output = @run.output_port("OUT")
+
+    assert_equal 1, output.depth
+    assert_equal 40, output.size.length
+    assert_equal 40, output.type.length
+    assert_equal 40, output.reference.length
+
+    assert_equal output_0_value.size, output[0].size
+    assert_equal "text/plain", output[0].type
+    assert_equal "https://localhost/taverna#{RUN_PATH}/#{output_0_ref}",
+      output[0].reference.to_s
+    assert_equal output_0_value, output[0].value
+
+    output_0_stream = TestCache.new
+    assert_equal output_0_value.size, output[0].stream_value(output_0_stream)
+    assert_equal output_0_value, output_0_stream.data
+
+    assert_equal output_4_value.size, output[4].size
+    assert_equal "application/x-error", output[4].type
+    assert_equal "https://localhost/taverna#{RUN_PATH}/#{output_4_ref}",
+      output[4].reference.to_s
+    assert_equal output_4_value, output[4].value
+
+    output_4_stream = TestCache.new
+    assert_equal output_4_value.size, output[4].stream_value(output_4_stream)
+    assert_equal output_4_value, output_4_stream.data
+
+    assert_requested status, :times => 2
+    assert_requested out, :times => 1
+  end
+
   def test_log
     log = mock("#{RUN_PATH}/wd/logs/detail.log", :accept => "text/plain",
       :status => 200, :credentials => $userinfo,
