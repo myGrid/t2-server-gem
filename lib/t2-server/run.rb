@@ -1112,33 +1112,35 @@ module T2Server
     end
 
     def _get_input_port_info
-      ports = {}
       port_desc = @server.read(links[:inputexp], "application/xml",
         @credentials)
 
       doc = xml_document(port_desc)
 
-      xpath_find(doc, @@xpaths[:port_in]).each do |inp|
-        port = InputPort.new(self, inp)
-        ports[port.name] = port
-      end
-
-      ports
+      _get_port_info(doc, :port_in)
     end
 
     def _get_output_port_info
-      ports = {}
-
       begin
         port_desc = @server.read(links[:output], "application/xml", @credentials)
       rescue AttributeNotFoundError => anfe
-        return ports
+        return {}
       end
 
       doc = xml_document(port_desc)
 
-      xpath_find(doc, @@xpaths[:port_out]).each do |out|
-        port = OutputPort.new(self, out)
+      _get_port_info(doc, :port_out)
+    end
+
+    def _get_port_info(doc, type)
+      ports = {}
+
+      xpath_find(doc, @@xpaths[type]).each do |desc|
+        port = if type == :port_out
+                 OutputPort.new(self, desc)
+               else
+                 InputPort.new(self, desc)
+               end
         ports[port.name] = port
       end
 
