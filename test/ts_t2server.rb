@@ -71,6 +71,7 @@ if address == ""
   require 'tc_server'
   require 'tc_perms'
   require 'tc_run'
+  require 'tc_interaction'
 else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
