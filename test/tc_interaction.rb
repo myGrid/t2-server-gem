@@ -99,4 +99,49 @@ class TestInteractions < Test::Unit::TestCase
     assert_equal test_input_data, entries[0].input_data
   end
 
+  def test_replies
+    mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-interaction-feed-1.raw")
+
+    entries = @run.notifications(:all)
+    requests = @run.notifications(:requests)
+    replies = @run.notifications(:replies)
+
+    assert_equal 2, entries.length
+    assert_equal 2, requests.length
+    assert_equal [], replies
+
+    mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-interaction-feed-2.raw")
+
+    # No new requests...
+    assert_equal [], @run.notifications
+
+    # Refresh local lists.
+    entries = @run.notifications(:all)
+    requests = @run.notifications(:requests)
+    replies = @run.notifications(:replies)
+
+    # One more entry in total.
+    assert_equal 3, entries.length
+
+    # Should not lose a request.
+    assert_equal 2, requests.length
+
+    # Should gain a reply.
+    assert_equal 1, replies.length
+
+    # One request should have a reply.
+    assert requests[0].has_reply?
+    refute requests[1].has_reply?
+
+    refute replies[0].is_notification?
+    refute replies[0].has_reply?
+    assert replies[0].is_reply?
+    assert_equal requests[0].id, replies[0].reply_to
+    assert_equal "", replies[0].input_data
+  end
+
 end
