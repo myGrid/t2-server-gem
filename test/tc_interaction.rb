@@ -67,4 +67,36 @@ class TestInteractions < Test::Unit::TestCase
     assert_equal [], @run.notifications(:all)
   end
 
+  def test_requests
+    mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-interaction-feed-1.raw")
+
+    entries = @run.notifications(:all)
+    requests = @run.notifications(:requests)
+    replies = @run.notifications(:replies)
+
+    assert_equal 2, entries.length
+    assert_equal 2, requests.length
+    assert_equal [], replies
+
+    # No new requests...
+    assert_equal [], @run.notifications
+
+    entries.each do |entry|
+      refute entry.is_reply?
+      refute entry.is_notification?
+      refute entry.has_reply?
+      assert_not_equal "", entry.serial
+      assert_not_nil entry.uri
+      assert_nil entry.reply_to
+    end
+
+    test_input_data = "{ \"test\" : \"value\"}"
+    mock("#{RUN_PATH}/wd/interactions/interaction#{entries[0].id}InputData.json",
+      :credentials => $userinfo, :body => test_input_data)
+
+    assert_equal test_input_data, entries[0].input_data
+  end
+
 end
