@@ -99,6 +99,21 @@ class TestInteractions < Test::Unit::TestCase
     assert_equal test_input_data, entries[0].input_data
   end
 
+  def test_no_request_input_data
+    mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-interaction-feed-1.raw")
+
+    entries = @run.notifications
+
+    mock("#{RUN_PATH}/wd/interactions/interaction#{entries[0].id}InputData.json",
+      :credentials => $userinfo, :body => "", :status => 404)
+
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      assert_equal "", entries[0].input_data
+    end
+  end
+
   def test_replies
     mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
       :credentials => $userinfo,
