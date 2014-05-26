@@ -114,6 +114,26 @@ class TestInteractions < Test::Unit::TestCase
     end
   end
 
+  def test_reply
+    mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
+      :credentials => $userinfo,
+      :output => "get-rest-run-interaction-feed-1.raw")
+
+    test_reply_data = "{ \"test\" : \"value\" }"
+
+    entries = @run.notifications
+
+    mock("#{RUN_PATH}/wd/interactions/interaction#{entries[0].id}OutputData.json",
+      :method => :put, :credentials => $userinfo, :body => test_reply_data)
+
+    # When mocking this POST it doesn't matter (at the moment) what the
+    # returned location is.
+    mock("#{RUN_PATH}/interaction", :method => :post,  :status => 201,
+      :credentials => $userinfo, :location => "https://localhost/taverna")
+
+    entries[0].reply("OK", test_reply_data)
+  end
+
   def test_replies
     mock("#{RUN_PATH}/interaction", :accept => "application/atom+xml",
       :credentials => $userinfo,
