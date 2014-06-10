@@ -51,4 +51,19 @@ class TestAdmin < Test::Unit::TestCase
       assert_nil admin["__not-here__"]
     end
   end
+
+  def test_admin_resource
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
+
+      assert_not_nil resource
+      assert_equal "allowNew", resource.name
+      assert resource.writable?
+      assert resource.respond_to?(:value=)
+
+      rEsOuRcE = admin["AlLOwnEW"]
+      assert_not_nil rEsOuRcE
+      assert_same resource, rEsOuRcE
+    end
+  end
 end
