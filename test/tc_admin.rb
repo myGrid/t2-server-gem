@@ -66,4 +66,18 @@ class TestAdmin < Test::Unit::TestCase
       assert_same resource, rEsOuRcE
     end
   end
+
+  def test_admin_read
+    value = ["true", "false"]
+    mock("/admin/allowNew", :credentials => $userinfo, :accept => "text/plain",
+      :body => value)
+
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
+
+      # Test that the value is fetched from the server each time.
+      assert_equal value[0], resource.value
+      assert_equal value[1], resource.value
+    end
+  end
 end
