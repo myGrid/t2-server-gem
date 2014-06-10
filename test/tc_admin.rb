@@ -80,4 +80,15 @@ class TestAdmin < Test::Unit::TestCase
       assert_equal value[1], resource.value
     end
   end
+
+  def test_admin_write
+    value = false
+    mock("/admin/allowNew", :method => :put, :credentials => $userinfo,
+      :body => value.to_s, :status => 200)
+
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
+      resource.value = value
+    end
+  end
 end
