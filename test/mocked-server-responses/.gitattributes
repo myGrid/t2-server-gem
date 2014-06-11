@@ -1,1 +1,1 @@
-*.raw eol=crlf
+*.raw -text

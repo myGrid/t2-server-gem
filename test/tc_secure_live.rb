@@ -40,7 +40,6 @@ class TestSecurity < Test::Unit::TestCase
   # User name and password for the test secure server.
   USERNAME = "testuser"
   PASSWORD = "testpasswd"
-  CERTPASS = "testcert"
 
   # Various URIs required.
   HEATER_HTTP  = "http://heater.cs.man.ac.uk:7070/"
@@ -65,6 +64,8 @@ class TestSecurity < Test::Unit::TestCase
 
   # Client private key for HTTPS authentication
   USER_PK = "test/workflows/secure/user-cert.p12"
+  CERTNAME = "{492EB700-ADBA-44B9-A263-D7DF9F2E0F2B}"
+  CERTPASS = "testcert"
 
   # HTTP Basic authentication
   def test_basic_creds_http
@@ -74,7 +75,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
 
@@ -98,7 +99,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
 
@@ -122,7 +123,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end
@@ -136,7 +137,7 @@ class TestSecurity < Test::Unit::TestCase
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end
@@ -187,13 +188,13 @@ class TestSecurity < Test::Unit::TestCase
   # HTTPS client certificate authentication
   def test_client_cert_auth_https
     T2Server::Run.create($uri, WKF_CLIENT_HTTPS, $creds, $conn_params) do |run|
-      run.add_keypair_credential(HEATER_CAUTH, USER_PK, CERTPASS)
+      run.add_keypair_credential(HEATER_CAUTH, USER_PK, CERTPASS, CERTNAME)
       run.add_trust(HEATER_PK)
       run.start
       assert(run.running?)
       assert_nothing_raised(T2Server::RunStateError) { run.wait }
       assert(run.finished?)
-      assert_not_nil(run.output_port("out").value)
+      refute(run.output_port("out").error?)
       assert(run.delete)
     end
   end

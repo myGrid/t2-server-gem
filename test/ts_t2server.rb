@@ -40,19 +40,8 @@ require 't2-server'
 # command line.
 if ARGV.size != 0
   address = ARGV[0]
-
-  unless ARGV[1].nil?
-    user1, pass1 = ARGV[1].split(":")
-    user1 = nil if pass1.nil?
-  end
-
-  unless ARGV[2].nil?
-    user2, pass2 = ARGV[2].split(":")
-    user2 = nil if pass2.nil?
-  end
-
-  puts "Running tests against a live server at: #{address}"
-  puts "   With user(s): #{user1} #{user2}" if user1
+  user1 = ARGV[1]
+  user2 = ARGV[2]
 
   # Clear the commandline arguments so that we don't confuse runit.
   ARGV.clear
@@ -72,19 +61,28 @@ require 'tc_credentials'
 # Only run tests against a live server if we have an address for one.
 if address == ""
   $uri = URI.parse("https://localhost/taverna")
-  $creds = T2Server::HttpBasic.new("test", "test")
   $userinfo = "test:test"
+  $userinfo1 = "test1:test1"
+  $creds = T2Server::HttpBasic.parse($userinfo)
+  $creds1 = T2Server::HttpBasic.parse($userinfo1)
   $conn_params = T2Server::DefaultConnectionParameters.new
 
   require 'tc_connection_exceptions'
   require 'tc_server'
+  require 'tc_perms'
   require 'tc_run'
+  require 'tc_interaction'
+  require 'tc_admin'
 else
   $uri, $creds = T2Server::Util.strip_uri_credentials(address)
 
   # override creds if passed in on the command line
-  $creds = T2Server::HttpBasic.new(user1, pass1) if user1
-  $creds1 = T2Server::HttpBasic.new(user2, pass2) if user2
+  $creds = T2Server::HttpBasic.parse(user1) if user1
+  $creds1 = T2Server::HttpBasic.parse(user2) if user2
+
+  puts "Running tests against a live server at: #{$uri}"
+  print "   With user(s): #{$creds.username}" if $creds
+  puts $creds1.nil? ? "" : " #{$creds1.username}"
 
   if $uri.scheme == "http"
     $conn_params = T2Server::DefaultConnectionParameters.new

@@ -306,7 +306,13 @@ module T2Server
         @http.ssl_version = @params[:ssl_version]
       end
 
-      # Peer verification
+      set_peer_verification
+      set_client_authentication
+    end
+
+    private
+
+    def set_peer_verification
       if @params[:verify_peer]
         if @params[:ca_file]
           @http.ca_file = @params[:ca_file]
@@ -328,8 +334,9 @@ module T2Server
       else
         @http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
+    end
 
-      # Client authentication
+    def set_client_authentication
       if @params[:client_certificate]
         pem = File.read(@params[:client_certificate])
         @http.certificate = OpenSSL::X509::Certificate.new(pem)
@@ -337,5 +344,6 @@ module T2Server
           @params[:client_password])
       end
     end
+
   end
 end

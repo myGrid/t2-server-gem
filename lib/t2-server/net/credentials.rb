@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012 The University of Manchester, UK.
+# Copyright (c) 2010-2014 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -51,6 +51,17 @@ module T2Server
       @password = password
     end
     # :startdoc:
+
+    # :call-seq:
+    #   parse(userinfo) -> Credentials
+    #
+    # Parse a typical userinfo style string, such as "username:password", into
+    # a credentials object. In this case the credentials would have a username
+    # of "username" and a password of "password".
+    def self.parse(userinfo)
+      user, pass = userinfo.split(':', 2)
+      new(user, pass)
+    end
 
     # :call-seq:
     #   to_s -> string

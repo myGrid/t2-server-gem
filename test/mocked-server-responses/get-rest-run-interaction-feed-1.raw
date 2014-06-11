@@ -1,0 +1,92 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Content-Type: application/atom+xml; type=feed;charset=UTF-8
+Transfer-Encoding: chunked
+
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title type="text">Interactions for Taverna Run "Multi_interactor"</title>
+  <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/interaction" rel="self"/>
+  <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74" rel="workflowrun"/>
+  <entry xmlns:interaction="http://ns.taverna.org.uk/2012/interaction">
+  
+    <id>urn:uuid:2ba41de9-73d7-4e7f-99b8-0a71e03b75b7</id>
+  
+    <published>2014-05-25T15:09:13.688Z</published>
+  
+    <updated>2014-05-25T15:09:13.688Z</updated>
+  
+    <author>
+    
+      <name>Taverna</name>
+  </author>
+  
+    <title type="text">Interaction from Taverna for 966ac40e-6c2a-4650-b094-f6c14d893de6:facade0:Multi_interactor:ask:invocation6</title>
+  
+    <interaction:run-id>a341b87f-25cc-4dfd-be36-f5b073a6ba74</interaction:run-id>
+  
+    <interaction:path>ask</interaction:path>
+  
+    <interaction:count>0</interaction:count>
+  
+    <interaction:id>db4c26e742a14bba93356a473e314ce4</interaction:id>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiondb4c26e742a14bba93356a473e314ce4.html" rel="presentation"/>
+  
+    <content type="xhtml">
+    
+      <div xmlns="http://www.w3.org/1999/xhtml">
+      
+        <p>
+        
+          <a href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiondb4c26e742a14bba93356a473e314ce4.html">Open: https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiondb4c26e742a14bba93356a473e314ce4.html</a>
+      </p>
+    </div>
+  </content>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/interaction/entry_1" rel="self"/>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74" rel="workflowrun"/>
+</entry>
+  <updated>2014-05-25T15:09:13.688Z</updated>
+  <entry xmlns:interaction="http://ns.taverna.org.uk/2012/interaction">
+  
+    <id>urn:uuid:7eb364c8-3462-4299-afcf-8362a56e94f7</id>
+  
+    <published>2014-05-25T15:09:13.894Z</published>
+  
+    <updated>2014-05-25T15:09:13.894Z</updated>
+  
+    <author>
+    
+      <name>Taverna</name>
+  </author>
+  
+    <title type="text">Interaction from Taverna for 966ac40e-6c2a-4650-b094-f6c14d893de6:facade0:Multi_interactor:Nested_workflow:invocation3:facade1:Workflow10:Interaction:invocation7</title>
+  
+    <interaction:run-id>a341b87f-25cc-4dfd-be36-f5b073a6ba74</interaction:run-id>
+  
+    <interaction:path>Nested_workflow:Interaction</interaction:path>
+  
+    <interaction:count>0</interaction:count>
+  
+    <interaction:id>d1dfbdb616ae42598d2987837ffaa332</interaction:id>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiond1dfbdb616ae42598d2987837ffaa332.html" rel="presentation"/>
+  
+    <content type="xhtml">
+    
+      <div xmlns="http://www.w3.org/1999/xhtml">
+      
+        <p>
+        
+          <a href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiond1dfbdb616ae42598d2987837ffaa332.html">Open: https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/interactions/interactiond1dfbdb616ae42598d2987837ffaa332.html</a>
+      </p>
+    </div>
+  </content>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/interaction/entry_2" rel="self"/>
+  
+    <link href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74" rel="workflowrun"/>
+</entry>
+</feed>

@@ -30,44 +30,65 @@
 #
 # Author: Robert Haines
 
+require 'mocked-server-responses/mocks'
 require 't2-server'
 
-class TestCredentials < Test::Unit::TestCase
+class TestAdmin < Test::Unit::TestCase
+  include T2Server::Mocks
 
-  USERNAME = "username"
-  PASSWORD = "password"
-  USERINFO = "#{USERNAME}:#{PASSWORD}"
+  def setup
+    @server = T2Server::Server.new($uri, $conn_params)
 
-  # This class is used to ensure that the password is set in the credentials.
-  class FakeRequest
-    def basic_auth(user, pass)
-      pass
+    mock("/admin", :accept => "application/xml", :output => "get-admin.raw",
+      :credentials => $userinfo)
+    mock("/admin/allowNew", :method => :options, :credentials => $userinfo,
+      :output => "options-admin-allownew.raw")
+  end
+
+  def test_admin_init
+    @server.administrator($creds) do |admin|
+      assert_not_nil admin["allowNew"]
+      assert_nil admin["__not-here__"]
     end
   end
 
-  def test_no_password_exposure
-    creds = T2Server::HttpBasic.new(USERNAME, PASSWORD)
+  def test_admin_resource
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
 
-    r_to_s = creds.to_s
-    r_inspect = creds.inspect
+      assert_not_nil resource
+      assert_equal "allowNew", resource.name
+      assert resource.writable?
+      assert resource.respond_to?(:value=)
 
-    refute r_to_s.include?(PASSWORD)
-    refute r_inspect.include?(PASSWORD)
+      rEsOuRcE = admin["AlLOwnEW"]
+      assert_not_nil rEsOuRcE
+      assert_same resource, rEsOuRcE
+    end
   end
 
-  def test_create_basic
-    request = FakeRequest.new
-    creds = T2Server::HttpBasic.new(USERNAME, PASSWORD)
+  def test_admin_read
+    value = ["true", "false"]
+    mock("/admin/allowNew", :credentials => $userinfo, :accept => "text/plain",
+      :body => value)
 
-    assert_equal USERNAME, creds.username
-    assert_equal PASSWORD, creds.authenticate(request)
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
+
+      # Test that the value is fetched from the server each time.
+      assert_equal value[0], resource.value
+      assert_equal value[1], resource.value
+    end
   end
 
-  def test_parse_basic
-    request = FakeRequest.new
-    creds = T2Server::HttpBasic.parse(USERINFO)
+  def test_admin_write
+    value = false
+    mock("/admin/allowNew", :method => :put, :credentials => $userinfo,
+      :body => value.to_s, :status => 200)
 
-    assert_equal USERNAME, creds.username
-    assert_equal PASSWORD, creds.authenticate(request)
+    @server.administrator($creds) do |admin|
+      resource = admin["allownew"]
+      resource.value = value
+    end
   end
 end

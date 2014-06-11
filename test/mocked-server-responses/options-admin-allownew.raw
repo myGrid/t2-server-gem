@@ -1,0 +1,7 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Allow: GET,PUT,HEAD,OPTIONS
+Date: Tue, 10 Jun 2014 15:53:35 GMT
+Content-Type: application/octet-stream
+Content-Length: 0
+

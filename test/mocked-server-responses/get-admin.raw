@@ -1,0 +1,6 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Content-Type: application/xml
+Content-Length: 604
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><admin:description xmlns:ts="http://ns.taverna.org.uk/2010/xml/server/" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ur="http://schema.ogf.org/urf/2003/09/urf" xmlns:feed="http://ns.taverna.org.uk/2010/xml/server/feed/" xmlns:ts-soap="http://ns.taverna.org.uk/2010/xml/server/soap/" xmlns:ts-rest="http://ns.taverna.org.uk/2010/xml/server/rest/" xmlns:admin="http://ns.taverna.org.uk/2010/xml/server/admin/" xmlns:xlink="http://www.w3.org/1999/xlink"><admin:allowNew xlink:href="https://localhost/taverna/admin/allowNew"/></admin:description>
