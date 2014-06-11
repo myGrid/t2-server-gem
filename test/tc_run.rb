@@ -102,15 +102,13 @@ class TestRun < Test::Unit::TestCase
     assert @run.finished?
     refute @run.deleted?
 
-    assert_nothing_raised(T2Server::ConnectionError) do
-      assert @run.delete
-      assert @run.deleted?
-      refute @run.finished?
-      assert_nothing_raised(T2Server::AttributeNotFoundError) do
-        assert @run.delete # Should still return true, not raise 404
-      end
-      assert @run.delete # Should still return true
+    assert @run.delete
+    assert @run.deleted?
+    refute @run.finished?
+    assert_nothing_raised(T2Server::AttributeNotFoundError) do
+      assert @run.delete # Should still return true, not raise 404
     end
+    assert @run.delete # Should still return true
 
     assert_equal :deleted, @run.status
     assert_not_equal :finished, @run.status
