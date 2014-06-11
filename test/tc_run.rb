@@ -95,19 +95,25 @@ class TestRun < Test::Unit::TestCase
   # Test run connection
   def test_run_create_and_delete
     status = mock("#{RUN_PATH}/status", :accept => "text/plain",
-      :credentials => $userinfo, :body => "Initialized")
+      :credentials => $userinfo, :body => "Finished")
     del = mock(RUN_PATH, :method => :delete, :status => [204, 404, 404],
       :credentials => $userinfo)
 
+    assert @run.finished?
+    refute @run.deleted?
+
     assert_nothing_raised(T2Server::ConnectionError) do
-      assert @run.initialized?
       assert @run.delete
       assert @run.deleted?
+      refute @run.finished?
       assert_nothing_raised(T2Server::AttributeNotFoundError) do
         assert @run.delete # Should still return true, not raise 404
       end
       assert @run.delete # Should still return true
     end
+
+    assert_equal :deleted, @run.status
+    assert_not_equal :finished, @run.status
 
     assert_requested status, :times => 1
     assert_requested del, :times => 3
@@ -243,7 +249,7 @@ class TestRun < Test::Unit::TestCase
       assert_nil @run.output_port("wrong!")
     end
 
-    assert_requested status, :times => 12
+    assert_requested status, :times => 6
     assert_requested in_exp, :times => 1
     assert_requested out, :times => 1
   end
@@ -261,7 +267,7 @@ class TestRun < Test::Unit::TestCase
     # Status :finished
     refute @run.error?
 
-    assert_requested status, :times => 3
+    assert_requested status, :times => 2
     assert_requested out, :times => 1
   end
 
@@ -279,7 +285,7 @@ class TestRun < Test::Unit::TestCase
     # Status :finished
     assert @run.error?
 
-    assert_requested status, :times => 3
+    assert_requested status, :times => 2
     assert_requested out, :times => 1
   end
 
@@ -375,7 +381,7 @@ class TestRun < Test::Unit::TestCase
     assert_equal output_4_value.size, output[4].stream_value(output_4_stream)
     assert_equal output_4_value, output_4_stream.data
 
-    assert_requested status, :times => 2
+    assert_requested status, :times => 1
     assert_requested out, :times => 1
   end
 
