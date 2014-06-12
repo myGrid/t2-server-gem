@@ -34,6 +34,10 @@ require 't2-server'
 
 class TestXMLMessages < Test::Unit::TestCase
 
+  SINGLE_INPUT_XML = LibXML::XML::Document.string(
+    '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="0"/>'
+  ).root
+
   SINGLE_OUTPUT_XML = LibXML::XML::Document.string(
     '<port:output xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" port:name="OUT" port:depth="0">'\
       '<port:value port:contentFile="/out/OUT" port:contentType="text/plain" port:contentByteLength="5" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT"/>'\
@@ -56,6 +60,13 @@ class TestXMLMessages < Test::Unit::TestCase
       '</port:list>'\
     '</port:output>'
   ).root
+
+  def test_singleton_input_port
+    port = T2Server::InputPort.new(nil, SINGLE_INPUT_XML)
+
+    assert_equal "IN", port.name
+    assert_equal 0, port.depth
+  end
 
   def test_singleton_output_port
     port = T2Server::OutputPort.new(nil, SINGLE_OUTPUT_XML)
