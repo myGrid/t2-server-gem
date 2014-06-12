@@ -338,10 +338,10 @@ module T2Server
 
     def set_client_authentication
       if @params[:client_certificate]
-        pem = File.read(@params[:client_certificate])
-        @http.certificate = OpenSSL::X509::Certificate.new(pem)
-        @http.private_key = OpenSSL::PKey::RSA.new(pem,
-          @params[:client_password])
+        cert = File.read(@params[:client_certificate])
+        pkcs12 = OpenSSL::PKCS12.new(cert, @params[:client_password])
+        @http.certificate = pkcs12.certificate
+        @http.private_key = pkcs12.key
       end
     end
 

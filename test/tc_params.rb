@@ -36,6 +36,8 @@ class TestParams < Test::Unit::TestCase
 
   CERT_DIR  = "test/workflows/secure"
   SERVER_PK = "#{CERT_DIR}/heater-pk.pem"
+  CLNT_CERT = "#{CERT_DIR}/user-cert.p12"
+  CLNT_PASS = "testcert"
 
   def test_base_params
     params = T2Server::ConnectionParameters.new
@@ -91,6 +93,28 @@ class TestParams < Test::Unit::TestCase
 
       assert_nothing_raised do
         T2Server::Server.new("#{$uri}/ca/#{uri_suffix}", params)
+      end
+
+      uri_suffix += 1
+    end
+  end
+
+  def test_client_cert
+    uri_suffix = 0
+
+    [CLNT_CERT, File.new(CLNT_CERT)].each do |c|
+      params = T2Server::ClientAuthSSLConnectionParameters.new(c, CLNT_PASS)
+
+      assert_not_nil params[:verify_peer]
+      assert params[:verify_peer]
+
+      assert_not_nil params[:client_certificate]
+      assert_equal CLNT_CERT, params[:client_certificate]
+      assert_not_nil params[:client_password]
+      assert_equal CLNT_PASS, params[:client_password]
+
+      assert_nothing_raised do
+        T2Server::Server.new("#{$uri}/client/#{uri_suffix}", params)
       end
 
       uri_suffix += 1

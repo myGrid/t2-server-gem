@@ -115,6 +115,9 @@ module T2Server
 
       @credentials = credentials
 
+      # Has this Run finished executing on the server?
+      @finished = false
+
       # Has this Run object been deleted from the server?
       @deleted = false
 
@@ -320,7 +323,13 @@ module T2Server
     # :running or :finished.
     def status
       return :deleted if @deleted
-      Status.to_sym(@server.read(links[:status], "text/plain", @credentials))
+      return :finished if @finished
+
+      state = Status.to_sym(@server.read(links[:status], "text/plain",
+        @credentials))
+
+      @finished = (state == :finished)
+      state
     end
 
     # :call-seq:
