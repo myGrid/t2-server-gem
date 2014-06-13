@@ -32,9 +32,7 @@
 
 require 't2-server'
 
-class TestXML
-  include T2Server::XML::Methods
-end
+require 'helpers/test-xml'
 
 class TestXMLMessages < Test::Unit::TestCase
 
