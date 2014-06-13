@@ -32,21 +32,7 @@
 
 require 't2-server'
 
-# A fake run class that can be "initialized" and use "baclava" as needed.
-class FakeRun
-  def initialize(init = true, baclava = false)
-    @init = init
-    @baclava = baclava
-  end
-
-  def initialized?
-    @init
-  end
-
-  def baclava_input?
-    @baclava
-  end
-end
+require 'helpers/fake-run'
 
 class TestXMLMessages < Test::Unit::TestCase
 
