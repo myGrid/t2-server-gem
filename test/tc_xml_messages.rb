@@ -41,6 +41,9 @@ class TestXMLMessages < Test::Unit::TestCase
     '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="0"/>'
   ).root
 
+  INPUT_PORT_LIST_XML = LibXML::XML::Document.string(
+    '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="1"/>'
+  ).root
 
   def setup
     @test = TestXML.new
@@ -83,6 +86,22 @@ class TestXMLMessages < Test::Unit::TestCase
     refute root.attributes?
 
     check_child_nodes(root, "value" => input_value)
+  end
+
+  def test_input_list_fragment
+    port = T2Server::InputPort.new(FakeRun.new, INPUT_PORT_LIST_XML)
+    delimiter = ";"
+    input_list = ["one", 2, :three]
+    flat_list = input_list.join(delimiter)
+    port.value = input_list
+    port.delimiter = delimiter
+    fragment = @test.xml_input_fragment(port)
+
+    root = get_and_check_root(fragment, "runInput")
+
+    assert root.attributes?
+
+    check_child_nodes(root, "value" => flat_list)
   end
 
   def test_input_file_fragment

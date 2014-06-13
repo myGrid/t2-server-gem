@@ -98,10 +98,11 @@ module T2Server
           value = port.file
         else
           type = "value"
-          value = port.value.to_s
+          value = port.value(true).to_s
         end
 
-        node = create_node("nsr:runInput", ["nsr:#{type}", value])
+        attr = port.depth == 1 ? { "nsr:listDelimiter" => port.delimiter } : {}
+        node = create_node("nsr:runInput", attr, ["nsr:#{type}", value])
         create_document(node).to_s
       end
 
