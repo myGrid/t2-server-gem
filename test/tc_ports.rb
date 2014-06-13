@@ -66,6 +66,10 @@ class TestXMLMessages < Test::Unit::TestCase
 
     assert_equal "IN", port.name
     assert_equal 0, port.depth
+
+    refute port.remote_file?
+    refute port.file?
+    assert_nil port.value
   end
 
   def test_singleton_output_port
