@@ -33,13 +33,7 @@
 require 'mocked-server-responses/mocks'
 require 't2-server'
 
-# For time-based tests to run we have to mangle the timezone to match the
-# local server. Sigh.
-def timezone
-  z = Time.zone_offset(Time.now.zone) / 3600
-  s = z.abs < 10 ? "0#{z.abs.to_s}" : z.abs.to_s
-  z < 0 ? "-#{s}" : "+#{s}"
-end
+require 'helpers/timezone'
 
 # A class to test data streaming.
 class TestCache
