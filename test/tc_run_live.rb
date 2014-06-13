@@ -32,23 +32,7 @@
 
 require 't2-server'
 
-# A class to test data streaming.
-class TestCache
-  attr_reader :data
-
-  def initialize
-    @data = ""
-  end
-
-  def write(data)
-    @data += data
-    data.size
-  end
-
-  def size
-    return @data.size
-  end
-end
+require 'helpers/test-cache'
 
 class TestRun < Test::Unit::TestCase
 
