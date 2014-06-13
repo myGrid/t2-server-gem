@@ -90,6 +90,18 @@ class TestXMLMessages < Test::Unit::TestCase
     refute port.set?
   end
 
+  def test_set_input_port_value
+    value = "test"
+    run = FakeRun.new
+    port = T2Server::InputPort.new(run, SINGLE_INPUT_XML)
+    port.value = value
+
+    assert port.set?
+    refute port.file?
+    refute port.remote_file?
+    assert_equal value, port.value
+  end
+
   def test_singleton_output_port
     port = T2Server::OutputPort.new(nil, SINGLE_OUTPUT_XML)
 
