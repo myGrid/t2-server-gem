@@ -1048,7 +1048,7 @@ module T2Server
     def _check_and_set_inputs
       lists = false
       input_ports.each_value do |port|
-        if port.depth > 0
+        if port.depth > 1
           lists = true
           break
         end
