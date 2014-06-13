@@ -92,8 +92,16 @@ module T2Server
         uris
       end
 
-      def xml_input_fragment(input, type = :value)
-        node = create_node("nsr:runInput", ["nsr:#{type}", input.to_s])
+      def xml_input_fragment(port)
+        if port.file?
+          type = "file"
+          value = port.file
+        else
+          type = "value"
+          value = port.value.to_s
+        end
+
+        node = create_node("nsr:runInput", ["nsr:#{type}", value])
         create_document(node).to_s
       end
 

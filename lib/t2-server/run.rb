@@ -1068,12 +1068,9 @@ module T2Server
           # If we're using a local file upload it first then set the port to
           # use a remote file.
           port.remote_file = upload_file(port.file) unless port.remote_file?
-
-          xml_value = xml_input_fragment(port.file, :file)
-        else
-          xml_value = xml_input_fragment(port.value)
         end
 
+        xml_value = xml_input_fragment(port)
         @server.update(uri, xml_value, "application/xml", @credentials)
       end
     end

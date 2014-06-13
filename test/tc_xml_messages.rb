@@ -33,8 +33,14 @@
 require 't2-server'
 
 require 'helpers/test-xml'
+require 'helpers/fake-run'
 
 class TestXMLMessages < Test::Unit::TestCase
+
+  INPUT_PORT_XML = LibXML::XML::Document.string(
+    '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="0"/>'
+  ).root
+
 
   def setup
     @test = TestXML.new
@@ -67,8 +73,10 @@ class TestXMLMessages < Test::Unit::TestCase
   end
 
   def test_input_value_fragment
+    port = T2Server::InputPort.new(FakeRun.new, INPUT_PORT_XML)
     input_value = "test & input"
-    fragment = @test.xml_input_fragment(input_value)
+    port.value = input_value
+    fragment = @test.xml_input_fragment(port)
 
     root = get_and_check_root(fragment, "runInput")
 
@@ -78,8 +86,10 @@ class TestXMLMessages < Test::Unit::TestCase
   end
 
   def test_input_file_fragment
+    port = T2Server::InputPort.new(FakeRun.new, INPUT_PORT_XML)
     file_name = "/file/name.txt"
-    fragment = @test.xml_input_fragment(file_name, :file)
+    port.file = file_name
+    fragment = @test.xml_input_fragment(port)
 
     root = get_and_check_root(fragment, "runInput")
 
