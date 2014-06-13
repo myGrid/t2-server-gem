@@ -32,6 +32,22 @@
 
 require 't2-server'
 
+# A fake run class that can be "initialized" and use "baclava" as needed.
+class FakeRun
+  def initialize(init = true, baclava = false)
+    @init = init
+    @baclava = baclava
+  end
+
+  def initialized?
+    @init
+  end
+
+  def baclava_input?
+    @baclava
+  end
+end
+
 class TestXMLMessages < Test::Unit::TestCase
 
   SINGLE_INPUT_XML = LibXML::XML::Document.string(
@@ -62,7 +78,8 @@ class TestXMLMessages < Test::Unit::TestCase
   ).root
 
   def test_singleton_input_port
-    port = T2Server::InputPort.new(nil, SINGLE_INPUT_XML)
+    run = FakeRun.new
+    port = T2Server::InputPort.new(run, SINGLE_INPUT_XML)
 
     assert_equal "IN", port.name
     assert_equal 0, port.depth
@@ -70,6 +87,7 @@ class TestXMLMessages < Test::Unit::TestCase
     refute port.remote_file?
     refute port.file?
     assert_nil port.value
+    refute port.set?
   end
 
   def test_singleton_output_port
