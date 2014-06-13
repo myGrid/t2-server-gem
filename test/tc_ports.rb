@@ -62,9 +62,10 @@ class TestXMLMessages < Test::Unit::TestCase
 
   LIST_OUTPUT_XML = LibXML::XML::Document.string(
     '<port:output xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" port:name="OUT" port:depth="1">'\
-      '<port:list port:length="2" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT">'\
+      '<port:list port:length="3" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT">'\
         '<port:value port:contentFile="/out/OUT/1" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/1"/>'\
         '<port:error port:errorFile="/out/OUT/2.error" port:errorByteLength="101" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/2.error"/>'\
+        '<port:absent/>'\
       '</port:list>'\
     '</port:output>'
   ).root
@@ -167,8 +168,8 @@ class TestXMLMessages < Test::Unit::TestCase
   end
 
   def test_list_output_port
-    sizes = [7, 101]
-    types = ["text/plain", "application/x-error"]
+    sizes = [7, 101, 0]
+    types = ["text/plain", "application/x-error", "application/x-empty"]
 
     port = T2Server::OutputPort.new(nil, LIST_OUTPUT_XML)
 
@@ -181,7 +182,7 @@ class TestXMLMessages < Test::Unit::TestCase
     assert_equal sizes, port.size
     assert_equal types, port.type
 
-    assert_equal 2, port.size.length
+    assert_equal 3, port.size.length
 
     refute port[0].empty?
     refute port[0].error?
@@ -194,6 +195,12 @@ class TestXMLMessages < Test::Unit::TestCase
     assert_equal types[1], port[1].type
     assert_equal sizes[1], port[1].size
     assert port[1].reference.instance_of?(URI::HTTPS)
+
+    assert port[2].empty?
+    refute port[2].error?
+    assert_equal types[2], port[2].type
+    assert_equal sizes[2], port[2].size
+    assert port[2].reference.instance_of?(URI::Generic)
   end
 
 end
