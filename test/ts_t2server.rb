@@ -69,6 +69,7 @@ if address == ""
 
   require 'tc_connection_exceptions'
   require 'tc_server'
+  require 'tc_ports'
   require 'tc_perms'
   require 'tc_run'
   require 'tc_interaction'
