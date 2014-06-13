@@ -40,6 +40,10 @@ class TestXMLMessages < Test::Unit::TestCase
     '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="0"/>'
   ).root
 
+  LIST_INPUT_XML = LibXML::XML::Document.string(
+    '<port:input xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/input/expected/input/IN" port:name="IN" port:depth="1"/>'
+  ).root
+
   SINGLE_OUTPUT_XML = LibXML::XML::Document.string(
     '<port:output xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" port:name="OUT" port:depth="0">'\
       '<port:value port:contentFile="/out/OUT" port:contentType="text/plain" port:contentByteLength="5" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT"/>'\
@@ -62,6 +66,19 @@ class TestXMLMessages < Test::Unit::TestCase
 
     assert_equal "IN", port.name
     assert_equal 0, port.depth
+
+    refute port.remote_file?
+    refute port.file?
+    assert_nil port.value
+    refute port.set?
+  end
+
+  def test_list_input_port
+    run = FakeRun.new
+    port = T2Server::InputPort.new(run, LIST_INPUT_XML)
+
+    assert_equal "IN", port.name
+    assert_equal 1, port.depth
 
     refute port.remote_file?
     refute port.file?
@@ -138,6 +155,22 @@ class TestXMLMessages < Test::Unit::TestCase
     refute port.file?
     refute port.remote_file?
     assert_equal value, port.value
+  end
+
+  def test_set_input_port_list
+    delimiter = "!"
+    list = [1, "two", :three]
+    list_join = list.join(delimiter)
+    run = FakeRun.new
+    port = T2Server::InputPort.new(run, LIST_INPUT_XML)
+    port.value = list
+    port.delimiter = delimiter
+
+    assert port.set?
+    refute port.file?
+    refute port.remote_file?
+    assert_equal list, port.value
+    assert_equal list_join, port.value(true)
   end
 
   def test_singleton_output_port

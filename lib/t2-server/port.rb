@@ -65,11 +65,14 @@ module T2Server
   # Represents an input to a workflow.
   class InputPort < Port
 
+    # The default delimiter to use when flattening inputs of depth 1.
+    DEFAULT_LIST_DELIMITER = "~"
+
     # If set, the file which has been used to supply this port's data.
     attr_reader :file
 
-    # If set, the value held by this port. Could be a list (of lists (etc)).
-    attr_reader :value
+    # The delimiter to be used as a list separator.
+    attr_accessor :delimiter
 
     # :stopdoc:
     # Create a new InputPort.
@@ -79,8 +82,19 @@ module T2Server
       @value = nil
       @file = nil
       @remote_file = false
+      @delimiter = DEFAULT_LIST_DELIMITER
     end
     # :startdoc:
+
+    # :call-seq:
+    #   value(flatten = false) -> string
+    #
+    # Get the value of this input port (if set) which could be a list (of
+    # lists (etc)). If +flatten+ is set to true then lists of depth 1 will be
+    # returned as a string joined with the port's delimiter character.
+    def value(flatten = false)
+      (depth == 1 && flatten) ? @value.join(@delimiter) : @value
+    end
 
     # :call-seq:
     #   value = value
