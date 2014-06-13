@@ -62,17 +62,9 @@ class TestXMLMessages < Test::Unit::TestCase
 
   LIST_OUTPUT_XML = LibXML::XML::Document.string(
     '<port:output xmlns:port="http://ns.taverna.org.uk/2010/port/" xmlns:xlink="http://www.w3.org/1999/xlink" port:name="OUT" port:depth="1">'\
-      '<port:list port:length="10" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT">'\
+      '<port:list port:length="2" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT">'\
         '<port:value port:contentFile="/out/OUT/1" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/1"/>'\
-        '<port:value port:contentFile="/out/OUT/2" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/2"/>'\
-        '<port:value port:contentFile="/out/OUT/3" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/3"/>'\
-        '<port:value port:contentFile="/out/OUT/4" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/4"/>'\
-        '<port:error port:errorFile="/out/OUT/5.error" port:errorByteLength="101" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/5.error"/>'\
-        '<port:value port:contentFile="/out/OUT/6" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/6"/>'\
-        '<port:value port:contentFile="/out/OUT/7" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/7"/>'\
-        '<port:value port:contentFile="/out/OUT/8" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/8"/>'\
-        '<port:value port:contentFile="/out/OUT/9" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/9"/>'\
-        '<port:value port:contentFile="/out/OUT/10" port:contentType="text/plain" port:contentByteLength="7" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/10"/>'\
+        '<port:error port:errorFile="/out/OUT/2.error" port:errorByteLength="101" xlink:href="https://localhost/taverna/rest/runs/a341b87f-25cc-4dfd-be36-f5b073a6ba74/wd/out/OUT/2.error"/>'\
       '</port:list>'\
     '</port:output>'
   ).root
@@ -175,12 +167,8 @@ class TestXMLMessages < Test::Unit::TestCase
   end
 
   def test_list_output_port
-    sizes = [7, 7, 7, 7, 101, 7, 7, 7, 7, 7]
-    types = [
-      "text/plain", "text/plain", "text/plain", "text/plain",
-      "application/x-error", "text/plain", "text/plain", "text/plain",
-      "text/plain", "text/plain"
-    ]
+    sizes = [7, 101]
+    types = ["text/plain", "application/x-error"]
 
     port = T2Server::OutputPort.new(nil, LIST_OUTPUT_XML)
 
@@ -188,18 +176,24 @@ class TestXMLMessages < Test::Unit::TestCase
     assert port.error?
     assert_equal "OUT", port.name
     assert_equal 1, port.depth
-    assert_equal 164, port.total_size
+    assert_equal 108, port.total_size
 
     assert_equal sizes, port.size
     assert_equal types, port.type
 
-    10.times do |i|
-      refute port[i].empty?
-      assert_equal types[i] == "application/x-error", port[i].error?
-      assert_equal types[i], port[i].type
-      assert_equal sizes[i], port[i].size
-      assert port[i].reference.instance_of?(URI::HTTPS)
-    end
+    assert_equal 2, port.size.length
+
+    refute port[0].empty?
+    refute port[0].error?
+    assert_equal types[0], port[0].type
+    assert_equal sizes[0], port[0].size
+    assert port[0].reference.instance_of?(URI::HTTPS)
+
+    refute port[1].empty?
+    assert port[1].error?
+    assert_equal types[1], port[1].type
+    assert_equal sizes[1], port[1].size
+    assert port[1].reference.instance_of?(URI::HTTPS)
   end
 
 end
