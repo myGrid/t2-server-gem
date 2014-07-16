@@ -75,6 +75,20 @@ class TestServerVersion < Test::Unit::TestCase
     assert @v250 != @v240
   end
 
+  def test_version_comparison_strings
+    assert @v24 == "2.4.0"
+    assert @v240 == "2.4"
+    assert @v240 < "2.4.1"
+    assert @v250 < "2.5.1"
+    assert @v250 > "2.4.10"
+    assert @v251 > "2.5"
+    assert @v240 <= "2.4"
+    assert @v240 <= "2.4.1"
+    assert @v250 >= "2.4.1"
+    assert @v251 >= "2.5"
+    assert @v251 != "2.5"
+  end
+
   def test_version_components
     assert_equal [2, 4, 0], @v24.to_a
     assert_equal [2, 4, 0], @v240.to_a
