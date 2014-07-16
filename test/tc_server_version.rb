@@ -68,6 +68,11 @@ class TestServerVersion < Test::Unit::TestCase
     assert @v240 < @v241
     assert @v251 > @v241
     assert @v251 > @v250
+    assert @v24 <= @v240
+    assert @v240 <= @v241
+    assert @v250 >= @v241
+    assert @v250 >= @v250
+    assert @v250 != @v240
   end
 
   def test_version_components
