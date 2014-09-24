@@ -1,5 +1,54 @@
 = Changes log for the T2 Ruby Gem
 
+== Version 1.2.0
+
+* Test provenance collection on version 2.5.4 and up only.
+* Only run tests against a live server if an address is supplied.
+* Add a test case to test the connection factory.
+* Set up mocking of Net::HTTP and mock creation of a run.
+* Mock testing server run limits and deleting all runs.
+* Add Coveralls integration to the tests.
+* Add tests for the credentials classes.
+* Add a simple check for parsing the server version.
+* Test a full run of a workflow.
+* Fix the parameters classes with initial parameters.
+* Test custom CA connection parameters.
+* Test a network timeout.
+* Catch Net::HTTP::Persistent::Error internally.
+* Net::HTTP::Persistent::Error is now wrapped internally.
+* Remove the unused RunNotFoundError.
+* Fix documentation for Run#upload_data.
+* Set minimum ruby version to be 1.9.3 in the spec.
+* Modernize the installation instructions.
+* Remove the unused workflow upload XML fragment.
+* Add XML generation methods for server messages.
+* Programmatic generation of mkdir server message.
+* Programmatic generation of the upload server message.
+* Streamline XML node generation methods.
+* Programmatically generate input server messages.
+* Generate permissions server message fragment.
+* Generate trusts server message fragment.
+* Generate credentials server messages.
+* Streamline the generation of hierarchical XML nodes.
+* Setup tests for the XML messages sent to server.
+* Factor out the common help and version CLI options.
+* Factor out the different SSL config options for HTTPS connections.
+* Neaten up the code to get a run's resource links.
+* Fix typo in Run#grant_permission.
+* Add a parse method to the credentials objects.
+* Found a way to better test the credentials objects.
+* Fix up the test suite driver code.
+* Update the public key of the secure remote services.
+* Update the client certificate for secure remote services.
+* Stop using a pre-cooked server reply for Run#status.
+* Only download a range of bytes if requested for outputs.
+* Streamline the OutputPort methods for getting data.
+* Remove unused private method (path) from OutputPort.
+* Factor out I/O Port processing.
+* Cache a run's finished state when it has finished.
+* Fix the client authentication connection settings.
+* Test InputPort and OutputPort.
+
 == Version 1.1.0
 
 * Remove hirb as a runtime dependency.
