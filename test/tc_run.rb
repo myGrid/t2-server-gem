@@ -33,7 +33,7 @@
 require 'mocked-server-responses/mocks'
 require 't2-server'
 
-require 'helpers/timezone'
+require 'helpers/mangle-time'
 require 'helpers/test-cache'
 
 class TestRun < Test::Unit::TestCase
@@ -42,9 +42,10 @@ class TestRun < Test::Unit::TestCase
   WKF_PASS = "test/workflows/pass_through.t2flow"
 
   # Some expiry times, mangled to work in different timezones.
-  TIME_STR = "2014-05-08 17:41:57 #{timezone}00"    # Ruby time format
-  TIME_RET = "2014-05-08T17:41:57.00#{timezone}:00" # Server return format
-  TIME_SET = "2014-05-08T17:41:57.00#{timezone}00"  # Server update format
+  TIME_OBJ = Time.now                                      # Ruby time object
+  TIME_STR = TIME_OBJ.strftime("%Y-%m-%d %H:%M:%S.%2N %z") # Ruby time string
+  TIME_RET = TIME_OBJ.xmlschema(2)                         # Server return format
+  TIME_SET = mangle_time(TIME_OBJ)                         # Server update format
 
   # Need to lock down the run UUID so recorded server responses make sense.
   RUN_UUID = "a341b87f-25cc-4dfd-be36-f5b073a6ba74"
@@ -134,7 +135,7 @@ class TestRun < Test::Unit::TestCase
       :status => 200, :body => TIME_SET, :credentials => $userinfo)
 
     @run.expiry = TIME_STR
-    @run.expiry = Time.parse(TIME_STR)
+    @run.expiry = TIME_OBJ
 
     assert_requested exp, :times => 2
   end
