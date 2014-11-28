@@ -61,7 +61,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('launchy', '~> 2.2')
   s.add_development_dependency('hirb', '~> 0.7')
   s.add_development_dependency('test-unit', '~> 3.0')
-  s.add_development_dependency('webmock', '~> 1.17')
+  s.add_development_dependency('webmock', '~> 1.19.0')
   s.add_development_dependency('coveralls')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0')
