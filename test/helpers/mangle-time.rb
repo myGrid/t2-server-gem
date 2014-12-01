@@ -30,10 +30,9 @@
 #
 # Author: Robert Haines
 
-# For time-based tests to run we have to mangle the timezone to match the
-# local server. Sigh.
-def timezone
-  z = Time.zone_offset(Time.now.zone) / 3600
-  s = z.abs < 10 ? "0#{z.abs.to_s}" : z.abs.to_s
-  z < 0 ? "-#{s}" : "+#{s}"
+# For time-based tests we need to mangle the time strings for uploading to
+# Taverna Server.
+def mangle_time(time)
+  date_str = time.xmlschema(2)
+  date_str = date_str[0..-4] + date_str[-2..-1]
 end
