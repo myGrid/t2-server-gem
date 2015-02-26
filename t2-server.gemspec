@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014 The University of Manchester, UK.
+# Copyright (c) 2010-2015 The University of Manchester, UK.
 #
 # All rights reserved.
 #
@@ -65,6 +65,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency('coveralls')
   s.add_runtime_dependency('net-http-persistent', '~> 2.6')
   s.add_runtime_dependency('taverna-baclava', '~> 1.0')
-  s.add_runtime_dependency('ratom', '~> 0.8.2')
+  s.add_runtime_dependency('ratom', '~> 0.9')
   s.add_runtime_dependency('libxml-ruby', '~> 2.6')
 end
