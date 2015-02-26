@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>Table of Contents -  Taverna 2 Server Ruby Interface Library version 1.3.0</title>
+
+<link href="./fonts.css" rel="stylesheet">
+<link href="./rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/navigation.js"></script>
+<script src="./js/search_index.js"></script>
+<script src="./js/search.js"></script>
+<script src="./js/searcher.js"></script>
+<script src="./js/darkfish.js"></script>
+
+
+<body id="top" class="table-of-contents">
+<main role="main">
+<h1 class="class">Table of Contents -  Taverna 2 Server Ruby Interface Library version 1.3.0</h1>
+
+<h2 id="pages">Pages</h2>
+<ul>
+  <li class="file">
+    <a href="CHANGES_rdoc.html">CHANGES</a>
+
+    <ul>
+      <li><a href="CHANGES_rdoc.html#label-Changes+log+for+the+T2+Ruby+Gem">Changes log for the T2 Ruby Gem</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+1.3.0">Version 1.3.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+1.2.0">Version 1.2.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+1.1.0">Version 1.1.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+1.0.0">Version 1.0.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.9.3">Version 0.9.3</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.9.2">Version 0.9.2</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.9.1">Version 0.9.1</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.9.0">Version 0.9.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.6.1">Version 0.6.1</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.6.0">Version 0.6.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.5.3">Version 0.5.3</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.5.2">Version 0.5.2</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.5.1">Version 0.5.1</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.5.0">Version 0.5.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.2.1">Version 0.2.1</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.2.0">Version 0.2.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.1.1">Version 0.1.1</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.1.0">Version 0.1.0</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.0.4">Version 0.0.4</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.0.3">Version 0.0.3</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.0.2">Version 0.0.2</a>
+      <li><a href="CHANGES_rdoc.html#label-Version+0.0.1">Version 0.0.1</a>
+      <li><a href="CHANGES_rdoc.html#label-About+this+CHANGES+file">About this CHANGES file</a>
+    </ul>
+  </li>
+    <li class="file">
+    <a href="LICENCE_rdoc.html">LICENCE</a>
+  </li>
+    <li class="file">
+    <a href="README_rdoc.html">README</a>
+
+    <ul>
+      <li><a href="README_rdoc.html#label-Taverna+2+Server+Interaction+Gem"><a href="http://www.taverna.org.uk/">Taverna</a> 2 Server Interaction Gem</a>
+      <li><a href="README_rdoc.html#label-Synopsis">Synopsis</a>
+      <li><a href="README_rdoc.html#label-Installation">Installation</a>
+      <li><a href="README_rdoc.html#label-Compatibility">Compatibility</a>
+      <li><a href="README_rdoc.html#label-Taverna+Server">Taverna Server</a>
+      <li><a href="README_rdoc.html#label-Ruby">Ruby</a>
+      <li><a href="README_rdoc.html#label-Usage">Usage</a>
+      <li><a href="README_rdoc.html#label-Configuring+a+Server+connection">Configuring a Server connection</a>
+      <li><a href="README_rdoc.html#label-Authenticating+to+a+Taverna+Server">Authenticating to a Taverna Server</a>
+      <li><a href="README_rdoc.html#label-Server+API+example">Server API example</a>
+      <li><a href="README_rdoc.html#label-Run+API+example">Run API example</a>
+      <li><a href="README_rdoc.html#label-Example+scripts">Example scripts</a>
+      <li><a href="README_rdoc.html#label-Interacting+with+secure+Web+Services">Interacting with secure Web Services</a>
+      <li><a href="README_rdoc.html#label-Username+and+password+credentials">Username and password credentials</a>
+      <li><a href="README_rdoc.html#label-REST">REST</a>
+      <li><a href="README_rdoc.html#label-SOAP">SOAP</a>
+      <li><a href="README_rdoc.html#label-R+Servers+%28via+Rshells%29">R Servers (via Rshells)</a>
+      <li><a href="README_rdoc.html#label-Keypair+%28certificate-based%29+credentials">Keypair (certificate-based) credentials</a>
+      <li><a href="README_rdoc.html#label-Trusts+%28peer+verification%29">Trusts (peer verification)</a>
+      <li><a href="README_rdoc.html#label-Interacting+with+other+Taverna+Server+users">Interacting with other Taverna Server users</a>
+      <li><a href="README_rdoc.html#label-Support">Support</a>
+      <li><a href="README_rdoc.html#label-References">References</a>
+    </ul>
+  </li>
+  
+</ul>
+
+<h2 id="classes">Classes and Modules</h2>
+<ul>
+  <li class="module">
+    <a href="T2Server.html">T2Server</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/AccessForbiddenError.html">T2Server::AccessForbiddenError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Administrator.html">T2Server::Administrator</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Administrator/AdminResource.html">T2Server::Administrator::AdminResource</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/AttributeNotFoundError.html">T2Server::AttributeNotFoundError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/AuthorizationError.html">T2Server::AuthorizationError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/ClientAuthSSLConnectionParameters.html">T2Server::ClientAuthSSLConnectionParameters</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/ConnectionError.html">T2Server::ConnectionError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/ConnectionParameters.html">T2Server::ConnectionParameters</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/ConnectionRedirectError.html">T2Server::ConnectionRedirectError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/CustomCASSLConnectionParameters.html">T2Server::CustomCASSLConnectionParameters</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/DefaultConnectionParameters.html">T2Server::DefaultConnectionParameters</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/HttpBasic.html">T2Server::HttpBasic</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/HttpCredentials.html">T2Server::HttpCredentials</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/InputPort.html">T2Server::InputPort</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/InsecureSSLConnectionParameters.html">T2Server::InsecureSSLConnectionParameters</a>
+  </li>
+  <li class="module">
+    <a href="T2Server/Interaction.html">T2Server::Interaction</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Interaction/Notification.html">T2Server::Interaction::Notification</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/OutputPort.html">T2Server::OutputPort</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Port.html">T2Server::Port</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/PortValue.html">T2Server::PortValue</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Run.html">T2Server::Run</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/RunStateError.html">T2Server::RunStateError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/SSL3ConnectionParameters.html">T2Server::SSL3ConnectionParameters</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Server.html">T2Server::Server</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/Server/Version.html">T2Server::Server::Version</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/ServerAtCapacityError.html">T2Server::ServerAtCapacityError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/T2ServerError.html">T2Server::T2ServerError</a>
+  </li>
+  <li class="class">
+    <a href="T2Server/UnexpectedServerResponse.html">T2Server::UnexpectedServerResponse</a>
+  </li>
+  <li class="module">
+    <a href="T2Server/Util.html">T2Server::Util</a>
+  </li>
+  <li class="module">
+    <a href="T2Server/Version.html">T2Server::Version</a>
+  </li>
+</ul>
+
+<h2 id="methods">Methods</h2>
+<ul>
+
+  <li class="method">
+    <a href="T2Server/Util.html#method-c-append_to_uri_path">::append_to_uri_path</a>
+    &mdash;
+    <span class="container">T2Server::Util</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-c-create">::create</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Util.html#method-c-get_path_leaf_from_uri">::get_path_leaf_from_uri</a>
+    &mdash;
+    <span class="container">T2Server::Util</span>
+
+  <li class="method">
+    <a href="T2Server/RunStateError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::RunStateError</span>
+
+  <li class="method">
+    <a href="T2Server/UnexpectedServerResponse.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::UnexpectedServerResponse</span>
+
+  <li class="method">
+    <a href="T2Server/AttributeNotFoundError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::AttributeNotFoundError</span>
+
+  <li class="method">
+    <a href="T2Server/ServerAtCapacityError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::ServerAtCapacityError</span>
+
+  <li class="method">
+    <a href="T2Server/AccessForbiddenError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::AccessForbiddenError</span>
+
+  <li class="method">
+    <a href="T2Server/AuthorizationError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::AuthorizationError</span>
+
+  <li class="method">
+    <a href="T2Server/ConnectionError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::ConnectionError</span>
+
+  <li class="method">
+    <a href="T2Server/ConnectionRedirectError.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::ConnectionRedirectError</span>
+
+  <li class="method">
+    <a href="T2Server/InsecureSSLConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::InsecureSSLConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/DefaultConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::DefaultConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/HttpBasic.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::HttpBasic</span>
+
+  <li class="method">
+    <a href="T2Server/Server/Version.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::Server::Version</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/ClientAuthSSLConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::ClientAuthSSLConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/SSL3ConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::SSL3ConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/ConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::ConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/CustomCASSLConnectionParameters.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">T2Server::CustomCASSLConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/HttpCredentials.html#method-c-parse">::parse</a>
+    &mdash;
+    <span class="container">T2Server::HttpCredentials</span>
+
+  <li class="method">
+    <a href="T2Server/Util.html#method-c-replace_uri_path">::replace_uri_path</a>
+    &mdash;
+    <span class="container">T2Server::Util</span>
+
+  <li class="method">
+    <a href="T2Server/Util.html#method-c-strip_path_slashes">::strip_path_slashes</a>
+    &mdash;
+    <span class="container">T2Server::Util</span>
+
+  <li class="method">
+    <a href="T2Server/Util.html#method-c-strip_uri_credentials">::strip_uri_credentials</a>
+    &mdash;
+    <span class="container">T2Server::Util</span>
+
+  <li class="method">
+    <a href="T2Server/Server/Version.html#method-i-3C-3D-3E">#&lt;=&gt;</a>
+    &mdash;
+    <span class="container">T2Server::Server::Version</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-5B-5D">#[]</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Administrator.html#method-i-5B-5D">#[]</a>
+    &mdash;
+    <span class="container">T2Server::Administrator</span>
+
+  <li class="method">
+    <a href="T2Server/ConnectionParameters.html#method-i-5B-5D-3D">#[]=</a>
+    &mdash;
+    <span class="container">T2Server::ConnectionParameters</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-add_keypair_credential">#add_keypair_credential</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-add_password_credential">#add_password_credential</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-add_trust">#add_trust</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-administrator">#administrator</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-baclava-3F">#baclava?</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-baclava_input-3D">#baclava_input=</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-baclava_input-3F">#baclava_input?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-baclava_output">#baclava_output</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-create_run">#create_run</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-create_time">#create_time</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-credential">#credential</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-credentials">#credentials</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-delete">#delete</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-delete_all_credentials">#delete_all_credentials</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-delete_all_runs">#delete_all_runs</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-delete_all_trusts">#delete_all_trusts</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-delete_credential">#delete_credential</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-delete_trust">#delete_trust</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-deleted-3F">#deleted?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-empty-3F">#empty?</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-empty-3F">#empty?</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-error-3F">#error?</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-error-3F">#error?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-error-3F">#error?</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-exitcode">#exitcode</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-expiry">#expiry</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-expiry-3D">#expiry=</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-file-3D">#file=</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-file-3F">#file?</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-finish_time">#finish_time</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-finished-3F">#finished?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-generate_baclava_output">#generate_baclava_output</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-generate_baclava_output-3F">#generate_baclava_output?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-generate_provenance">#generate_provenance</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-generate_provenance-3F">#generate_provenance?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-grant_permission">#grant_permission</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Interaction/Notification.html#method-i-has_reply-3F">#has_reply?</a>
+    &mdash;
+    <span class="container">T2Server::Interaction::Notification</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-initialized-3F">#initialized?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Interaction/Notification.html#method-i-input_data">#input_data</a>
+    &mdash;
+    <span class="container">T2Server::Interaction::Notification</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-input_port">#input_port</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-input_ports">#input_ports</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/HttpCredentials.html#method-i-inspect">#inspect</a>
+    &mdash;
+    <span class="container">T2Server::HttpCredentials</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-inspect">#inspect</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/Interaction/Notification.html#method-i-is_notification-3F">#is_notification?</a>
+    &mdash;
+    <span class="container">T2Server::Interaction::Notification</span>
+
+  <li class="method">
+    <a href="T2Server/Interaction/Notification.html#method-i-is_reply-3F">#is_reply?</a>
+    &mdash;
+    <span class="container">T2Server::Interaction::Notification</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-log">#log</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-mkdir">#mkdir</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-name">#name</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-name-3D">#name=</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-notifications">#notifications</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-output_port">#output_port</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-output_ports">#output_ports</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-owner">#owner</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-owner-3F">#owner?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-permission">#permission</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-permissions">#permissions</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-provenance">#provenance</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-reference">#reference</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-remote_file-3D">#remote_file=</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-remote_file-3F">#remote_file?</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Interaction/Notification.html#method-i-reply">#reply</a>
+    &mdash;
+    <span class="container">T2Server::Interaction::Notification</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-revoke_permission">#revoke_permission</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-run_limit">#run_limit</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-running-3F">#running?</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-runs">#runs</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-set-3F">#set?</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-size">#size</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-start">#start</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-start_time">#start_time</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-status">#status</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-stderr">#stderr</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-stdout">#stdout</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-stream_value">#stream_value</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-stream_value">#stream_value</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/Server/Version.html#method-i-to_a">#to_a</a>
+    &mdash;
+    <span class="container">T2Server::Server::Version</span>
+
+  <li class="method">
+    <a href="T2Server/Server/Version.html#method-i-to_s">#to_s</a>
+    &mdash;
+    <span class="container">T2Server::Server::Version</span>
+
+  <li class="method">
+    <a href="T2Server/HttpCredentials.html#method-i-to_s">#to_s</a>
+    &mdash;
+    <span class="container">T2Server::HttpCredentials</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-total_size">#total_size</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-trusts">#trusts</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-type">#type</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-upload_data">#upload_data</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-upload_file">#upload_file</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-uri">#uri</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-value">#value</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-value">#value</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/Administrator/AdminResource.html#method-i-value">#value</a>
+    &mdash;
+    <span class="container">T2Server::Administrator::AdminResource</span>
+
+  <li class="method">
+    <a href="T2Server/InputPort.html#method-i-value-3D">#value=</a>
+    &mdash;
+    <span class="container">T2Server::InputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Server.html#method-i-version">#version</a>
+    &mdash;
+    <span class="container">T2Server::Server</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-wait">#wait</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-workflow">#workflow</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+
+  <li class="method">
+    <a href="T2Server/Administrator/AdminResource.html#method-i-writable-3F">#writable?</a>
+    &mdash;
+    <span class="container">T2Server::Administrator::AdminResource</span>
+
+  <li class="method">
+    <a href="T2Server/PortValue.html#method-i-write_value_to_file">#write_value_to_file</a>
+    &mdash;
+    <span class="container">T2Server::PortValue</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-write_value_to_file">#write_value_to_file</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/OutputPort.html#method-i-zip">#zip</a>
+    &mdash;
+    <span class="container">T2Server::OutputPort</span>
+
+  <li class="method">
+    <a href="T2Server/Run.html#method-i-zip_output">#zip_output</a>
+    &mdash;
+    <span class="container">T2Server::Run</span>
+</ul>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://rdoc.rubyforge.org">RDoc</a> 4.1.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

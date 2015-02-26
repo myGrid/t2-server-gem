@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class T2Server::OutputPort -  Taverna 2 Server Ruby Interface Library version 1.3.0</title>
+
+<link href="../fonts.css" rel="stylesheet">
+<link href="../rdoc.css" rel="stylesheet">
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../";
+</script>
+
+<script src="../js/jquery.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/search_index.js"></script>
+<script src="../js/search.js"></script>
+<script src="../js/searcher.js"></script>
+<script src="../js/darkfish.js"></script>
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="../index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="../table_of_contents.html#pages">Pages</a>
+    <a href="../table_of_contents.html#classes">Classes</a>
+    <a href="../table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link"><a href="Port.html">T2Server::Port</a>
+  
+</div>
+
+    <div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><span class="include">XML::Methods</span>
+  
+  
+  </ul>
+</div>
+
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-i-5B-5D">#[]</a>
+    
+    <li ><a href="#method-i-empty-3F">#empty?</a>
+    
+    <li ><a href="#method-i-error-3F">#error?</a>
+    
+    <li ><a href="#method-i-reference">#reference</a>
+    
+    <li ><a href="#method-i-size">#size</a>
+    
+    <li ><a href="#method-i-stream_value">#stream_value</a>
+    
+    <li ><a href="#method-i-total_size">#total_size</a>
+    
+    <li ><a href="#method-i-type">#type</a>
+    
+    <li ><a href="#method-i-value">#value</a>
+    
+    <li ><a href="#method-i-write_value_to_file">#write_value_to_file</a>
+    
+    <li ><a href="#method-i-zip">#zip</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-T2Server::OutputPort">
+  <h1 id="class-T2Server::OutputPort" class="class">
+    class T2Server::OutputPort
+  </h1>
+
+  <section class="description">
+    
+<p>Represents an output port of a workflow.</p>
+
+  </section>
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+
+    
+
+    
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-5B-5D" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            [int] &rarr; obj
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>This call provides access to the underlying structure of the <a
+href="OutputPort.html">OutputPort</a>. It can only be used for ports of
+depth &gt;= 1. For singleton ports, use <a
+href="OutputPort.html#method-i-value">#value</a> instead.</p>
+
+<p>Example usage - To get part of a value from an output port with depth 3: <a
+href="1">port</a>[<a href="1">0]</a>.value(10…100)</p>
+          
+          
+
+          
+          <div class="method-source-code" id="5B-5D-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 211</span>
+<span class="ruby-keyword">def</span> <span class="ruby-operator">[]</span>(<span class="ruby-identifier">i</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@structure</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-ivar">@structure</span>[<span class="ruby-identifier">i</span>]
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-empty-3F" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            empty? &rarr; true or false
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Is this output port empty?</p>
+
+<p>Note that if the output port holds a list then it is not considered empty,
+even if that list is empty. This is because the port itself is not empty,
+there is a list there! A separate test should be performed to see if that
+list is empty or not.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="empty-3F-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 196</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">empty?</span>
+  <span class="ruby-comment"># Funnily enough, an empty list does *not* make a port empty!</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Array</span>
+  <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">empty?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-error-3F" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            error? &rarr; true or false
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Is there an error associated with this output port?</p>
+          
+          
+
+          
+          <div class="method-source-code" id="error-3F-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 183</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">error?</span>
+  <span class="ruby-ivar">@error</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-reference" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            reference &rarr; string
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            reference &rarr; array
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get URI references to the data values of this output port as strings.</p>
+
+<p>For a singleton output a single uri is returned. For lists an array of uris
+is returned. For an individual reference from a list use
+‘port[].reference’.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="reference-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 288</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">reference</span>
+  <span class="ruby-ivar">@refs</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:reference</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-size" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            size &rarr; fixnum
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            size &rarr; array
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get the data size of the data value in this output port.</p>
+
+<p>For a singleton output a single size is returned. For lists an array of
+sizes is returned. For an individual size from a list use ‘port[].size’.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="size-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 312</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">size</span>
+  <span class="ruby-ivar">@sizes</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:size</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-stream_value" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            stream_value(stream) &rarr; fixnum
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            stream_value(stream, range) &rarr; fixnum
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Stream a singleton port value directly to another stream and return the
+number of bytes written. If a range is supplied then only that range of
+data is streamed from the server. The stream passed in may be anything that
+provides a <code>write</code> method; instances of IO and File, for
+example. No data is cached by this method.</p>
+
+<p>To stream parts of a list port, use <a
+href="PortValue.html#method-i-stream_value">T2Server::PortValue#stream_value</a>
+on the list item directly:</p>
+
+<pre>run.output_port(&quot;port_name&quot;)[0].stream_value(stream)</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="stream_value-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 253</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">stream</span>, <span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ArgumentError</span>,
+    <span class="ruby-string">&quot;Stream passed in must provide a write method&quot;</span> <span class="ruby-keyword">unless</span>
+      <span class="ruby-identifier">stream</span>.<span class="ruby-identifier">respond_to?</span> <span class="ruby-value">:write</span>
+
+  <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">stream_value</span>(<span class="ruby-identifier">stream</span>, <span class="ruby-identifier">range</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-total_size" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            total_size &rarr; fixnum
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Return the total data size of all the data in this output port.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="total_size-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 320</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">total_size</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@total_size</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@total_size</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">instance_of?</span> <span class="ruby-constant">Array</span>
+    <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">empty?</span>
+    <span class="ruby-ivar">@total_size</span> = <span class="ruby-identifier">strip</span>(<span class="ruby-value">:size</span>).<span class="ruby-identifier">flatten</span>.<span class="ruby-identifier">inject</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">sum</span>, <span class="ruby-identifier">i</span><span class="ruby-operator">|</span> <span class="ruby-identifier">sum</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">i</span> }
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-ivar">@total_size</span> = <span class="ruby-identifier">size</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-type" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            type &rarr; string
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            type &rarr; array
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get the mime type of the data value in this output port.</p>
+
+<p>For a singleton output a single type is returned. For lists an array of
+types is returned. For an individual type from a list use ‘port[].type’.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="type-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 300</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">type</span>
+  <span class="ruby-ivar">@types</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:type</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-value" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            value &rarr; binary blob
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            value(range) &rarr; binary blob
+          </span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            value {|chunk| ...}
+          </span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            value(range) {|chunk| ...}
+          </span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            value &rarr; array
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>For singleton outputs download or stream the data (or part of it) held by
+the output port. Please see the documentation for <a
+href="PortValue.html#method-i-value">T2Server::PortValue#value</a> for full
+details.</p>
+
+<p>For list outputs all data values are downloaded into memory and returned in
+an Array structure that mirrors the structure of the output port. Do not
+use this form if the output port has large amounts of data! To get part of
+a value from a list use something like:</p>
+
+<pre>run.output_port(&quot;port_name&quot;)[0].value(0..100)</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="value-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 232</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">value</span>(<span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+    <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">value</span>(<span class="ruby-identifier">range</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-ivar">@values</span> <span class="ruby-operator">||=</span> <span class="ruby-identifier">strip</span>(<span class="ruby-value">:value</span>)
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-write_value_to_file" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            write_value_to_file(filename) &rarr; fixnum
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            write_value_to_file(filename, range) &rarr; fixnum
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Stream a singleton port value to a file and return the number of bytes
+written. If a range is supplied then only that range of data is downloaded
+from the server.</p>
+
+<p>To save parts of a list port to a file, use <a
+href="PortValue.html#method-i-write_value_to_file">T2Server::PortValue#write_value_to_file</a>
+on the list item directly:</p>
+
+<pre>run.output_port(&quot;port_name&quot;)[0].write_value_to_file</pre>
+          
+          
+
+          
+          <div class="method-source-code" id="write_value_to_file-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 273</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">write_value_to_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">range</span> = <span class="ruby-keyword">nil</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-value">0</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+
+  <span class="ruby-ivar">@structure</span>.<span class="ruby-identifier">write_value_to_file</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">range</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-zip" class="method-detail ">
+        
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            zip &rarr; binary blob
+          </span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            zip(filename) &rarr; fixnum
+          </span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            zip(stream) &rarr; fixnum
+          </span>
+          
+        </div>
+        
+        <div class="method-heading">
+          <span class="method-callseq">
+            zip {|chunk| ...}
+          </span>
+          
+        </div>
+        
+        
+
+        <div class="method-description">
+          
+          <p>Get the data in this output port directly from the server in zip format.</p>
+
+<p>This method does not work with singleton ports. Taverna <a
+href="Server.html">Server</a> cannot currently return zip files of
+singleton ports on their own. If you wish to get a singleton port in a zip
+file then you can use <a
+href="Run.html#method-i-zip_output">T2Server::Run#zip_output</a> which will
+return all outputs in a single file.</p>
+
+<p>If this method is called on a singleton port it will return
+<code>nil</code> and streaming from it will return nothing.</p>
+
+<p>Calling this method with no parameters will simply return a blob of zipped
+data. Providing a filename will stream the data directly to that file and
+return the number of bytes written. Passing in an object that has a
+<code>write</code> method (for example, an instance of File or IO) will
+stream the zip data directly to that object and return the number of bytes
+that were streamed. Passing in a block will allow access to the underlying
+data stream:</p>
+
+<pre class="ruby"><span class="ruby-identifier">port</span>.<span class="ruby-identifier">zip</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">chunk</span><span class="ruby-operator">|</span>
+  <span class="ruby-identifier">print</span> <span class="ruby-identifier">chunk</span>
+<span class="ruby-keyword">end</span>
+</pre>
+
+<p>Raises <a href="RunStateError.html">RunStateError</a> if the run has not
+finished running.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="zip-source">
+            <pre><span class="ruby-comment"># File lib/t2-server/port.rb, line 358</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">zip</span>(<span class="ruby-identifier">param</span> = <span class="ruby-keyword">nil</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">nil</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">depth</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+  <span class="ruby-ivar">@run</span>.<span class="ruby-identifier">zip_output</span>(<span class="ruby-identifier">param</span>, <span class="ruby-identifier">name</span>, <span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://rdoc.rubyforge.org">RDoc</a> 4.1.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-Rdoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+
